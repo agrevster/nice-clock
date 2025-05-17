@@ -239,17 +239,17 @@ test {
         const row_end = row_start + bytes_per_row;
         const row_bytes = glyph[row_start..row_end];
 
-        var printed: u8 = 0;
+        var tile_index: u8 = 0;
         for (row_bytes) |byte| {
             for (0..8) |bit| {
-                if (printed >= font.width) break;
+                if (tile_index >= font.width) break;
                 const bit_u3: u3 = @intCast(bit);
                 if ((byte & (@as(u8, 0x80) >> bit_u3)) != 0) {
                     std.debug.print("#", .{});
                 } else {
                     std.debug.print(".", .{});
                 }
-                printed += 1;
+                tile_index += 1;
             }
         }
         std.debug.print("\n", .{});

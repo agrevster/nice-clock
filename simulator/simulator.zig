@@ -29,7 +29,7 @@ pub fn main() void {
         .tile_pointer = &tiles,
     };
 
-    var clock = Clock{ .interface = connector.connectorInterface(), .has_event_loop_started = false, .modules = &[_]common.module.ClockModule{modules.test_module} };
+    var clock = Clock{ .interface = connector.connectorInterface(), .has_event_loop_started = false, .modules = &[_]common.module.ClockModule{ modules.test_module, modules.test_module2 } };
 
     var is_active: bool = true;
 

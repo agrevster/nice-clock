@@ -3,6 +3,8 @@ const common = @import("../common.zig");
 
 pub const ClockConnectorError = error{EventLoopAlreadyStarted};
 
+const logger = std.log.scoped(.common_connector);
+
 pub const CommonConnector = struct {
     interface: common.Connector.ConnectorInterface,
     has_event_loop_started: bool,
