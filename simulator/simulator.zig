@@ -1,6 +1,7 @@
 const std = @import("std");
 const renderer = @import("renderer.zig");
 const common = @import("common");
+const modules = @import("modules.zig");
 const Connector = @import("./simConnector.zig").SimConnector;
 const Clock = common.Clock;
 
@@ -28,7 +29,7 @@ pub fn main() void {
         .tile_pointer = &tiles,
     };
 
-    var clock = Clock{ .interface = connector.connectorInterface(), .has_event_loop_started = false };
+    var clock = Clock{ .interface = connector.connectorInterface(), .has_event_loop_started = false, .modules = &[_]common.module.ClockModule{modules.test_module} };
 
     var is_active: bool = true;
 

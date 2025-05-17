@@ -3,7 +3,7 @@ const common = @import("../common.zig");
 
 const time = std.time;
 const math = std.math;
-const Connector = common.Connector;
+const Clock = common.Clock;
 const Color = common.Color;
 
 const logger = std.log.scoped(.Components);
@@ -19,13 +19,13 @@ pub const ComponentPos = struct {
 
 pub const Component = struct {
     ctx: *const anyopaque,
-    draw: *const fn (ctx: *const anyopaque, clock: *Connector) ComponentError!void,
+    draw: *const fn (ctx: *const anyopaque, clock: *Clock) ComponentError!void,
 };
 
 pub const RootComponent = struct {
     components: []const Component,
 
-    pub fn render(self: *const RootComponent, clock: *Connector, fps: u8, time_limit_s: u64) ComponentError!void {
+    pub fn render(self: *const RootComponent, clock: *Clock, fps: u8, time_limit_s: u64) ComponentError!void {
         const u64_fps: u64 = @intCast(fps);
 
         var timer = try std.time.Timer.start();
@@ -56,7 +56,7 @@ pub const TileComponent = struct {
         return Component{ .ctx = self, .draw = &draw };
     }
 
-    fn draw(ctx: *const anyopaque, clock: *Connector) ComponentError!void {
+    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
         const self: *const TileComponent = @ptrCast(@alignCast(ctx));
         try clock.interface.setTile(clock.interface.ctx, self.*.pos.y, self.*.pos.x, self.*.color);
     }
@@ -73,7 +73,7 @@ pub const BoxComponent = struct {
         return Component{ .ctx = self, .draw = &draw };
     }
 
-    fn draw(ctx: *const anyopaque, clock: *Connector) ComponentError!void {
+    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
         const self: *const BoxComponent = @ptrCast(@alignCast(ctx));
         for (self.pos.y..(self.pos.y + self.height)) |y_pos| {
             if (y_pos > 31) continue;
@@ -102,7 +102,7 @@ pub const CircleComponent = struct {
         return Component{ .ctx = self, .draw = &draw };
     }
 
-    fn setTileIfValid(clock: *Connector, y: OverflowError!u8, x: OverflowError!u8, color: Color) void {
+    fn setTileIfValid(clock: *Clock, y: OverflowError!u8, x: OverflowError!u8, color: Color) void {
         if (y) |y_val| {
             if (x) |x_val| {
                 if (y_val < 32 and x_val < 64) clock.interface.setTile(clock.*.interface.ctx, y_val, x_val, color) catch unreachable;
@@ -110,7 +110,7 @@ pub const CircleComponent = struct {
         } else |_| {}
     }
 
-    fn draw(ctx: *const anyopaque, clock: *Connector) ComponentError!void {
+    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
         const self: *const CircleComponent = @ptrCast(@alignCast(ctx));
 
         if (self.radius <= 0) {
@@ -153,7 +153,7 @@ pub const CharComponent = struct {
         return Component{ .ctx = self, .draw = &draw };
     }
 
-    fn draw(ctx: *const anyopaque, clock: *Connector) ComponentError!void {
+    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
         const self: *const CharComponent = @ptrCast(@alignCast(ctx));
 
         const glyph = self.font.glyphs.get(self.char) orelse self.font.glyphs.get(self.font.default_char).?;
