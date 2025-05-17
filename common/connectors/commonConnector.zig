@@ -1,10 +1,10 @@
 const std = @import("std");
-const common = @import("common");
+const common = @import("../common.zig");
 
 pub const ClockConnectorError = error{EventLoopAlreadyStarted};
 
 pub const CommonConnector = struct {
-    interface: common.connector.ConnectorInterface,
+    interface: common.Connector.ConnectorInterface,
     has_event_loop_started: bool,
     modules: []common.module.ClockModule,
 

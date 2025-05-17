@@ -1,5 +1,5 @@
 const std = @import("std");
-const common = @import("common");
+const common = @import("../common.zig");
 
 const time = std.time;
 const math = std.math;

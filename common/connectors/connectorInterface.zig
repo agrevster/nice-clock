@@ -1,4 +1,4 @@
-const common = @import("common");
+const common = @import("../common.zig");
 
 pub const ConnectorError = error{
     TileOutOfBounds,

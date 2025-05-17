@@ -1,5 +1,5 @@
 const std = @import("std");
-const common = @import("common");
+const common = @import("../common.zig");
 
 pub const ClockModuleType = enum {
     Internal,
