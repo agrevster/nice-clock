@@ -84,85 +84,6 @@ pub const BDF = struct {
 };
 
 test {
-    return error.SkipZigTest;
-    // const font_input =
-    //     \\STARTFONT 2.1
-    //     \\COMMENT $Id: 5x8.bdf,v 1.32 2006-01-05 20:03:17+00 mgk25 Rel $
-    //     \\COMMENT Send bug reports to Markus Kuhn <http://www.cl.cam.ac.uk/~mgk25/>
-    //     \\FONT -Misc-Fixed-Medium-R-Normal--8-80-75-75-C-50-ISO10646-1
-    //     \\SIZE 11 75 75
-    //     \\FONTBOUNDINGBOX 5 8 0 -1
-    //     \\STARTPROPERTIES 22
-    //     \\FONTNAME_REGISTRY ""
-    //     \\FOUNDRY "Misc"
-    //     \\FAMILY_NAME "Fixed"
-    //     \\WEIGHT_NAME "Medium"
-    //     \\SLANT "R"
-    //     \\SETWIDTH_NAME "Normal"
-    //     \\ADD_STYLE_NAME ""
-    //     \\PIXEL_SIZE 8
-    //     \\POINT_SIZE 80
-    //     \\RESOLUTION_X 75
-    //     \\RESOLUTION_Y 75
-    //     \\SPACING "C"
-    //     \\AVERAGE_WIDTH 50
-    //     \\CHARSET_REGISTRY "ISO10646"
-    //     \\CHARSET_ENCODING "1"
-    //     \\FONT_DESCENT 1
-    //     \\FONT_ASCENT 7
-    //     \\COPYRIGHT "Public domain font.  Share and enjoy."
-    //     \\DEFAULT_CHAR 0
-    //     \\_XMBDFED_INFO "Edited with xmbdfed 4.5."
-    //     \\CAP_HEIGHT 6
-    //     \\X_HEIGHT 4
-    //     \\ENDPROPERTIES
-    //     \\CHARS 1426
-    //     \\STARTCHAR char0
-    //     \\ENCODING 0
-    //     \\SWIDTH 436 0
-    //     \\DWIDTH 5 0
-    //     \\BBX 5 8 0 -1
-    //     \\BITMAP
-    //     \\00
-    //     \\A0
-    //     \\10
-    //     \\80
-    //     \\10
-    //     \\80
-    //     \\50
-    //     \\00
-    //     \\ENDCHAR
-    //     \\STARTCHAR exclam
-    //     \\ENCODING 33
-    //     \\SWIDTH 436 0
-    //     \\DWIDTH 5 0
-    //     \\BBX 5 8 0 -1
-    //     \\BITMAP
-    //     \\00
-    //     \\20
-    //     \\20
-    //     \\20
-    //     \\20
-    //     \\00
-    //     \\20
-    //     \\00
-    //     \\ENDCHAR
-    // ;
-    // var font = try BDF.parseBDF(std.testing.allocator, font_input);
-    // defer font.deinit(std.testing.allocator);
-    // std.debug.print("FONT WIDTH x HEIGHT: {d} x {d}\n", .{ font.width, font.height });
-    // std.debug.print("DEFAULT_CHAR: {b}\n", .{font.default_char});
-    // std.debug.print("Glyphs Capacity: {d}\n", .{font.glyphs.capacity()});
-    //
-    // // const glyph = font.glyphs.get('!').?;
-    // //
-    // // for (0..font.height) |y| {
-    // //     std.debug.print("\n{b}", .{glyph[y]});
-    // //
-    // // }
-}
-
-test {
     const font_input =
         \\STARTFONT 2.1
         \\COMMENT $Id: 6x12.bdf,v 1.32 2008-06-26 12:50:43+01 mgk25 Rel $
@@ -240,6 +161,10 @@ test {
     std.debug.print("DEFAULT_CHAR: {b}\n", .{font.default_char});
     std.debug.print("Glyphs Capacity: {d}\n", .{font.glyphs.capacity()});
 
+    try std.testing.expect(font.width == 6);
+    try std.testing.expect(font.height == 12);
+    try std.testing.expect(font.default_char == 0);
+
     const glyph = font.glyphs.get(0).?;
 
     const bytes_per_row = (font.width + 7) / 8;
@@ -265,6 +190,7 @@ test {
         std.debug.print("\n", .{});
     }
 }
+
 test "big font" {
     const font_input =
         \\FONT -misc-spleen-medium-r-normal--24-240-72-72-C-120-ISO10646-1
@@ -448,12 +374,22 @@ test "loadFontFromFile" {
 }
 
 test "font-store-full" {
-    return error.SkipZigTest;
-    // try FontStore.init(std.testing.allocator);
-    // defer FontStore.deinit(std.testing.allocator);
-    //
-    // const font = try FontStore.Font5x8.font();
-    //
-    // try std.testing.expect(font.width == 5);
-    // try std.testing.expect(font.height == 8);
+    try FontStore.init(std.testing.allocator);
+    defer FontStore.deinit(std.testing.allocator);
+
+    const font1 = try FontStore.Font5x8.font();
+    try std.testing.expect(font1.width == 5);
+    try std.testing.expect(font1.height == 8);
+
+    const font2 = try FontStore.Font5x8_2.font();
+    try std.testing.expect(font2.width == 5);
+    try std.testing.expect(font2.height == 8);
+
+    const font3 = try FontStore.Font7x13.font();
+    try std.testing.expect(font3.width == 7);
+    try std.testing.expect(font3.height == 13);
+
+    const font4 = try FontStore.Font12x24.font();
+    try std.testing.expect(font4.width == 12);
+    try std.testing.expect(font4.height == 24);
 }
