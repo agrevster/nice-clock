@@ -161,6 +161,30 @@ pub const CircleComponent = struct {
     }
 };
 
+fn drawChar(clock: *Clock, y_pos: u8, x_pos: u8, font: common.font.BDF, char: u8, color: Color) ComponentError!void {
+    const glyph = font.glyphs.get(char) orelse font.glyphs.get(font.default_char).?;
+    const bytes_per_row = (font.width + 7) / 8;
+
+    for (0..font.height) |row| {
+        const row_start = row * bytes_per_row;
+        const row_end = row_start + bytes_per_row;
+        const row_bytes = glyph[row_start..row_end];
+
+        var tile_index: u8 = 0;
+        for (row_bytes) |byte| {
+            for (0..8) |bit| {
+                if (tile_index >= font.width) break;
+                const bit_u3: u3 = @intCast(bit);
+                if ((byte & (@as(u8, 0x80) >> bit_u3)) != 0) {
+                    const row_u8: u8 = @intCast(row);
+                    try clock.interface.setTile(clock.interface.ctx, row_u8 + y_pos, tile_index + x_pos, color);
+                }
+                tile_index += 1;
+            }
+        }
+    }
+}
+
 ///Used to draw a single glyph from the given `font` on the screen.
 pub const CharComponent = struct {
     pos: ComponentPos,
@@ -174,28 +198,30 @@ pub const CharComponent = struct {
 
     fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
         const self: *const CharComponent = @ptrCast(@alignCast(ctx));
+        try drawChar(clock, self.pos.y, self.pos.x, try self.font.font(), self.char, self.color);
+    }
+};
 
-        const font_bdf = try self.font.font();
-        const glyph = font_bdf.glyphs.get(self.char) orelse font_bdf.glyphs.get(font_bdf.default_char).?;
-        const bytes_per_row = (font_bdf.width + 7) / 8;
+///Used to draw text from a given `font` on the screen.
+pub const TextComponent = struct {
+    pos: ComponentPos,
+    font: common.font.FontStore,
+    text: []const u8,
+    color: Color,
 
-        for (0..font_bdf.height) |row| {
-            const row_start = row * bytes_per_row;
-            const row_end = row_start + bytes_per_row;
-            const row_bytes = glyph[row_start..row_end];
+    pub fn component(self: *const TextComponent) Component {
+        return Component{ .ctx = self, .draw = &draw };
+    }
 
-            var tile_index: u8 = 0;
-            for (row_bytes) |byte| {
-                for (0..8) |bit| {
-                    if (tile_index >= font_bdf.width) break;
-                    const bit_u3: u3 = @intCast(bit);
-                    if ((byte & (@as(u8, 0x80) >> bit_u3)) != 0) {
-                        const row_u8: u8 = @intCast(row);
-                        try clock.interface.setTile(clock.interface.ctx, row_u8 + self.pos.y, tile_index + self.pos.x, self.color);
-                    }
-                    tile_index += 1;
-                }
-            }
+    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
+        const self: *const TextComponent = @ptrCast(@alignCast(ctx));
+
+        var char_x = self.pos.x;
+        const font = try self.font.font();
+
+        for (self.text) |char| {
+            try drawChar(clock, self.pos.y, char_x, font, char, self.color);
+            char_x += font.width;
         }
     }
 };

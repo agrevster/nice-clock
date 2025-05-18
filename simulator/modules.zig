@@ -24,6 +24,13 @@ const letter_a = components.CharComponent{
     .font = .Font5x8_2,
 };
 
+const hello = components.TextComponent{
+    .color = common.Color{ .b = 255, .g = 0, .r = 255 },
+    .pos = components.ComponentPos{ .x = 5, .y = 20 },
+    .text = "Hello",
+    .font = .Font5x8,
+};
+
 pub const test_module = common.module.ClockModule{
     .name = "Test",
     .time_limit_s = 5,
@@ -31,6 +38,7 @@ pub const test_module = common.module.ClockModule{
         .components = &[_]components.Component{
             red_box.component(),
             letter_a.component(),
+            hello.component(),
         },
     },
 };
