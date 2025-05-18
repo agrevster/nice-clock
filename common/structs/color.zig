@@ -1,5 +1,6 @@
 const std = @import("std");
 
+/// Used to represent RGB colors
 pub const ClockColor = struct {
     r: u8,
     g: u8,

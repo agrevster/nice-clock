@@ -318,6 +318,11 @@ test "big font" {
     }
 }
 
+///This enum is used to owns and stores all the BDF fonts used by the clock.
+///Each field in the enum corresponds to a file in `./assets/fonts`
+///Example: **Font5x8** = `./assets/fonts/5x8.bdf`
+///To add a new font simply add a new enum field with the name of the new font you want added.
+///`init` loads all the fonts *(this is expensive)* and when you're done with them run `deinit`.
 pub const FontStore = enum {
     Font5x8,
     Font5x8_2,
@@ -332,11 +337,13 @@ pub const FontStore = enum {
     var fonts: [@typeInfo(FontStore).@"enum".fields.len]BDF = undefined;
     var fonts_initalized = false;
 
+    ///Returns a loaded BDF font for the enum field owned by the font store.
     pub fn font(self: FontStore) FontStoreError!BDF {
         if (!fonts_initalized) return FontStoreError.FontStoreNotInitialized;
         return fonts[@intFromEnum(self)];
     }
 
+    ///Loads the font files, and parses them, allowing you to call the `font` function on a enum field and get a BDF in return.
     pub fn init(allocator: std.mem.Allocator) !void {
         if (fonts_initalized) return FontStoreError.FontStoreAlreadyInitialized;
         const font_file_names = @typeInfo(FontStore).@"enum".fields;
@@ -348,12 +355,15 @@ pub const FontStore = enum {
         fonts_initalized = true;
     }
 
+    ///Calls `deinit` on all the loaded BDF fonts.
     pub fn deinit(allocator: std.mem.Allocator) void {
         for (0..fonts.len) |i| {
             fonts[i].deinit(allocator);
         }
+        fonts_initalized = false;
     }
 
+    ///Attempts to read the contents of a .bdf file located at `./assets/fonts/` and parse a BDF from the text in the file.
     fn loadFontFromFile(allocator: std.mem.Allocator, font_name: []const u8) !BDF {
         var arena = std.heap.ArenaAllocator.init(allocator);
         defer arena.deinit();

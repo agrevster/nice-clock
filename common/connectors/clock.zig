@@ -5,11 +5,13 @@ pub const ClockConnectorError = error{EventLoopAlreadyStarted};
 
 const logger = std.log.scoped(.common_connector);
 
+/// Used by all clock platforms to handle essential features like modules, fonts and images.
 pub const CommonConnector = struct {
     interface: common.Connector.ConnectorInterface,
     has_event_loop_started: bool,
     modules: []const common.module.ClockModule,
 
+    /// Used to start up the clock, should only be called once
     pub fn startClock(self: *CommonConnector, is_active: *bool) ClockConnectorError!void {
         if (self.has_event_loop_started) return ClockConnectorError.EventLoopAlreadyStarted;
         self.has_event_loop_started = true;

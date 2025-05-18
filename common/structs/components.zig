@@ -6,25 +6,39 @@ const math = std.math;
 const Clock = common.Clock;
 const Color = common.Color;
 
-const logger = std.log.scoped(.Components);
+const logger = std.log.scoped(.components);
 
 const OverflowError = error{Overflow};
 
 pub const ComponentError = error{ TileOutOfBounds, TimerUnsupported, InvalidArgument };
 
+/// Used to specify the position of a component on the clock's screen.
 pub const ComponentPos = struct {
     x: u8,
     y: u8,
 };
 
+///Components are the building blocks of clock modules.
+///Each component struct should have a method *(methods have *@This)* called `component` that returns a `Component`
+///
+/// `ctx` should point to a component struct's `@This`
+/// `draw` should point to a function used to draw the component.
+///
+/// If you need to a access `*@This` in draw use this block
+///
+/// ```zig
+/// const self: *const @This = @ptrCast(@alignCast(ctx));
+/// ````
 pub const Component = struct {
     ctx: *const anyopaque,
     draw: *const fn (ctx: *const anyopaque, clock: *Clock) ComponentError!void,
 };
 
+///Each module has a root component which is responsible for drawing every component
 pub const RootComponent = struct {
     components: []const Component,
 
+    ///This function draws each component in order. It redraws each component `fps` time per second and stop drawing after `time_limit_s` seconds.
     pub fn render(self: *const RootComponent, clock: *Clock, fps: u8, time_limit_s: u64) ComponentError!void {
         const u64_fps: u64 = @intCast(fps);
 
@@ -48,6 +62,7 @@ pub const RootComponent = struct {
     }
 };
 
+///Used to represent single tiles on the screen, at position `pos` and of color `color`.
 pub const TileComponent = struct {
     pos: ComponentPos,
     color: Color,
@@ -62,6 +77,7 @@ pub const TileComponent = struct {
     }
 };
 
+///Used to represent a rectangle on the screen of a given width and height.
 pub const BoxComponent = struct {
     pos: ComponentPos,
     width: u8,
@@ -92,6 +108,8 @@ pub const BoxComponent = struct {
     }
 };
 
+///Used to represent a circle on the screen.
+///*The outline thickness can be used to fill in the circle.*
 pub const CircleComponent = struct {
     pos: ComponentPos,
     radius: u8,
@@ -143,6 +161,7 @@ pub const CircleComponent = struct {
     }
 };
 
+///Used to draw a single glyph from the given `font` on the screen.
 pub const CharComponent = struct {
     pos: ComponentPos,
     font: *common.BDF,
