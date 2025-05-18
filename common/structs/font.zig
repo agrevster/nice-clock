@@ -318,7 +318,7 @@ test "big font" {
     }
 }
 
-///This enum is used to owns and stores all the BDF fonts used by the clock.
+///This enum is used to own and store all the BDF fonts used by the clock.
 ///Each field in the enum corresponds to a file in `./assets/fonts`
 ///Example: **Font5x8** = `./assets/fonts/5x8.bdf`
 ///To add a new font simply add a new enum field with the name of the new font you want added.
@@ -332,7 +332,7 @@ pub const FontStore = enum {
     Font7x14,
     Font12x24,
 
-    const FontStoreError = error{ FontStoreNotInitialized, FontStoreAlreadyInitialized };
+    pub const FontStoreError = error{ FontStoreNotInitialized, FontStoreAlreadyInitialized };
 
     var fonts: [@typeInfo(FontStore).@"enum".fields.len]BDF = undefined;
     var fonts_initalized = false;
@@ -350,6 +350,7 @@ pub const FontStore = enum {
 
         inline for (font_file_names, 0..) |font_file_name, i| {
             const ff = try loadFontFromFile(allocator, font_file_name.name[4..]);
+            errdefer ff.deinit(allocator);
             fonts[i] = ff;
         }
         fonts_initalized = true;

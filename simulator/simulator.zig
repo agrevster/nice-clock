@@ -12,8 +12,9 @@ fn start(clock: *Clock, logger: anytype, is_active: *bool) void {
 }
 
 pub fn main() void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var allocator = arena.allocator();
+    defer arena.deinit();
     const logger = std.log.scoped(.Simulator);
 
     var tiles: [32][64]common.Color = undefined;
@@ -24,12 +25,23 @@ pub fn main() void {
         }
     }
 
+    if (common.font.FontStore.init(allocator)) {} else |err| {
+        logger.err("{s}", .{@errorName(err)});
+    }
+
     var connector = Connector{
         .blank_tiles = tiles,
         .tile_pointer = &tiles,
     };
 
-    var clock = Clock{ .interface = connector.connectorInterface(), .has_event_loop_started = false, .modules = &[_]common.module.ClockModule{ modules.test_module, modules.test_module2 } };
+    var clock = Clock{
+        .interface = connector.connectorInterface(),
+        .has_event_loop_started = false,
+        .modules = &[_]common.module.ClockModule{
+            modules.test_module,
+        },
+        .allocator = &allocator,
+    };
 
     var is_active: bool = true;
 
@@ -37,10 +49,10 @@ pub fn main() void {
         logger.info("Started clock connector...", .{});
     } else |err| switch (err) {
         error.Unexpected => logger.err("There was an unexpected error with the clock thread!", .{}),
-        else => |any_err| logger.err("There was an error with the clock thread: {}", .{@TypeOf(any_err)}),
+        else => |any_err| logger.err("There was an error with the clock thread: {s}", .{@errorName(any_err)}),
     }
 
     if (renderer.startSimulator(logger, &tiles, &is_active)) {} else |err| {
-        logger.err("There was an error with the simulator window: {}", .{err});
+        logger.err("There was an error with the simulator window: {s}", .{@errorName(err)});
     }
 }

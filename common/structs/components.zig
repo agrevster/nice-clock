@@ -10,7 +10,7 @@ const logger = std.log.scoped(.components);
 
 const OverflowError = error{Overflow};
 
-pub const ComponentError = error{ TileOutOfBounds, TimerUnsupported, InvalidArgument };
+pub const ComponentError = error{ TileOutOfBounds, TimerUnsupported, InvalidArgument } || common.font.FontStore.FontStoreError;
 
 /// Used to specify the position of a component on the clock's screen.
 pub const ComponentPos = struct {
@@ -164,21 +164,22 @@ pub const CircleComponent = struct {
 ///Used to draw a single glyph from the given `font` on the screen.
 pub const CharComponent = struct {
     pos: ComponentPos,
-    font: *common.BDF,
-    text: u8,
+    font: common.font.FontStore,
+    char: u8,
     color: Color,
 
-    pub fn component(self: *const TileComponent) Component {
+    pub fn component(self: *const CharComponent) Component {
         return Component{ .ctx = self, .draw = &draw };
     }
 
     fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
         const self: *const CharComponent = @ptrCast(@alignCast(ctx));
 
-        const glyph = self.font.glyphs.get(self.char) orelse self.font.glyphs.get(self.font.default_char).?;
-        const bytes_per_row = (self.font.width + 7) / 8;
+        const font_bdf = try self.font.font();
+        const glyph = font_bdf.glyphs.get(self.char) orelse font_bdf.glyphs.get(font_bdf.default_char).?;
+        const bytes_per_row = (font_bdf.width + 7) / 8;
 
-        for (0..self.font.height) |row| {
+        for (0..font_bdf.height) |row| {
             const row_start = row * bytes_per_row;
             const row_end = row_start + bytes_per_row;
             const row_bytes = glyph[row_start..row_end];
@@ -186,10 +187,11 @@ pub const CharComponent = struct {
             var tile_index: u8 = 0;
             for (row_bytes) |byte| {
                 for (0..8) |bit| {
-                    if (tile_index >= self.font.width) break;
+                    if (tile_index >= font_bdf.width) break;
                     const bit_u3: u3 = @intCast(bit);
                     if ((byte & (@as(u8, 0x80) >> bit_u3)) != 0) {
-                        clock.interface.setTile(clock, row + self.pos.y, tile_index + self.pos.x, self.color);
+                        const row_u8: u8 = @intCast(row);
+                        try clock.interface.setTile(clock.interface.ctx, row_u8 + self.pos.y, tile_index + self.pos.x, self.color);
                     }
                     tile_index += 1;
                 }

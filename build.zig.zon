@@ -15,8 +15,8 @@
 
     .dependencies = .{
         .SDL = .{
-            .url = "git+https://github.com/aidanaden/SDL#2eb04285b3cd21ce692f7642f54eb72a573031f3",
-            .hash = "SDL-0.0.0-rR2QyFdqAACizEzl96ncXC0i99GpqdbhmvZbecMqSX2I",
+            .url = "https://github.com/agrevster/ZIG-SDL/archive/refs/tags/1.1.tar.gz",
+            .hash = "SDL-0.0.0-rR2QyENqAACksFSn6S9BieQnMTnY3nicFXhpcAjqiKXg",
         },
     },
     .paths = .{

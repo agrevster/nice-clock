@@ -17,6 +17,20 @@ const blue_box = components.BoxComponent{
     .width = 5,
 };
 
-pub const test_module = common.module.ClockModule{ .name = "Test", .time_limit_s = 5, .root_component = components.RootComponent{ .components = &[_]components.Component{red_box.component()} } };
+const letter_a = components.CharComponent{
+    .color = common.Color{ .b = 255, .g = 255, .r = 0 },
+    .pos = components.ComponentPos{ .x = 10, .y = 10 },
+    .char = 'A',
+    .font = .Font5x8_2,
+};
 
-pub const test_module2 = common.module.ClockModule{ .name = "Test2", .time_limit_s = 5, .root_component = components.RootComponent{ .components = &[_]components.Component{blue_box.component()} } };
+pub const test_module = common.module.ClockModule{
+    .name = "Test",
+    .time_limit_s = 5,
+    .root_component = components.RootComponent{
+        .components = &[_]components.Component{
+            red_box.component(),
+            letter_a.component(),
+        },
+    },
+};

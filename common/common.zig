@@ -6,10 +6,10 @@ pub const Connector = @import("connectors/connectorInterface.zig");
 pub const Clock = @import("connectors/clock.zig").CommonConnector;
 pub const ClockError = @import("connectors/clock.zig").ClockConnectorError;
 pub const components = @import("structs/components.zig");
-pub const BDF = @import("structs/bdf.zig").BDF;
+pub const font = @import("structs/font.zig");
 pub const module = @import("structs/module.zig");
 pub const constants = @import("constants.zig");
 
 test "Nice Clock Units Tests" {
-    testing.refAllDecls(BDF);
+    testing.refAllDecls(font);
 }

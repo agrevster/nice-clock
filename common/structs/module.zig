@@ -25,7 +25,8 @@ pub const ClockModule = struct {
     ///Displays the module on the clock's screen.
     pub fn render(self: *ClockModule, clock: *common.Clock) void {
         self.root_component.render(clock, common.constants.fps, self.time_limit_s) catch |err| {
-            logger.err("[{s}] - {}", .{ self.name, @TypeOf(err) });
+            logger.err("[{s}]: {s}", .{ self.name, @errorName(err) });
+            clock.has_event_loop_started = false;
         };
     }
 };
