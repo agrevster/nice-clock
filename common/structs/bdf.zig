@@ -18,11 +18,6 @@ pub const BDF = struct {
         self.glyphs.deinit();
     }
 
-    ///Determines the position of a bit, used for rendering glyphs.
-    pub fn bit_at(bits: u8, pos: u3) bool {
-        return 1 == (bits >> pos);
-    }
-
     ///Parsed a BDF font file into a `BDF` struct.
     pub fn parseBDF(allocator: std.mem.Allocator, input: []const u8) !BDF {
         var lines = std.mem.tokenizeSequence(u8, input, "\n");
@@ -36,6 +31,16 @@ pub const BDF = struct {
         var current_char: ?u16 = null;
         var in_bitmap = false;
         var bitmap = std.ArrayList(u8).init(allocator);
+
+        // If there is an error be sure to free everything
+        errdefer {
+            var it = glyphs.valueIterator();
+            while (it.next()) |glyph| {
+                allocator.free(glyph.*);
+            }
+            glyphs.deinit();
+            bitmap.deinit();
+        }
 
         while (lines.next()) |line| {
             const trimmed = std.mem.trim(u8, line, " \r\n");
@@ -59,8 +64,13 @@ pub const BDF = struct {
                 current_char = null;
                 in_bitmap = false;
             } else if (in_bitmap) {
-                const byte = try parseInt(u8, trimmed, 16);
-                try bitmap.append(byte);
+                const bytes = try parseInt(u16, trimmed, 16);
+                const num_bytes = (trimmed.len + 1) / 2;
+                for (0..num_bytes) |i| {
+                    const shift: u4 = @intCast(8 * (num_bytes - 1 - i));
+                    const byte: u8 = @intCast((bytes >> shift) & 0xFF);
+                    try bitmap.append(byte);
+                }
             }
         }
 
@@ -254,4 +264,196 @@ test {
         }
         std.debug.print("\n", .{});
     }
+}
+test "big font" {
+    const font_input =
+        \\FONT -misc-spleen-medium-r-normal--24-240-72-72-C-120-ISO10646-1
+        \\SIZE 24 72 72
+        \\FONTBOUNDINGBOX 12 24 0 -5
+        \\STARTPROPERTIES 20
+        \\FAMILY_NAME "Spleen"
+        \\WEIGHT_NAME "Medium"
+        \\FONT_VERSION "2.1.0"
+        \\FOUNDRY "misc"
+        \\SLANT "R"
+        \\SETWIDTH_NAME "Normal"
+        \\PIXEL_SIZE 24
+        \\POINT_SIZE 240
+        \\RESOLUTION_X 72
+        \\RESOLUTION_Y 72
+        \\SPACING "C"
+        \\AVERAGE_WIDTH 120
+        \\CHARSET_REGISTRY "ISO10646"
+        \\CHARSET_ENCODING "1"
+        \\MIN_SPACE 12
+        \\FONT_ASCENT 19
+        \\FONT_DESCENT 5
+        \\COPYRIGHT "Copyright (c) 2018-2024, Frederic Cambus"
+        \\DEFAULT_CHAR 32
+        \\_GBDFED_INFO "Edited with gbdfed 1.6."
+        \\ENDPROPERTIES
+        \\CHARS 916
+        \\STARTCHAR SPACE
+        \\ENCODING 32
+        \\SWIDTH 500 0
+        \\DWIDTH 12 0
+        \\BBX 12 24 0 -5
+        \\BITMAP
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\ENDCHAR
+        \\STARTCHAR EXCLAMATION MARK
+        \\ENCODING 33
+        \\SWIDTH 500 0
+        \\DWIDTH 12 0
+        \\BBX 12 24 0 -5
+        \\BITMAP
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0600
+        \\0600
+        \\0600
+        \\0600
+        \\0600
+        \\0600
+        \\0600
+        \\0600
+        \\0600
+        \\0600
+        \\0600
+        \\0000
+        \\0000
+        \\0600
+        \\0600
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\0000
+        \\ENDCHAR
+    ;
+    var font = try BDF.parseBDF(std.testing.allocator, font_input);
+    defer font.deinit(std.testing.allocator);
+    std.debug.print("\n\nFONT WIDTH x HEIGHT: {d} x {d}\n", .{ font.width, font.height });
+    std.debug.print("DEFAULT_CHAR: {d}\n", .{font.default_char});
+    std.debug.print("Glyphs Capacity: {d}\n", .{font.glyphs.capacity()});
+
+    try std.testing.expect(font.width == 12);
+    try std.testing.expect(font.height == 24);
+    try std.testing.expect(font.default_char == 32);
+
+    const glyph = font.glyphs.get('!').?;
+
+    const bytes_per_row = (font.width + 7) / 8;
+
+    for (0..font.height) |row| {
+        const row_start = row * bytes_per_row;
+        const row_end = row_start + bytes_per_row;
+        const row_bytes = glyph[row_start..row_end];
+
+        var tile_index: u8 = 0;
+        for (row_bytes) |byte| {
+            for (0..8) |bit| {
+                if (tile_index >= font.width) break;
+                const bit_u3: u3 = @intCast(bit);
+                if ((byte & (@as(u8, 0x80) >> bit_u3)) != 0) {
+                    std.debug.print("#", .{});
+                } else {
+                    std.debug.print(".", .{});
+                }
+                tile_index += 1;
+            }
+        }
+        std.debug.print("\n", .{});
+    }
+}
+
+pub const FontStore = enum {
+    Font5x8,
+    Font5x8_2,
+    Font6x12,
+    Font6x13,
+    Font7x13,
+    Font7x14,
+    Font12x24,
+
+    const FontStoreError = error{ FontStoreNotInitialized, FontStoreAlreadyInitialized };
+
+    var fonts: [@typeInfo(FontStore).@"enum".fields.len]BDF = undefined;
+    var fonts_initalized = false;
+
+    pub fn font(self: FontStore) FontStoreError!BDF {
+        if (!fonts_initalized) return FontStoreError.FontStoreNotInitialized;
+        return fonts[@intFromEnum(self)];
+    }
+
+    pub fn init(allocator: std.mem.Allocator) !void {
+        if (fonts_initalized) return FontStoreError.FontStoreAlreadyInitialized;
+        const font_file_names = @typeInfo(FontStore).@"enum".fields;
+
+        inline for (font_file_names, 0..) |font_file_name, i| {
+            const ff = try loadFontFromFile(allocator, font_file_name.name[4..]);
+            fonts[i] = ff;
+        }
+        fonts_initalized = true;
+    }
+
+    pub fn deinit(allocator: std.mem.Allocator) void {
+        for (0..fonts.len) |i| {
+            fonts[i].deinit(allocator);
+        }
+    }
+
+    fn loadFontFromFile(allocator: std.mem.Allocator, font_name: []const u8) !BDF {
+        var arena = std.heap.ArenaAllocator.init(allocator);
+        defer arena.deinit();
+
+        const file_name = try std.fmt.allocPrint(arena.allocator(), "./assets/fonts/{s}.bdf", .{font_name});
+        const font_file = try std.fs.cwd().readFileAlloc(arena.allocator(), file_name, 1000000);
+        return try BDF.parseBDF(allocator, font_file);
+    }
+};
+
+test "loadFontFromFile" {
+    var file_font = try FontStore.loadFontFromFile(std.testing.allocator, "5x8");
+    defer file_font.deinit(std.testing.allocator);
+
+    try std.testing.expect(file_font.width == 5);
+    try std.testing.expect(file_font.height == 8);
+    try std.testing.expect(file_font.default_char == 0);
+}
+
+test "font-store-full" {
+    return error.SkipZigTest;
+    // try FontStore.init(std.testing.allocator);
+    // defer FontStore.deinit(std.testing.allocator);
+    //
+    // const font = try FontStore.Font5x8.font();
+    //
+    // try std.testing.expect(font.width == 5);
+    // try std.testing.expect(font.height == 8);
 }
