@@ -19,14 +19,20 @@ pub const ClockModule = struct {
     time_limit_s: u64,
     ///The type of the module see: `ClockModuleType`
     module_type: ClockModuleType = ClockModuleType.Custom,
+    ///Called whenever a module is initialized, this gives modules a space to make allocations or requests before rendering begins.
+    init: ?*const fn (self: *ClockModule, clock: *common.Clock) void,
+    ///Called whenever a module is deinitialized, meaning that the module is able to free its allocations.
+    deinit: ?*const fn (self: *ClockModule, clock: *common.Clock) void,
 
     const logger = std.log.scoped(.module);
 
     ///Displays the module on the clock's screen.
-    pub fn render(self: *ClockModule, clock: *common.Clock, allocator: std.mem.Allocator) void {
-        self.root_component.render(clock, common.constants.fps, self.time_limit_s, allocator) catch |err| {
+    pub fn render(self: *ClockModule, clock: *common.Clock) void {
+        if (self.init) |init| init(self, clock);
+        self.root_component.render(clock, common.constants.fps, self.time_limit_s) catch |err| {
             logger.err("[{s}]: {s}", .{ self.name, @errorName(err) });
             clock.has_event_loop_started = false;
         };
+        if (self.deinit) |deinit| deinit(self, clock);
     }
 };

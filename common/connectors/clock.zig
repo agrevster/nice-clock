@@ -20,7 +20,7 @@ pub const CommonConnector = struct {
         var current_module = self.modules[0];
 
         while (is_active.*) {
-            current_module.render(self, self.allocator.*);
+            current_module.render(self);
             self.interface.clearScreen(self.interface.ctx);
             current_module = self.modules[std.crypto.random.intRangeAtMost(usize, 0, self.modules.len - 1)];
         }

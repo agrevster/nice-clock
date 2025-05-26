@@ -1,3 +1,4 @@
+const std = @import("std");
 const common = @import("common");
 const components = common.components;
 
@@ -78,6 +79,8 @@ const animation2 = components.AnimationComponent{
 pub const animation_module = common.module.ClockModule{
     .name = "Animation",
     .time_limit_s = 10,
+    .init = null,
+    .deinit = null,
     .root_component = components.RootComponent{
         .components = &[_]components.AnyComponent{
             components.AnyComponent{ .animated = animation1 },
@@ -89,6 +92,8 @@ pub const animation_module = common.module.ClockModule{
 pub const test_module = common.module.ClockModule{
     .name = "Test",
     .time_limit_s = 5,
+    .init = null,
+    .deinit = null,
     .root_component = components.RootComponent{
         .components = &[_]components.AnyComponent{
             components.AnyComponent{ .normal = red_box.component() },

@@ -93,14 +93,14 @@ pub const RootComponent = struct {
     }
 
     ///This function draws each component in order. It redraws each component `fps` time per second and stop drawing after `time_limit_s` seconds.
-    pub fn render(self: *const RootComponent, clock: *Clock, fps: u8, time_limit_s: u64, allocator: std.mem.Allocator) ComponentError!void {
+    pub fn render(self: *const RootComponent, clock: *Clock, fps: u8, time_limit_s: u64) ComponentError!void {
         const u64_fps: u64 = @intCast(fps);
         const sleep_time_ns = time.ns_per_s / u64_fps;
         const fastest_animation: ?i16 = self.getFastestAnimationSpeed();
 
         // Preprocess animated components
-        var timed_animations = allocator.alloc(TimedAnimation, self.components.len) catch return ComponentError.AllocationError;
-        defer allocator.free(timed_animations);
+        var timed_animations = clock.allocator.alloc(TimedAnimation, self.components.len) catch return ComponentError.AllocationError;
+        defer clock.allocator.free(timed_animations);
         var timed_count: usize = 0;
 
         for (self.components) |comp| {
