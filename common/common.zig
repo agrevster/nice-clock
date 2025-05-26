@@ -12,4 +12,5 @@ pub const constants = @import("constants.zig");
 
 test "Nice Clock Units Tests" {
     testing.refAllDecls(font);
+    testing.refAllDecls(components);
 }

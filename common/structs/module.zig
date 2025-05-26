@@ -23,8 +23,8 @@ pub const ClockModule = struct {
     const logger = std.log.scoped(.module);
 
     ///Displays the module on the clock's screen.
-    pub fn render(self: *ClockModule, clock: *common.Clock) void {
-        self.root_component.render(clock, common.constants.fps, self.time_limit_s) catch |err| {
+    pub fn render(self: *ClockModule, clock: *common.Clock, allocator: std.mem.Allocator) void {
+        self.root_component.render(clock, common.constants.fps, self.time_limit_s, allocator) catch |err| {
             logger.err("[{s}]: {s}", .{ self.name, @errorName(err) });
             clock.has_event_loop_started = false;
         };

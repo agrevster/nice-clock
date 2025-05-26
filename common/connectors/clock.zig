@@ -17,12 +17,10 @@ pub const CommonConnector = struct {
         if (self.has_event_loop_started) return ClockConnectorError.EventLoopAlreadyStarted;
         self.has_event_loop_started = true;
 
-        defer common.font.FontStore.deinit(self.allocator.*);
-
         var current_module = self.modules[0];
 
         while (is_active.*) {
-            current_module.render(self);
+            current_module.render(self, self.allocator.*);
             self.interface.clearScreen(self.interface.ctx);
             current_module = self.modules[std.crypto.random.intRangeAtMost(usize, 0, self.modules.len - 1)];
         }

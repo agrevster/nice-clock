@@ -39,6 +39,7 @@ pub fn main() void {
         .has_event_loop_started = false,
         .modules = &[_]common.module.ClockModule{
             modules.test_module,
+            modules.animation_module,
         },
         .allocator = &allocator,
     };

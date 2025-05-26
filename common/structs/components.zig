@@ -10,7 +10,7 @@ const logger = std.log.scoped(.components);
 
 const OverflowError = error{Overflow};
 
-pub const ComponentError = error{ TileOutOfBounds, TimerUnsupported, InvalidArgument } || common.font.FontStore.FontStoreError;
+pub const ComponentError = error{ TileOutOfBounds, TimerUnsupported, InvalidArgument, AllocationError } || common.font.FontStore.FontStoreError;
 
 /// Used to specify the position of a component on the clock's screen.
 pub const ComponentPos = struct {
@@ -34,30 +34,115 @@ pub const Component = struct {
     draw: *const fn (ctx: *const anyopaque, clock: *Clock) ComponentError!void,
 };
 
+///This struct represents a `Component` with an animation. Duration is how many ticks the animation lasts while speed is used to specify how long in between ticks.
+pub const AnimationComponent = struct {
+    component: Component,
+    update_animation: *const fn (clock: *Clock, frame_number: u32) void,
+    duration: u32,
+    loop: bool,
+    speed: i16,
+
+    pub fn timed_animation(self: *const AnimationComponent) TimedAnimation {
+        return TimedAnimation{
+            .base = self.*,
+            .internal_frame = 0,
+        };
+    }
+};
+
+///An internal wrapper used to ensure that animations update only when they should.
+pub const TimedAnimation = struct {
+    base: AnimationComponent,
+    internal_frame: u32,
+
+    pub fn update_animation(self: *TimedAnimation, clock: *Clock, global_frame: u32) void {
+        // Stop updating if we're not looping and have reached the end
+        if (self.base.duration > 0 and !self.base.loop and self.internal_frame >= self.base.duration) {
+            return;
+        }
+
+        // Advance animation only every `speed` frames
+        const u32_speed: u32 = @intCast(self.base.speed);
+        if (self.base.speed > 0 and global_frame % u32_speed == 0) {
+            self.base.update_animation(clock, self.internal_frame);
+            self.internal_frame += 1;
+
+            if (self.base.loop and self.internal_frame >= self.base.duration) {
+                self.internal_frame = 0;
+            }
+        }
+    }
+};
+
+pub const AnyComponent = union(enum) { animated: AnimationComponent, normal: Component };
+
 ///Each module has a root component which is responsible for drawing every component
 pub const RootComponent = struct {
-    components: []const Component,
+    components: []const AnyComponent,
+
+    ///Returns the speed of the fastest child's animation updates or `null` if there are no animated components. *or animated components with 0 as speed*
+    fn getFastestAnimationSpeed(self: *const RootComponent) ?i16 {
+        var max: i16 = 0;
+        for (self.components) |any_component| {
+            if (any_component == AnyComponent.animated) {
+                const animation = any_component.animated;
+                if (animation.speed > max) max = animation.speed;
+            }
+        }
+        return if (max == 0) null else max;
+    }
 
     ///This function draws each component in order. It redraws each component `fps` time per second and stop drawing after `time_limit_s` seconds.
-    pub fn render(self: *const RootComponent, clock: *Clock, fps: u8, time_limit_s: u64) ComponentError!void {
+    pub fn render(self: *const RootComponent, clock: *Clock, fps: u8, time_limit_s: u64, allocator: std.mem.Allocator) ComponentError!void {
         const u64_fps: u64 = @intCast(fps);
+        const sleep_time_ns = time.ns_per_s / u64_fps;
+        const fastest_animation: ?i16 = self.getFastestAnimationSpeed();
+
+        // Preprocess animated components
+        var timed_animations = allocator.alloc(TimedAnimation, self.components.len) catch return ComponentError.AllocationError;
+        defer allocator.free(timed_animations);
+        var timed_count: usize = 0;
+
+        for (self.components) |comp| {
+            if (comp == AnyComponent.animated) {
+                timed_animations[timed_count] = comp.animated.timed_animation();
+                timed_count += 1;
+            }
+        }
+
+        // Sort animations by speed so that they redraw in the correct order.
+        std.mem.sort(TimedAnimation, timed_animations, {}, struct {
+            fn less_than(_: void, a: TimedAnimation, b: TimedAnimation) bool {
+                return b.base.speed < a.base.speed;
+            }
+        }.less_than);
 
         var timer = try std.time.Timer.start();
         var frame: u32 = 0;
 
         timer.reset();
+
         while (true) {
             if ((timer.read() / time.ns_per_s) > time_limit_s) break;
-
             clock.interface.clearScreen(clock.interface.ctx);
 
-            for (self.*.components) |component| {
-                try component.draw(component.ctx, clock);
+            // Draw normal components
+            for (self.components) |comp| {
+                if (comp == AnyComponent.normal) {
+                    try comp.normal.draw(comp.normal.ctx, clock);
+                }
+            }
+
+            // Update + draw animated components
+            for (timed_animations[0..timed_count]) |*timed| {
+                timed.update_animation(clock, frame);
+                if (fastest_animation != null and fastest_animation == timed.base.speed) clock.interface.clearScreen(clock.interface.ctx);
+                try timed.base.component.draw(timed.base.component.ctx, clock);
             }
 
             frame += 1;
             clock.interface.updateScreen(clock.interface.ctx);
-            std.time.sleep(time.ns_per_s / u64_fps);
+            std.time.sleep(sleep_time_ns);
         }
     }
 };
