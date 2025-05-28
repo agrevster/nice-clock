@@ -18,7 +18,7 @@ pub const BDF = struct {
         self.glyphs.deinit();
     }
 
-    ///Parsed a BDF font file into a `BDF` struct.
+    ///Parses a BDF font file into a `BDF` struct.
     pub fn parseBDF(allocator: std.mem.Allocator, input: []const u8) !BDF {
         var lines = std.mem.tokenizeSequence(u8, input, "\n");
 

@@ -25,8 +25,5 @@
         "common",
         "hardware",
         "simulator",
-        // For example...
-        //"LICENSE",
-        //"README.md",
     },
 }
