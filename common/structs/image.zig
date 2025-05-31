@@ -69,6 +69,66 @@ pub const PPM = struct {
     }
 };
 
+///Used to store images for a module. Each module has its own store which is initialized when the module is and destroyed when the module is done rendering.
+///
+///**Call the** `init` **function to create.**
+const ImageStore = struct {
+    image_map: std.StringHashMap(PPM),
+    allocator: std.mem.Allocator,
+
+    pub const Error = error{ InvalidFile, ImageLoadingError, ImageNotInStore, OutOfMemory };
+
+    const logger = std.log.scoped(.image_store);
+
+    ///Creates an image store
+    pub fn init(allocator: std.mem.Allocator) ImageStore {
+        return ImageStore{
+            .image_map = std.StringHashMap(PPM).init(allocator),
+            .allocator = allocator,
+        };
+    }
+
+    ///Deallocates the memory created by `init` as well as all of the images.
+    pub fn deinit(self: *ImageStore) void {
+        var it = self.image_map.valueIterator();
+
+        while (it.next()) |entry| {
+            entry.deinit(self.allocator);
+        }
+        self.image_map.deinit();
+    }
+
+    ///Adds an image to the store, this parses `assets/{IMAGE_NAME}.ppm`.
+    pub fn add_image(self: *ImageStore, image_filename: []const u8) Error!void {
+        const image_file = try load_image_from_file(self.allocator, image_filename);
+        try self.image_map.put(image_filename, image_file);
+    }
+
+    ///Gets an image from the store. If it is not there a `ImageNotInStore` error will be returned.
+    pub fn get_image(self: *ImageStore, image_filename: []const u8) Error!PPM {
+        if (!self.image_map.contains(image_filename)) return Error.ImageNotInStore;
+        return self.image_map.get(image_filename).?;
+    }
+
+    fn load_image_from_file(allocator: std.mem.Allocator, image_name: []const u8) Error!PPM {
+        var arena = std.heap.ArenaAllocator.init(allocator);
+        defer arena.deinit();
+
+        const file_name = std.fmt.allocPrint(arena.allocator(), "./assets/images/{s}.ppm", .{image_name}) catch return Error.OutOfMemory;
+        const image_file = std.fs.cwd().readFileAlloc(arena.allocator(), file_name, 1000000) catch |e| switch (e) {
+            error.FileNotFound => return Error.InvalidFile,
+            inline else => {
+                logger.err("Error loading image from file: {s} -> {s}", .{ file_name, @errorName(e) });
+                return error.ImageLoadingError;
+            },
+        };
+        return PPM.parsePPM(allocator, image_file) catch |e| {
+            logger.err("Error parsing PPM: {s} -> {s}", .{ file_name, @errorName(e) });
+            return Error.ImageLoadingError;
+        };
+    }
+};
+
 test {
     const image_file = try std.fs.cwd().readFileAlloc(testing.allocator, "./assets/images/test.ppm", 1000000);
     var ppm = try PPM.parsePPM(testing.allocator, image_file);
@@ -93,4 +153,22 @@ test {
         }
         std.debug.print("\n", .{});
     }
+}
+
+test "load_image_from_file" {
+    var file = try ImageStore.load_image_from_file(testing.allocator, "test");
+    file.deinit(testing.allocator);
+
+    try testing.expect(file.width == 5);
+    try testing.expect(file.height == 8);
+}
+
+test "ImageStore" {
+    var store = ImageStore.init(testing.allocator);
+    defer store.deinit();
+
+    try store.add_image("test");
+    const file = try store.get_image("test");
+    try testing.expect(file.width == 5);
+    try testing.expect(file.height == 8);
 }
