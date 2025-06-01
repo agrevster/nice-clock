@@ -311,6 +311,56 @@ pub const TextComponent = struct {
     }
 };
 
+///Used to draw text from a given `font` on the screen.
+///When the text reaches the edge of the screen or the char `\n` is found it gets wrapped down to the next line.
+pub const WrappedTextComponent = struct {
+    pos: ComponentPos,
+    font: common.font.FontStore,
+    text: []const u8,
+    color: Color,
+    ///Used to specify how many additional tiles are between each line. Negative entries are acceptable.
+    line_spacing: i8 = 0,
+
+    pub fn component(self: *const WrappedTextComponent) Component {
+        return Component{ .ctx = self, .draw = &draw };
+    }
+
+    ///Allows for addition of negative i8 `spacing` to u8 `initial`.
+    ///*If the number is negative returns `0`*
+    //This is pretty clumsy but it does the job, and fingers crossed no one will overflow because the screen is only 64x32
+    fn process_spacing(initial: u8, spacing: i8) u8 {
+        var x = initial;
+
+        if (spacing >= 0) {
+            x += @as(u8, @intCast(spacing));
+        } else {
+            x -= @as(u8, @intCast(@abs(spacing)));
+        }
+
+        return x;
+    }
+
+    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
+        const self: *const WrappedTextComponent = @ptrCast(@alignCast(ctx));
+
+        var y = self.pos.y;
+        var x = self.pos.x;
+        const font = try self.font.font();
+
+        for (self.text) |char| {
+            if (x + font.width >= 64) {
+                x = self.pos.x;
+
+                y += process_spacing(font.height, self.line_spacing);
+
+                if (y > 31 - font.height) break; //We don't want to draw text off the screen
+            }
+            try drawChar(clock, y, x, font, char, self.color);
+            x += font.width;
+        }
+    }
+};
+
 ///Used to draw an image onto the screen.
 pub const ImageComponent = struct {
     pos: ComponentPos,

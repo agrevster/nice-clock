@@ -81,6 +81,14 @@ const test_image_component = components.ImageComponent{
     .image_name = "test",
 };
 
+const long_text = components.WrappedTextComponent{
+    .color = common.Color{ .b = 0, .g = 0, .r = 255 },
+    .pos = components.ComponentPos{ .x = 3, .y = 1 },
+    .text = "Big 4L, I'm a member (yeah) Leave an opp cold, like December (what?) .45 on me, it's a Kimber (and what?) AK knockin' down trees, like timber",
+    .font = .Font5x8,
+    .line_spacing = -1,
+};
+
 pub const animation_module = common.module.ClockModule{
     .name = "Animation",
     .time_limit_s = 10,
@@ -107,6 +115,19 @@ pub const test_module = common.module.ClockModule{
             components.AnyComponent{ .normal = letter_a.component() },
             components.AnyComponent{ .normal = hello.component() },
             components.AnyComponent{ .normal = test_image_component.component() },
+        },
+    },
+};
+
+pub const long_text_module = common.module.ClockModule{
+    .name = "Long Text Test",
+    .time_limit_s = 10,
+    .init = null,
+    .deinit = null,
+    .image_names = null,
+    .root_component = components.RootComponent{
+        .components = &[_]components.AnyComponent{
+            components.AnyComponent{ .normal = long_text.component() },
         },
     },
 };

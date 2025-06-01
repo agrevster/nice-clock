@@ -38,6 +38,7 @@ pub fn main() void {
         .interface = connector.connectorInterface(),
         .has_event_loop_started = false,
         .modules = &[_]common.module.ClockModule{
+            modules.long_text_module,
             modules.test_module,
             modules.animation_module,
         },
