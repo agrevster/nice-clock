@@ -5,14 +5,14 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
 
     const common_lib = b.addModule("common", .{
-        .root_source_file = b.path("common/common.zig"),
+        .root_source_file = b.path("src/common/common.zig"),
         .target = target,
         .optimize = optimize,
     });
 
     const sim_exe = b.addExecutable(.{
         .name = "nice-clock-sim",
-        .root_source_file = b.path("simulator/simulator.zig"),
+        .root_source_file = b.path("src/simulator/simulator.zig"),
         .target = target,
         .optimize = std.builtin.OptimizeMode.Debug,
     });
