@@ -10,7 +10,7 @@ const logger = std.log.scoped(.components);
 
 const OverflowError = error{Overflow};
 
-pub const ComponentError = error{ TileOutOfBounds, TimerUnsupported, InvalidArgument, AllocationError } || common.font.FontStore.FontStoreError;
+pub const ComponentError = error{ TileOutOfBounds, TimerUnsupported, InvalidArgument, AllocationError } || common.font.FontStore.FontStoreError || common.image.ImageStore.Error;
 
 /// Used to specify the position of a component on the clock's screen.
 pub const ComponentPos = struct {
@@ -307,6 +307,33 @@ pub const TextComponent = struct {
         for (self.text) |char| {
             try drawChar(clock, self.pos.y, char_x, font, char, self.color);
             char_x += font.width;
+        }
+    }
+};
+
+///Used to draw an image onto the screen.
+pub const ImageComponent = struct {
+    pos: ComponentPos,
+    image_name: []const u8,
+
+    pub fn component(self: *const ImageComponent) Component {
+        return Component{ .ctx = self, .draw = &draw };
+    }
+
+    const black = common.Color{ .r = 0, .g = 0, .b = 0 };
+
+    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
+        const self: *const ImageComponent = @ptrCast(@alignCast(ctx));
+
+        const image = try clock.image_store.get_image(self.image_name);
+
+        for (0..image.height) |y| {
+            const y_u8: u8 = @intCast(y);
+            for (0..image.width) |x| {
+                const x_u8: u8 = @intCast(x);
+                const pixel = image.pixles[y * image.width + x];
+                if (!pixel.elq(black)) try clock.interface.setTile(clock.interface.ctx, y_u8 + self.pos.y, x_u8 + self.pos.x, pixel);
+            }
         }
     }
 };

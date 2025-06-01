@@ -13,7 +13,7 @@ fn start(clock: *Clock, logger: anytype, is_active: *bool) void {
 
 pub fn main() void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    var allocator = arena.allocator();
+    const allocator = arena.allocator();
     defer arena.deinit();
     const logger = std.log.scoped(.Simulator);
 
@@ -41,7 +41,7 @@ pub fn main() void {
             modules.test_module,
             modules.animation_module,
         },
-        .allocator = &allocator,
+        .allocator = allocator,
     };
 
     var is_active: bool = true;

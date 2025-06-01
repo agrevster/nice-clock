@@ -69,10 +69,10 @@ pub const PPM = struct {
     }
 };
 
-///Used to store images for a module. Each module has its own store which is initialized when the module is and destroyed when the module is done rendering.
+///Used to store images for a module. The clock has one `ImageStore` used to store images for each module.
 ///
 ///**Call the** `init` **function to create.**
-const ImageStore = struct {
+pub const ImageStore = struct {
     image_map: std.StringHashMap(PPM),
     allocator: std.mem.Allocator,
 
@@ -90,11 +90,7 @@ const ImageStore = struct {
 
     ///Deallocates the memory created by `init` as well as all of the images.
     pub fn deinit(self: *ImageStore) void {
-        var it = self.image_map.valueIterator();
-
-        while (it.next()) |entry| {
-            entry.deinit(self.allocator);
-        }
+        self.deinit_all_images();
         self.image_map.deinit();
     }
 
@@ -126,6 +122,25 @@ const ImageStore = struct {
             logger.err("Error parsing PPM: {s} -> {s}", .{ file_name, @errorName(e) });
             return Error.ImageLoadingError;
         };
+    }
+
+    ///Attempts to add all of a module's required images to the image store.
+    pub fn add_images_for_module(self: *ImageStore, module: *common.module.ClockModule) Error!void {
+        if (module.image_names) |image_names| {
+            for (image_names) |image_name| {
+                try self.add_image(image_name);
+            }
+        }
+    }
+
+    ///Clears the image store a deallocates all images stored in it.
+    pub fn deinit_all_images(self: *ImageStore) void {
+        var it = self.image_map.valueIterator();
+
+        while (it.next()) |entry| {
+            entry.deinit(self.allocator);
+        }
+        self.image_map.clearRetainingCapacity();
     }
 };
 

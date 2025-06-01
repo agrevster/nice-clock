@@ -23,6 +23,8 @@ pub const ClockModule = struct {
     init: ?*const fn (self: *ClockModule, clock: *common.Clock) void,
     ///Called whenever a module is deinitialized, meaning that the module is able to free its allocations.
     deinit: ?*const fn (self: *ClockModule, clock: *common.Clock) void,
+    ///Used to tell the clock's image store which images the module needs loaded.
+    image_names: ?[]const []const u8,
 
     const logger = std.log.scoped(.module);
 
@@ -31,7 +33,6 @@ pub const ClockModule = struct {
         if (self.init) |init| init(self, clock);
         self.root_component.render(clock, common.constants.fps, self.time_limit_s) catch |err| {
             logger.err("[{s}]: {s}", .{ self.name, @errorName(err) });
-            clock.has_event_loop_started = false;
         };
         if (self.deinit) |deinit| deinit(self, clock);
     }

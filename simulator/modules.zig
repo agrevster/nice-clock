@@ -76,11 +76,17 @@ const animation2 = components.AnimationComponent{
     .update_animation = &on_animation_update2,
 };
 
+const test_image_component = components.ImageComponent{
+    .pos = components.ComponentPos{ .x = 40, .y = 10 },
+    .image_name = "test",
+};
+
 pub const animation_module = common.module.ClockModule{
     .name = "Animation",
     .time_limit_s = 10,
     .init = null,
     .deinit = null,
+    .image_names = null,
     .root_component = components.RootComponent{
         .components = &[_]components.AnyComponent{
             components.AnyComponent{ .animated = animation1 },
@@ -94,11 +100,13 @@ pub const test_module = common.module.ClockModule{
     .time_limit_s = 5,
     .init = null,
     .deinit = null,
+    .image_names = &[_][]const u8{"test"},
     .root_component = components.RootComponent{
         .components = &[_]components.AnyComponent{
             components.AnyComponent{ .normal = red_box.component() },
             components.AnyComponent{ .normal = letter_a.component() },
             components.AnyComponent{ .normal = hello.component() },
+            components.AnyComponent{ .normal = test_image_component.component() },
         },
     },
 };
