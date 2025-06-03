@@ -10,6 +10,7 @@ pub const font = @import("structs/font.zig");
 pub const image = @import("structs/image.zig");
 pub const module = @import("structs/module.zig");
 pub const constants = @import("constants.zig");
+pub const module_loader = @import("connectors/moduleLoader.zig");
 
 test "Nice Clock Units Tests" {
     testing.refAllDecls(font);

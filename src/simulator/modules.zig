@@ -89,7 +89,7 @@ const long_text = components.WrappedTextComponent{
     .line_spacing = -1,
 };
 
-pub const animation_module = common.module.ClockModule{
+const animation_module = common.module.ClockModule{
     .name = "Animation",
     .time_limit_s = 10,
     .init = null,
@@ -103,7 +103,7 @@ pub const animation_module = common.module.ClockModule{
     },
 };
 
-pub const test_module = common.module.ClockModule{
+const test_module = common.module.ClockModule{
     .name = "Test",
     .time_limit_s = 5,
     .init = null,
@@ -119,7 +119,7 @@ pub const test_module = common.module.ClockModule{
     },
 };
 
-pub const long_text_module = common.module.ClockModule{
+const long_text_module = common.module.ClockModule{
     .name = "Long Text Test",
     .time_limit_s = 10,
     .init = null,
@@ -131,3 +131,28 @@ pub const long_text_module = common.module.ClockModule{
         },
     },
 };
+
+const logger = std.log.scoped(.test_module_loader);
+
+var modules: []common.module.ClockModule = undefined;
+
+fn unload(allocator: *std.mem.Allocator) void {
+    allocator.free(modules);
+}
+fn load(allocator: *std.mem.Allocator) []common.module.ClockModule {
+    if (allocator.alloc(common.module.ClockModule, 3)) |m| {
+        modules = m;
+    } else |err| {
+        logger.err("{s}", .{@errorName(err)});
+    }
+    errdefer allocator.free(modules);
+
+    modules[0] = long_text_module;
+    modules[1] = animation_module;
+    modules[2] = test_module;
+    return modules;
+}
+
+pub fn TestModuleLoader() common.module_loader.ModuleLoaderInterface {
+    return common.module_loader.ModuleLoaderInterface{ .unload = &unload, .load = &load };
+}

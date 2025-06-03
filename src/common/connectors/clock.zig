@@ -1,7 +1,7 @@
 const std = @import("std");
 const common = @import("../common.zig");
 
-pub const ClockConnectorError = error{ EventLoopAlreadyStarted, ErrorLoadingFonts };
+pub const ClockConnectorError = error{ EventLoopAlreadyStarted, NoModules };
 
 const logger = std.log.scoped(.common_connector);
 
@@ -9,7 +9,7 @@ const logger = std.log.scoped(.common_connector);
 pub const CommonConnector = struct {
     interface: common.Connector.ConnectorInterface,
     has_event_loop_started: bool,
-    modules: []const common.module.ClockModule,
+    module_loader: common.module_loader.ModuleLoaderInterface,
     allocator: std.mem.Allocator,
     image_store: common.image.ImageStore = undefined,
 
@@ -18,10 +18,14 @@ pub const CommonConnector = struct {
         if (self.has_event_loop_started) return ClockConnectorError.EventLoopAlreadyStarted;
         self.has_event_loop_started = true;
 
+        const modules = self.module_loader.load(&self.allocator);
+        defer self.module_loader.unload(&self.allocator);
+        if (modules.len == 0) return ClockConnectorError.NoModules;
+
         self.image_store = common.image.ImageStore.init(self.allocator);
         defer self.image_store.deinit();
 
-        var current_module = self.modules[0];
+        var current_module = modules[0];
 
         while (is_active.*) {
             self.image_store.add_images_for_module(&current_module) catch |e| {
@@ -30,7 +34,7 @@ pub const CommonConnector = struct {
             defer self.image_store.deinit_all_images();
             current_module.render(self);
             self.interface.clearScreen(self.interface.ctx);
-            current_module = self.modules[std.crypto.random.intRangeAtMost(usize, 0, self.modules.len - 1)];
+            current_module = modules[std.crypto.random.intRangeAtMost(usize, 0, modules.len - 1)];
         }
     }
 };
