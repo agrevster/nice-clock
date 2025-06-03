@@ -30,14 +30,14 @@ pub const ComponentPos = struct {
 /// const self: *const @This = @ptrCast(@alignCast(ctx));
 /// ````
 pub const Component = struct {
-    ctx: *const anyopaque,
-    draw: *const fn (ctx: *const anyopaque, clock: *Clock) ComponentError!void,
+    ctx: *anyopaque,
+    draw: *const fn (ctx: *anyopaque, clock: *Clock) ComponentError!void,
 };
 
 ///This struct represents a `Component` with an animation. Duration is how many ticks the animation lasts while speed is used to specify how long in between ticks.
 pub const AnimationComponent = struct {
     component: Component,
-    update_animation: *const fn (clock: *Clock, frame_number: u32) void,
+    update_animation: *const fn (ctx: *anyopaque, clock: *Clock, frame_number: u32) void,
     duration: u32,
     loop: bool,
     speed: i16,
@@ -64,7 +64,7 @@ pub const TimedAnimation = struct {
         // Advance animation only every `speed` frames
         const u32_speed: u32 = @intCast(self.base.speed);
         if (self.base.speed > 0 and global_frame % u32_speed == 0) {
-            self.base.update_animation(clock, self.internal_frame);
+            self.base.update_animation(self.base.component.ctx, clock, self.internal_frame);
             self.internal_frame += 1;
 
             if (self.base.loop and self.internal_frame >= self.base.duration) {
@@ -152,12 +152,12 @@ pub const TileComponent = struct {
     pos: ComponentPos,
     color: Color,
 
-    pub fn component(self: *const TileComponent) Component {
+    pub fn component(self: *TileComponent) Component {
         return Component{ .ctx = self, .draw = &draw };
     }
 
     fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
-        const self: *const TileComponent = @ptrCast(@alignCast(ctx));
+        const self: *TileComponent = @ptrCast(@alignCast(ctx));
         try clock.interface.setTile(clock.interface.ctx, self.*.pos.y, self.*.pos.x, self.*.color);
     }
 };
@@ -170,12 +170,12 @@ pub const BoxComponent = struct {
     fill_inside: bool,
     color: Color,
 
-    pub fn component(self: *const BoxComponent) Component {
+    pub fn component(self: *BoxComponent) Component {
         return Component{ .ctx = self, .draw = &draw };
     }
 
-    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
-        const self: *const BoxComponent = @ptrCast(@alignCast(ctx));
+    fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
+        const self: *BoxComponent = @ptrCast(@alignCast(ctx));
         for (self.pos.y..(self.pos.y + self.height)) |y_pos| {
             if (y_pos > 31) continue;
 
@@ -201,7 +201,7 @@ pub const CircleComponent = struct {
     outline_thickness: u8,
     color: Color,
 
-    pub fn component(self: *const CircleComponent) Component {
+    pub fn component(self: *CircleComponent) Component {
         return Component{ .ctx = self, .draw = &draw };
     }
 
@@ -213,8 +213,8 @@ pub const CircleComponent = struct {
         } else |_| {}
     }
 
-    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
-        const self: *const CircleComponent = @ptrCast(@alignCast(ctx));
+    fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
+        const self: *CircleComponent = @ptrCast(@alignCast(ctx));
 
         if (self.radius <= 0) {
             logger.err("Radius value: {} for circle!", .{self.radius});
@@ -277,12 +277,12 @@ pub const CharComponent = struct {
     char: u8,
     color: Color,
 
-    pub fn component(self: *const CharComponent) Component {
+    pub fn component(self: *CharComponent) Component {
         return Component{ .ctx = self, .draw = &draw };
     }
 
-    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
-        const self: *const CharComponent = @ptrCast(@alignCast(ctx));
+    fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
+        const self: *CharComponent = @ptrCast(@alignCast(ctx));
         try drawChar(clock, self.pos.y, self.pos.x, try self.font.font(), self.char, self.color);
     }
 };
@@ -294,12 +294,12 @@ pub const TextComponent = struct {
     text: []const u8,
     color: Color,
 
-    pub fn component(self: *const TextComponent) Component {
+    pub fn component(self: *TextComponent) Component {
         return Component{ .ctx = self, .draw = &draw };
     }
 
-    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
-        const self: *const TextComponent = @ptrCast(@alignCast(ctx));
+    fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
+        const self: *TextComponent = @ptrCast(@alignCast(ctx));
 
         var char_x = self.pos.x;
         const font = try self.font.font();
@@ -321,7 +321,7 @@ pub const WrappedTextComponent = struct {
     ///Used to specify how many additional tiles are between each line. Negative entries are acceptable.
     line_spacing: i8 = 0,
 
-    pub fn component(self: *const WrappedTextComponent) Component {
+    pub fn component(self: *WrappedTextComponent) Component {
         return Component{ .ctx = self, .draw = &draw };
     }
 
@@ -340,8 +340,8 @@ pub const WrappedTextComponent = struct {
         return x;
     }
 
-    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
-        const self: *const WrappedTextComponent = @ptrCast(@alignCast(ctx));
+    fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
+        const self: *WrappedTextComponent = @ptrCast(@alignCast(ctx));
 
         var y = self.pos.y;
         var x = self.pos.x;
@@ -366,13 +366,13 @@ pub const ImageComponent = struct {
     pos: ComponentPos,
     image_name: []const u8,
 
-    pub fn component(self: *const ImageComponent) Component {
+    pub fn component(self: *ImageComponent) Component {
         return Component{ .ctx = self, .draw = &draw };
     }
 
     const black = common.Color{ .r = 0, .g = 0, .b = 0 };
 
-    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
+    fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
         const self: *const ImageComponent = @ptrCast(@alignCast(ctx));
 
         const image = try clock.image_store.get_image(self.image_name);

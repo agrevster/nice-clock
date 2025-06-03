@@ -2,7 +2,7 @@ const std = @import("std");
 const common = @import("common");
 const components = common.components;
 
-const red_box = components.BoxComponent{
+var red_box = components.BoxComponent{
     .color = common.Color{ .r = 255, .g = 0, .b = 0 },
     .fill_inside = false,
     .pos = components.ComponentPos{ .x = 15, .y = 15 },
@@ -10,7 +10,7 @@ const red_box = components.BoxComponent{
     .width = 5,
 };
 
-const blue_box = components.BoxComponent{
+var blue_box = components.BoxComponent{
     .color = common.Color{ .b = 255, .g = 0, .r = 0 },
     .fill_inside = false,
     .pos = components.ComponentPos{ .x = 15, .y = 15 },
@@ -18,14 +18,14 @@ const blue_box = components.BoxComponent{
     .width = 5,
 };
 
-const letter_a = components.CharComponent{
+var letter_a = components.CharComponent{
     .color = common.Color{ .b = 255, .g = 255, .r = 0 },
     .pos = components.ComponentPos{ .x = 10, .y = 10 },
     .char = 'A',
     .font = .Font5x8_2,
 };
 
-const hello = components.TextComponent{
+var hello = components.TextComponent{
     .color = common.Color{ .b = 255, .g = 0, .r = 255 },
     .pos = components.ComponentPos{ .x = 5, .y = 20 },
     .text = "Hello",
@@ -47,17 +47,19 @@ var component_animation1 = components.BoxComponent{
     .pos = components.ComponentPos{ .x = 20, .y = 10 },
 };
 
-fn on_animation_update1(clock: *common.Clock, frame_number: u32) void {
+fn on_animation_update1(ctx: *anyopaque, clock: *common.Clock, frame_number: u32) void {
     _ = clock;
     _ = frame_number;
 
-    component_animation1.fill_inside = !component_animation1.fill_inside;
+    const component: *components.BoxComponent = @ptrCast(@alignCast(ctx));
+    component.fill_inside = !component.fill_inside;
 }
 
-fn on_animation_update2(clock: *common.Clock, frame_number: u32) void {
+fn on_animation_update2(ctx: *anyopaque, clock: *common.Clock, frame_number: u32) void {
     _ = clock;
+    const component: *components.TextComponent = @ptrCast(@alignCast(ctx));
     const frame_number_u8: u8 = @intCast(frame_number);
-    component_animation2.pos.x = frame_number_u8 + 8;
+    component.pos.x = frame_number_u8 + 8;
 }
 
 const animation1 = components.AnimationComponent{
@@ -76,12 +78,12 @@ const animation2 = components.AnimationComponent{
     .update_animation = &on_animation_update2,
 };
 
-const test_image_component = components.ImageComponent{
+var test_image_component = components.ImageComponent{
     .pos = components.ComponentPos{ .x = 40, .y = 10 },
     .image_name = "test",
 };
 
-const long_text = components.WrappedTextComponent{
+var long_text = components.WrappedTextComponent{
     .color = common.Color{ .b = 0, .g = 0, .r = 255 },
     .pos = components.ComponentPos{ .x = 3, .y = 1 },
     .text = "Big 4L, I'm a member (yeah) Leave an opp cold, like December (what?) .45 on me, it's a Kimber (and what?) AK knockin' down trees, like timber",
