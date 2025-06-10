@@ -126,18 +126,18 @@ pub const RootComponent = struct {
             if ((timer.read() / time.ns_per_s) > time_limit_s) break;
             clock.interface.clearScreen(clock.interface.ctx);
 
-            // Draw normal components
-            for (self.components) |comp| {
-                if (comp == AnyComponent.normal) {
-                    try comp.normal.draw(comp.normal.ctx, clock);
-                }
-            }
-
             // Update + draw animated components
             for (timed_animations[0..timed_count]) |*timed| {
                 timed.update_animation(clock, frame);
                 if (fastest_animation != null and fastest_animation == timed.base.speed) clock.interface.clearScreen(clock.interface.ctx);
                 try timed.base.component.draw(timed.base.component.ctx, clock);
+            }
+
+            // Draw normal components
+            for (self.components) |comp| {
+                if (comp == AnyComponent.normal) {
+                    try comp.normal.draw(comp.normal.ctx, clock);
+                }
             }
 
             frame += 1;
@@ -156,9 +156,9 @@ pub const TileComponent = struct {
         return Component{ .ctx = self, .draw = &draw };
     }
 
-    fn draw(ctx: *const anyopaque, clock: *Clock) ComponentError!void {
+    fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
         const self: *TileComponent = @ptrCast(@alignCast(ctx));
-        try clock.interface.setTile(clock.interface.ctx, self.*.pos.y, self.*.pos.x, self.*.color);
+        try clock.interface.setTile(clock.interface.ctx, self.pos.y, self.pos.x, self.color);
     }
 };
 
@@ -246,7 +246,7 @@ pub const CircleComponent = struct {
     }
 };
 
-fn drawChar(clock: *Clock, y_pos: u8, x_pos: u8, font: common.font.BDF, char: u8, color: Color) ComponentError!void {
+fn draw_char(clock: *Clock, y_pos: u8, x_pos: u8, font: common.font.BDF, char: u8, color: Color) ComponentError!void {
     const glyph = font.glyphs.get(char) orelse font.glyphs.get(font.default_char).?;
     const bytes_per_row = (font.width + 7) / 8;
 
@@ -283,7 +283,7 @@ pub const CharComponent = struct {
 
     fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
         const self: *CharComponent = @ptrCast(@alignCast(ctx));
-        try drawChar(clock, self.pos.y, self.pos.x, try self.font.font(), self.char, self.color);
+        try draw_char(clock, self.pos.y, self.pos.x, try self.font.font(), self.char, self.color);
     }
 };
 
@@ -305,7 +305,7 @@ pub const TextComponent = struct {
         const font = try self.font.font();
 
         for (self.text) |char| {
-            try drawChar(clock, self.pos.y, char_x, font, char, self.color);
+            try draw_char(clock, self.pos.y, char_x, font, char, self.color);
             char_x += font.width;
         }
     }
@@ -355,7 +355,7 @@ pub const WrappedTextComponent = struct {
 
                 if (y > 31 - font.height) break; //We don't want to draw text off the screen
             }
-            try drawChar(clock, y, x, font, char, self.color);
+            try draw_char(clock, y, x, font, char, self.color);
             x += font.width;
         }
     }
@@ -383,6 +383,102 @@ pub const ImageComponent = struct {
                 const x_u8: u8 = @intCast(x);
                 const pixel = image.pixles[y * image.width + x];
                 if (!pixel.elq(black)) try clock.interface.setTile(clock.interface.ctx, y_u8 + self.pos.y, x_u8 + self.pos.x, pixel);
+            }
+        }
+    }
+};
+
+///Used to draw text that scrolls across the screen
+///
+///Start pos is used to denote where the text starts appearing from
+///cutoff_x is the x value where the text disappears.
+///text_pos should equal -(start_pos.x) it is used to determine where the text starts out
+pub const HorizontalScrollingTextComponent = struct {
+    start_pos: ComponentPos,
+    font: common.font.FontStore,
+    text: []const u8,
+    color: Color,
+    cutoff_x: u8,
+    text_pos: i32 = -64,
+
+    ///WARNING: This is for internal use only. If you want to draw this use animation()
+    fn component(self: *HorizontalScrollingTextComponent) Component {
+        return Component{ .ctx = self, .draw = &draw };
+    }
+
+    pub fn animation(self: *HorizontalScrollingTextComponent, duration: u32, loop: bool, speed: i16) AnimationComponent {
+        return AnimationComponent{
+            .component = self.component(),
+            .duration = duration,
+            .loop = loop,
+            .speed = speed,
+            .update_animation = &update_animation,
+        };
+    }
+
+    fn update_animation(ctx: *anyopaque, clock: *Clock, frame_number: u32) void {
+        const comp: *HorizontalScrollingTextComponent = @ptrCast(@alignCast(ctx));
+        _ = clock;
+        _ = frame_number;
+        comp.text_pos += 1;
+    }
+
+    fn draw_char_column_if_possible(clock: *Clock, y_pos: u8, x_pos: u8, font: common.font.BDF, char: u8, column: u8, cutof_x: u8, color: Color) ComponentError!void {
+        _ = cutof_x;
+        if (y_pos > 31 or x_pos > 64) return;
+        if (column >= font.width) return;
+        const glyph = font.glyphs.get(char) orelse font.glyphs.get(font.default_char).?;
+        const bytes_per_row = (font.width + 7) / 8;
+
+        for (0..font.height) |row| {
+            const row_start = row * bytes_per_row;
+            const row_bytes = glyph[row_start .. row_start + bytes_per_row];
+
+            const row_u8: u8 = @intCast(row);
+
+            if ((row_u8 + y_pos) > 31) break;
+
+            const byte_index = column / 8;
+
+            const bit_u3: u3 = @intCast(column);
+            const byte = row_bytes[byte_index];
+            if ((byte & (@as(u8, 0x80) >> bit_u3)) != 0) {
+                try clock.interface.setTile(clock.interface.ctx, row_u8 + y_pos, x_pos, color);
+            }
+        }
+    }
+
+    fn get_char_and_y(text: []const u8, font: common.font.BDF, text_pixel_x: usize) ?[2]usize {
+        const char_index: usize = text_pixel_x / font.width;
+        const char_y: usize = text_pixel_x % font.width;
+        if (char_index >= text.len or char_y >= font.width) return null;
+        return [2]usize{ char_index, char_y };
+    }
+
+    fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
+        const self: *HorizontalScrollingTextComponent = @ptrCast(@alignCast(ctx));
+        const font = try self.font.font();
+
+        const text_pixel_length = self.text.len * font.width;
+        const start_pos_i9: i9 = @intCast(self.start_pos.x);
+
+        // Reset the text_pos when the text has all reached
+        if (self.text_pos >= text_pixel_length) self.text_pos = -start_pos_i9;
+
+        for (self.cutoff_x..self.start_pos.x) |x| {
+            const x_i9: i9 = @intCast(x);
+            const text_pixel_x = x_i9 + self.text_pos;
+
+            // Used to make sure that we start at the rightmost corner
+            if (text_pixel_x < 0 or text_pixel_x >= text_pixel_length) {
+                continue;
+            }
+            const text_pixel_x_usize: usize = @intCast(@max(0, text_pixel_x));
+
+            if (get_char_and_y(self.text, font, text_pixel_x_usize)) |info| {
+                const x_u8: u8 = @intCast(x);
+                const column: u8 = @truncate(info[1]);
+                try draw_char_column_if_possible(clock, self.start_pos.y, x_u8, font, self.text[info[0]], column, self.cutoff_x, self.color);
             }
         }
     }

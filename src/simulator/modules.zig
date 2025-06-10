@@ -83,12 +83,23 @@ var test_image_component = components.ImageComponent{
     .image_name = "test",
 };
 
-var long_text = components.WrappedTextComponent{
+var long_text = components.HorizontalScrollingTextComponent{
     .color = common.Color{ .b = 0, .g = 0, .r = 255 },
-    .pos = components.ComponentPos{ .x = 3, .y = 1 },
+    .start_pos = components.ComponentPos{ .x = 50, .y = 10 },
     .text = "Big 4L, I'm a member (yeah) Leave an opp cold, like December (what?) .45 on me, it's a Kimber (and what?) AK knockin' down trees, like timber",
+    // .text = "test",
     .font = .Font5x8,
-    .line_spacing = -1,
+    .text_pos = -50,
+    .cutoff_x = 20,
+};
+
+var start_pos_indicator = components.TileComponent{
+    .pos = .{ .x = 50, .y = 20 },
+    .color = .{ .r = 0, .g = 255, .b = 0 },
+};
+var end_pos_indicator = components.TileComponent{
+    .pos = .{ .x = 20, .y = 20 },
+    .color = .{ .r = 0, .g = 0, .b = 255 },
 };
 
 const animation_module = common.module.ClockModule{
@@ -123,13 +134,15 @@ const test_module = common.module.ClockModule{
 
 const long_text_module = common.module.ClockModule{
     .name = "Long Text Test",
-    .time_limit_s = 10,
+    .time_limit_s = 30,
     .init = null,
     .deinit = null,
     .image_names = null,
     .root_component = components.RootComponent{
         .components = &[_]components.AnyComponent{
-            components.AnyComponent{ .normal = long_text.component() },
+            components.AnyComponent{ .normal = start_pos_indicator.component() },
+            components.AnyComponent{ .normal = end_pos_indicator.component() },
+            components.AnyComponent{ .animated = long_text.animation(1500, true, 3) },
         },
     },
 };
