@@ -423,8 +423,7 @@ pub const HorizontalScrollingTextComponent = struct {
         comp.text_pos += 1;
     }
 
-    fn draw_char_column_if_possible(clock: *Clock, y_pos: u8, x_pos: u8, font: common.font.BDF, char: u8, column: u8, cutof_x: u8, color: Color) ComponentError!void {
-        _ = cutof_x;
+    fn draw_char_column_if_possible(clock: *Clock, y_pos: u8, x_pos: u8, font: common.font.BDF, char: u8, column: u8, color: Color) ComponentError!void {
         if (y_pos > 31 or x_pos > 64) return;
         if (column >= font.width) return;
         const glyph = font.glyphs.get(char) orelse font.glyphs.get(font.default_char).?;
@@ -462,7 +461,7 @@ pub const HorizontalScrollingTextComponent = struct {
         const text_pixel_length = self.text.len * font.width;
         const start_pos_i9: i9 = @intCast(self.start_pos.x);
 
-        // Reset the text_pos when the text has all reached
+        // Reset the text_pos when the text has all reached the end
         if (self.text_pos >= text_pixel_length) self.text_pos = -start_pos_i9;
 
         for (self.cutoff_x..self.start_pos.x) |x| {
@@ -470,16 +469,123 @@ pub const HorizontalScrollingTextComponent = struct {
             const text_pixel_x = x_i9 + self.text_pos;
 
             // Used to make sure that we start at the rightmost corner
-            if (text_pixel_x < 0 or text_pixel_x >= text_pixel_length) {
-                continue;
-            }
+            if (text_pixel_x < 0 or text_pixel_x >= text_pixel_length) continue;
+
             const text_pixel_x_usize: usize = @intCast(@max(0, text_pixel_x));
 
             if (get_char_and_y(self.text, font, text_pixel_x_usize)) |info| {
                 const x_u8: u8 = @intCast(x);
                 const column: u8 = @truncate(info[1]);
-                try draw_char_column_if_possible(clock, self.start_pos.y, x_u8, font, self.text[info[0]], column, self.cutoff_x, self.color);
+                try draw_char_column_if_possible(clock, self.start_pos.y, x_u8, font, self.text[info[0]], column, self.color);
             }
+        }
+    }
+};
+
+///Used to draw text that scrolls across the screen vertically
+pub const VerticalScrollingTextComponent = struct {
+    start_pos: ComponentPos,
+    width: u8,
+    height: u8,
+    font: common.font.FontStore,
+    text: []const u8,
+    color: Color,
+    text_pos: i32 = 0,
+    starting_text_pos: i32 = 0,
+    line_spacing: u8,
+
+    ///WARNING: This is for internal use only. If you want to draw this use animation()
+    fn component(self: *VerticalScrollingTextComponent) Component {
+        return Component{ .ctx = self, .draw = &draw };
+    }
+
+    pub fn animation(self: *VerticalScrollingTextComponent, duration: u32, loop: bool, speed: i16) AnimationComponent {
+        return AnimationComponent{
+            .component = self.component(),
+            .duration = duration,
+            .loop = loop,
+            .speed = speed,
+            .update_animation = &update_animation,
+        };
+    }
+
+    fn update_animation(ctx: *anyopaque, clock: *Clock, frame_number: u32) void {
+        const comp: *VerticalScrollingTextComponent = @ptrCast(@alignCast(ctx));
+        _ = clock;
+        _ = frame_number;
+        comp.text_pos += 1;
+    }
+
+    fn draw_char_if_possible(clock: *Clock, y_pos: i9, x_pos: i9, font: common.font.BDF, char: u8, color: Color) ComponentError!void {
+        if (y_pos < -@as(i9, @intCast(font.height))) return;
+        const glyph = font.glyphs.get(char) orelse font.glyphs.get(font.default_char).?;
+        const bytes_per_row = (font.width + 7) / 8;
+
+        for (0..font.height) |row| {
+            const row_start = row * bytes_per_row;
+            const row_end = row_start + bytes_per_row;
+            const row_bytes = glyph[row_start..row_end];
+
+            var tile_index: i9 = 0;
+            for (row_bytes) |byte| {
+                for (0..8) |bit| {
+                    const bit_u3: u3 = @intCast(bit);
+                    if ((byte & (@as(u8, 0x80) >> bit_u3)) != 0) {
+                        const row_i9: i9 = @intCast(row);
+                        if ((row_i9 + y_pos) > 31 or (row_i9 + y_pos) < 0 or (tile_index + x_pos) > 63 or (tile_index + x_pos) < 0) break;
+                        const x: u8 = @intCast(tile_index + x_pos);
+                        const y: u8 = @intCast(row_i9 + y_pos);
+                        try clock.interface.setTile(clock.interface.ctx, y, x, color);
+                    }
+                    tile_index += 1;
+                }
+            }
+        }
+    }
+
+    fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
+        const self: *VerticalScrollingTextComponent = @ptrCast(@alignCast(ctx));
+        const font = try self.font.font();
+
+        var lines_buf: [64]std.BoundedArray(u8, 128) = undefined;
+        var lines_count: usize = 0;
+        var i: usize = 0;
+        while (i < self.text.len and lines_count < lines_buf.len) {
+            var line = std.BoundedArray(u8, 128).init(0) catch break;
+            var line_width: usize = 0;
+            while (i < self.text.len) {
+                const c = self.text[i];
+                if (c == '\n') {
+                    i += 1;
+                    break;
+                }
+                const char_width = font.width;
+                if (line_width + char_width > self.width) break;
+                _ = line.append(c) catch break;
+                line_width += char_width;
+                i += 1;
+            }
+            lines_buf[lines_count] = line;
+            lines_count += 1;
+        }
+
+        const line_height: usize = font.height + @as(usize, @intCast(self.line_spacing));
+        const total_text_height: usize = lines_count * line_height;
+
+        if (self.text_pos > total_text_height) self.text_pos = self.starting_text_pos;
+
+        const window_y: i32 = self.start_pos.y;
+        var text_y: i32 = -@as(i32, self.text_pos);
+        for (lines_buf[0..lines_count]) |line| {
+            if (text_y + @as(i32, font.height) > 0 and text_y < self.height) {
+                var x: u8 = self.start_pos.x;
+                for (line.slice()) |char| {
+                    const y: i9 = @intCast(window_y + text_y);
+                    try draw_char_if_possible(clock, y, x, font, char, self.color);
+                    x += font.width;
+                }
+            }
+            text_y += @as(i32, @intCast(line_height));
         }
     }
 };

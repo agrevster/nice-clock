@@ -83,14 +83,17 @@ var test_image_component = components.ImageComponent{
     .image_name = "test",
 };
 
-var long_text = components.HorizontalScrollingTextComponent{
+var long_text = components.VerticalScrollingTextComponent{
     .color = common.Color{ .b = 0, .g = 0, .r = 255 },
-    .start_pos = components.ComponentPos{ .x = 50, .y = 10 },
+    .start_pos = components.ComponentPos{ .x = 0, .y = 0 },
     .text = "Big 4L, I'm a member (yeah) Leave an opp cold, like December (what?) .45 on me, it's a Kimber (and what?) AK knockin' down trees, like timber",
     // .text = "test",
     .font = .Font5x8,
-    .text_pos = -50,
-    .cutoff_x = 20,
+    .line_spacing = 0,
+    .text_pos = -32,
+    .starting_text_pos = -32,
+    .width = 63,
+    .height = 31,
 };
 
 var start_pos_indicator = components.TileComponent{
@@ -140,8 +143,6 @@ const long_text_module = common.module.ClockModule{
     .image_names = null,
     .root_component = components.RootComponent{
         .components = &[_]components.AnyComponent{
-            components.AnyComponent{ .normal = start_pos_indicator.component() },
-            components.AnyComponent{ .normal = end_pos_indicator.component() },
             components.AnyComponent{ .animated = long_text.animation(1500, true, 3) },
         },
     },
