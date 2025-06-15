@@ -32,6 +32,14 @@ pub fn build(b: *std.Build) !void {
         });
         sim_exe.linkLibrary(sdl_dep.artifact("SDL2"));
     }
+    const lua_dep = b.dependency("zlua", .{
+        .target = target,
+        .optimize = optimize,
+        .lang = .luau,
+        .shared = false,
+    });
+
+    common_lib.addImport("zlua", lua_dep.module("zlua"));
 
     sim_exe.root_module.addImport("common", common_lib);
 

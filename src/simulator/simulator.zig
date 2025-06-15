@@ -1,7 +1,6 @@
 const std = @import("std");
 const renderer = @import("renderer.zig");
 const common = @import("common");
-const TestModuleLoader = @import("modules.zig").TestModuleLoader();
 const Connector = @import("./simConnector.zig").SimConnector;
 const Clock = common.Clock;
 
@@ -37,7 +36,7 @@ pub fn main() void {
     var clock = Clock{
         .interface = connector.connectorInterface(),
         .has_event_loop_started = false,
-        .module_loader = TestModuleLoader,
+        .modules = &[_]common.module.ClockModule{},
         .allocator = allocator,
     };
 
