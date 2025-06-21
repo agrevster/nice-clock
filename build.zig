@@ -32,6 +32,11 @@ pub fn build(b: *std.Build) !void {
         });
         sim_exe.linkLibrary(sdl_dep.artifact("SDL2"));
     }
+    const time_dep = b.dependency("datetime", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     const lua_dep = b.dependency("zlua", .{
         .target = target,
         .optimize = optimize,
@@ -40,6 +45,7 @@ pub fn build(b: *std.Build) !void {
     });
 
     common_lib.addImport("zlua", lua_dep.module("zlua"));
+    common_lib.addImport("datetime", time_dep.module("datetime"));
 
     sim_exe.root_module.addImport("common", common_lib);
 

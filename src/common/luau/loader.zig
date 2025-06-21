@@ -4,7 +4,7 @@ const common = @import("../common.zig");
 
 const Error = error{ MemoryError, LuauError, FileNotFound };
 
-const logger = std.log.scoped(.luau_interpreter);
+pub const logger = std.log.scoped(.luau_interpreter);
 
 fn load_module_file(file: []const u8, allocator: std.mem.Allocator) error{ OutOfMemory, FileNotFound, OtherError }![]const u8 {
     const file_name = std.fmt.allocPrint(allocator, "./modules/{s}.luau", .{file}) catch return error.OutOfMemory;
@@ -17,6 +17,20 @@ fn load_module_file(file: []const u8, allocator: std.mem.Allocator) error{ OutOf
         },
     };
     return file_contents;
+}
+
+pub fn LuauTry(comptime T: type, error_message: []const u8) type {
+    return struct {
+        pub fn unwrap(luau: *zlua.Lua, item: anyerror!T) T {
+            if (item) |item_no_err| {
+                return item_no_err;
+            } else |err| {
+                logger.err("LuauTry caught: {s}. Expected type: {s}", .{ @errorName(err), @typeName(T) });
+                _ = luau.pushString(error_message);
+                luau.raiseError();
+            }
+        }
+    };
 }
 
 pub fn interpret(module_file_name: []const u8, allocator: std.mem.Allocator) Error!void {
@@ -44,6 +58,7 @@ pub fn interpret(module_file_name: []const u8, allocator: std.mem.Allocator) Err
 
     //Load exports
     common.luau.exports.global.load_export(lua);
+    common.luau.exports.time.load_export(lua);
 
     const luau_bytecode = zlua.compile(allocator, luau_file, .{}) catch |e| switch (e) {
         error.OutOfMemory => return Error.MemoryError,

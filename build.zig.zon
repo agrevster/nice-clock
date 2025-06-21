@@ -15,6 +15,10 @@
             .url = "git+https://github.com/natecraddock/ziglua#6ec3c8cb61674ea9fddb3d9dcceffc5e0c8231e6",
             .hash = "zlua-0.1.0-hGRpC-IZBQC5bPuUsNuv9TKPLjZkbI132xCQt0hT_JDJ",
         },
+        .datetime = .{
+            .url = "git+https://github.com/frmdstryr/zig-datetime?ref=master#feca3bca5c81409c049d8d2f4dc06012a374d085",
+            .hash = "datetime-0.8.0-cJNXzNLZAQADGScmVIKJTyogbfkbIFldrmSK8RweZ3Eg",
+        },
     },
     .paths = .{
         "build.zig",
