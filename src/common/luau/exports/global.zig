@@ -38,13 +38,13 @@ fn print_at_index(luau: *Luau, i: i32, print_list: *std.ArrayList(u8), allocator
             appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "{} ", .{val}) catch "Error");
         },
         .table => {
-            const is_array = luau.rawGetIndex(-1, 1) != zlua.LuaType.nil;
+            const is_array = luau.rawGetIndex(i, 1) != zlua.LuaType.nil;
             luau.pop(1);
             if (is_array) {
                 appendu8SliceOrLog(print_list, "[");
-                const len: usize = @intCast(@max(0, luau.objectLen(-1)));
+                const len: usize = @intCast(@max(0, luau.objectLen(i)));
                 for (1..len + 1) |index| {
-                    _ = luau.rawGetIndex(-1, @as(i32, @intCast(index)));
+                    _ = luau.rawGetIndex(i, @as(i32, @intCast(index)));
                     appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "<{s}>,", .{luau.typeNameIndex(-1)}) catch "Error");
                     luau.pop(1);
                 }
@@ -52,13 +52,12 @@ fn print_at_index(luau: *Luau, i: i32, print_list: *std.ArrayList(u8), allocator
             } else {
                 appendu8SliceOrLog(print_list, "{");
                 luau.pushNil();
-                while (luau.next(-2)) {
+                while (luau.next(i)) {
                     const key = luau.toString(-2) catch std.fmt.allocPrint(allocator, "<{s}>", .{luau.typeNameIndex(-2)}) catch "Error";
                     const value = luau.toString(-1) catch std.fmt.allocPrint(allocator, "<{s}>", .{luau.typeNameIndex(-1)}) catch "Error";
                     appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "{s} = {s};", .{ key, value }) catch "Error");
                     luau.pop(1);
                 }
-                luau.pop(1);
                 appendu8SliceOrLog(print_list, "} ");
             }
         },
