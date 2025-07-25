@@ -14,8 +14,8 @@ pub const luau = @import("luau/luau.zig");
 
 test "Nice Clock Units Tests" {
     std.testing.log_level = .debug;
-    // testing.refAllDecls(font);
-    // testing.refAllDecls(components);
-    // testing.refAllDecls(image);
+    testing.refAllDecls(font);
+    testing.refAllDecls(components);
+    testing.refAllDecls(image);
     testing.refAllDecls(luau);
 }

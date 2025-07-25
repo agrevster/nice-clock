@@ -5,6 +5,8 @@ const time = std.time;
 const math = std.math;
 const Clock = common.Clock;
 const Color = common.Color;
+const LuauComponentConstructorError = common.luau.import_components.LuauComponentConstructorError;
+const LuauArg = common.luau.import_components.LuauArg;
 
 const logger = std.log.scoped(.components);
 
@@ -154,6 +156,22 @@ pub const TileComponent = struct {
 
     pub fn component(self: *TileComponent) Component {
         return Component{ .ctx = self, .draw = &draw };
+    }
+
+    pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
+        const pos_arg = try LuauArg.getPosOrError(args, 0);
+        const color_arg = try LuauArg.getColorOrError(args, 1);
+
+        const color = allocator.create(Color) catch return LuauComponentConstructorError.MemoryError;
+        const pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
+        const comp = allocator.create(TileComponent) catch return LuauComponentConstructorError.MemoryError;
+        const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
+
+        color.* = Color{ .r = color_arg.r, .g = color_arg.g, .b = color_arg.b };
+        pos.* = ComponentPos{ .x = pos_arg.x, .y = pos_arg.y };
+        comp.* = TileComponent{ .pos = pos.*, .color = color.* };
+        ret.* = AnyComponent{ .normal = comp.*.component() };
+        return ret;
     }
 
     fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {

@@ -7,7 +7,50 @@ export type GlobalDatetime = {
 	fromiso: (iso8601_timestamp: string) -> Datetime, 
 }
 
+export type GlobalNiceClock = {
+	modulebuilder: (name: string, timelimit: number, imagenames: {string}) -> ClockModuleBuilder,
+}
 
+-- niceclock
+
+export type ClockModuleBuilder = {
+	name: string,
+	timelimit: number,
+	components: {ClockComponent},
+	imagenames: {string},
+	init_fn: nil | () -> (),
+	deinit_fn: nil | () -> (),
+	init: (self: ClockModuleBuilder, fn: () -> ()) -> ClockModuleBuilder,
+	deinit: (self: ClockModuleBuilder, fn: () -> ()) -> ClockModuleBuilder,
+	build: (self: ClockModuleBuilder) ->  ClockModule,
+	-- Components
+	tile: (self: ClockModuleBuilder, pos: Pos, color: Color) -> ClockModuleBuilder,
+}
+
+export type ClockModule = {
+	name: string,
+	timelimit: number,
+	components: {ClockComponent},
+	imagenames: {string},
+	init: nil | () -> (),
+	deinit: nil | () -> (),
+}
+
+export type ClockComponent = {
+	type: number,
+	props: {}
+}
+
+export type Color = {
+	r: number,
+	g: number,
+	b: number,
+}
+
+export type Pos = {
+	x: number,
+	y: number,
+}
 
 -- datetime
 export type Datetime = {
@@ -44,6 +87,6 @@ export type DatetimeDelta = {
 	seconds: number?,
 }
 
-
 -- Declarations
 declare datetime: GlobalDatetime
+declare niceclock: GlobalNiceClock

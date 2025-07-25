@@ -1,12 +1,19 @@
 const std = @import("std");
 const zlua = @import("zlua");
 const common = @import("../common.zig");
+const Luau = zlua.Lua;
 
-const Error = error{ MemoryError, LuauError, FileNotFound };
+const Error = error{
+    OtherError,
+    LuauError,
+    FileNotFound,
+    DebugModule,
+    ModuleParsingError,
+};
 
 pub const logger = std.log.scoped(.luau_interpreter);
 
-fn load_module_file(file: []const u8, allocator: std.mem.Allocator) error{ OutOfMemory, FileNotFound, OtherError }![]const u8 {
+fn read_module_file(file: []const u8, allocator: std.mem.Allocator) error{ OutOfMemory, FileNotFound, OtherError }![]const u8 {
     const file_name = std.fmt.allocPrint(allocator, "./modules/{s}.luau", .{file}) catch return error.OutOfMemory;
     defer allocator.free(file_name);
     const file_contents = std.fs.cwd().readFileAlloc(allocator, file_name, 1000000) catch |e| switch (e) {
@@ -26,61 +33,111 @@ pub fn LuauTry(comptime T: type, error_message: []const u8) type {
                 return item_no_err;
             } else |err| {
                 logger.err("LuauTry caught: {s}. Expected type: {s}", .{ @errorName(err), @typeName(T) });
-                _ = luau.pushString(error_message);
-                luau.raiseError();
+                luau_error(luau, error_message);
             }
         }
     };
 }
 
-pub fn interpret(module_file_name: []const u8, allocator: std.mem.Allocator) Error!void {
-    const luau_file = load_module_file(module_file_name, allocator) catch |e| switch (e) {
-        error.OtherError => return Error.MemoryError,
-        inline else => {
-            logger.err("{s}", .{@errorName(e)});
-            return Error.MemoryError;
-        },
+pub fn luau_error(luau: *Luau, message: []const u8) noreturn {
+    _ = luau.pushString(message);
+    luau.raiseError();
+}
+
+pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Allocator) Error!common.module.ClockModule {
+    // Interpret the file
+    const luau_file = read_module_file(module_file_name, allocator) catch |e| {
+        logger.err("{s}", .{@errorName(e)});
+        return Error.OtherError;
     };
     defer allocator.free(luau_file);
 
-    var lua = zlua.Lua.init(allocator) catch return Error.MemoryError;
-    defer lua.deinit();
+    var luau = zlua.Lua.init(allocator) catch return Error.OtherError;
+    defer luau.deinit();
 
     //Open libraries (we don't want to open coroutines)
-    lua.openBase();
-    lua.openMath();
-    lua.openTable();
-    lua.openString();
-    lua.openBit32();
-    lua.openUtf8();
-    lua.openOS();
-    lua.openDebug();
+    luau.openBase();
+    luau.openMath();
+    luau.openTable();
+    luau.openString();
+    luau.openBit32();
+    luau.openUtf8();
+    luau.openOS();
+    luau.openDebug();
 
     //Load exports
-    common.luau.exports.global.load_export(lua);
-    common.luau.exports.time.load_export(lua);
+    common.luau.exports.global.load_export(luau);
+    common.luau.exports.time.load_export(luau);
+    common.luau.exports.nice_clock.load_export(luau);
 
     const luau_bytecode = zlua.compile(allocator, luau_file, .{}) catch |e| switch (e) {
-        error.OutOfMemory => return Error.MemoryError,
+        error.OutOfMemory => return Error.OtherError,
     };
     defer allocator.free(luau_bytecode);
 
-    lua.loadBytecode("...", luau_bytecode) catch {
-        const error_str = lua.toString(-1) catch "ERR";
+    luau.loadBytecode("...", luau_bytecode) catch {
+        const error_str = luau.toString(-1) catch "ERR";
         logger.err("{s}", .{error_str});
         return Error.LuauError;
     };
-    lua.protectedCall(.{}) catch |e| {
-        const error_str = lua.toString(-1) catch "ERR";
+    luau.protectedCall(.{ .results = 1 }) catch |e| {
+        const error_str = luau.toString(-1) catch "ERR";
         logger.err("{s}", .{error_str});
         logger.err("{s}", .{@errorName(e)});
     };
-}
 
-test {
-    const allocator = std.testing.allocator;
+    // Load module
+    //
+    //This is a mess because when we deinit the lua module it deallocates all the memory from luau therefore deallocating our module's fields.
+    const return_type = luau.typeOf(1);
+    if (return_type != zlua.LuaType.table and return_type != zlua.LuaType.nil) {
+        logger.err("Invalid module return type: {s}", .{luau.typeName(return_type)});
+        return Error.OtherError;
+    }
+    if (return_type == zlua.LuaType.nil) return Error.DebugModule;
 
-    interpret("test", allocator) catch |e| {
-        logger.err("{s}", .{@errorName(e)});
+    _ = luau.getField(1, "name");
+    const module_name_field = luau.toString(-1) catch return Error.ModuleParsingError;
+    const module_name = allocator.dupe(u8, module_name_field[0..module_name_field.len]) catch |e| {
+        std.log.err("Memory error: {s}", .{@errorName(e)});
+        return Error.OtherError;
+    };
+
+    _ = luau.getField(1, "timelimit");
+    const time_limit_field = luau.toInteger(-1) catch return Error.ModuleParsingError;
+    const time_limit = allocator.create(u64) catch |e| {
+        std.log.err("Memory error: {s}", .{@errorName(e)});
+        return Error.OtherError;
+    };
+    time_limit.* = @intCast(time_limit_field);
+
+    _ = luau.getField(1, "imagenames");
+    const image_names_field = luau.toAnyInternal([][]const u8, allocator, true, -1) catch return Error.ModuleParsingError;
+    var image_names = allocator.dupe([]const u8, image_names_field) catch |e| {
+        std.log.err("Memory error: {s}", .{@errorName(e)});
+        return Error.OtherError;
+    };
+    for (image_names_field, 0..) |image_name, i| {
+        const new_image_name = allocator.dupe(u8, image_name) catch |e| {
+            std.log.err("Memory error: {s}", .{@errorName(e)});
+            return Error.OtherError;
+        };
+        image_names[i] = new_image_name;
+    }
+
+    var root_component: *common.components.RootComponent = undefined;
+
+    if (common.luau.import_components.rootComponentFromLuau(luau, allocator)) |root| {
+        root_component = root;
+    } else |e| {
+        logger.err("Error creating root component for module {s}; ({s})", .{ module_name, @errorName(e) });
+        return error.ModuleParsingError;
+    }
+
+    return common.module.ClockModule{
+        .name = module_name,
+        .time_limit_s = time_limit.*,
+        .image_names = image_names,
+        .root_component = root_component.*,
     };
 }

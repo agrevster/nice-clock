@@ -19,10 +19,6 @@ pub const ClockModule = struct {
     time_limit_s: u64,
     ///The type of the module see: `ClockModuleType`
     module_type: ClockModuleType = ClockModuleType.Custom,
-    ///Called whenever a module is initialized, this gives modules a space to make allocations or requests before rendering begins.
-    init: ?*const fn (self: *ClockModule, clock: *common.Clock) void,
-    ///Called whenever a module is deinitialized, meaning that the module is able to free its allocations.
-    deinit: ?*const fn (self: *ClockModule, clock: *common.Clock) void,
     ///Used to tell the clock's image store which images the module needs loaded.
     image_names: ?[]const []const u8,
 
