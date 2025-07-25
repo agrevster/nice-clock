@@ -26,10 +26,8 @@ pub const ClockModule = struct {
 
     ///Displays the module on the clock's screen.
     pub fn render(self: *ClockModule, clock: *common.Clock) void {
-        if (self.init) |init| init(self, clock);
         self.root_component.render(clock, common.constants.fps, self.time_limit_s) catch |err| {
             logger.err("[{s}]: {s}", .{ self.name, @errorName(err) });
         };
-        if (self.deinit) |deinit| deinit(self, clock);
     }
 };

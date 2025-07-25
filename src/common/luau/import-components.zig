@@ -106,7 +106,6 @@ pub fn rootComponentFromLuau(luau: *Luau, allocator: std.mem.Allocator) RootComp
     const component_constructors = comptime generateLuauComponentConstructors();
     _ = luau.getField(1, "components");
     const component_array = luau.toAnyInternal([]ClockComponentTable, luau.allocator(), true, -1) catch {
-        std.log.debug("{s}", .{@tagName(luau.status())});
         return error.LuauParseError;
     };
 
@@ -141,12 +140,3 @@ pub fn generateLuauComponentBuilderFunctions(luau: *Luau) void {
         luau.setField(-2, component_function_name);
     }
 }
-
-// test {
-//     var args = [_]LuauArg{LuauArg{ .int = 5 }};
-//
-//     const constructors = comptime generateLuauComponentConstructors();
-//
-//     const tile = try constructors[0](&args, std.testing.allocator);
-//     _ = tile;
-// }

@@ -42,14 +42,14 @@ export type ClockComponent = {
 }
 
 export type Color = {
-	r: number,
-	g: number,
 	b: number,
+	g: number,
+	r: number,
 }
 
 export type Pos = {
-	x: number,
 	y: number,
+	x: number,
 }
 
 -- datetime

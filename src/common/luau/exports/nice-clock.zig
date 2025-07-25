@@ -6,7 +6,6 @@ const wrap = zlua.wrap;
 const LuauTry = common.luau.loader.LuauTry;
 const LuauArg = common.luau.import_components.LuauArg;
 const luau_error = common.luau.loader.luau_error;
-const logger = common.luau.loader.logger;
 const generateLuauComponentBuilderFunctions = common.luau.import_components.generateLuauComponentBuilderFunctions;
 
 ///Sends the exported functions to luau.
@@ -217,9 +216,9 @@ pub fn component_fn(luau: *Luau) i32 {
                     _ = luau.getField(i, "g");
                     _ = luau.getField(i, "b");
                     args[index - 2] = LuauArg{ .color = .{
-                        .r = @intCast(@min(255, @max(0, tryGetIntFromTable.unwrap(luau, luau.toInteger(-1))))),
+                        .r = @intCast(@min(255, @max(0, tryGetIntFromTable.unwrap(luau, luau.toInteger(-3))))),
                         .g = @intCast(@min(255, @max(0, tryGetIntFromTable.unwrap(luau, luau.toInteger(-2))))),
-                        .b = @intCast(@min(255, @max(0, tryGetIntFromTable.unwrap(luau, luau.toInteger(-3))))),
+                        .b = @intCast(@min(255, @max(0, tryGetIntFromTable.unwrap(luau, luau.toInteger(-1))))),
                     } };
                     luau.pop(3);
                     continue;
@@ -229,8 +228,8 @@ pub fn component_fn(luau: *Luau) i32 {
                     _ = luau.getField(i, "x");
                     _ = luau.getField(i, "y");
                     args[index - 2] = LuauArg{ .pos = .{
-                        .x = @intCast(@min(255, @max(0, tryGetIntFromTable.unwrap(luau, luau.toInteger(-1))))),
-                        .y = @intCast(@min(255, @max(0, tryGetIntFromTable.unwrap(luau, luau.toInteger(-2))))),
+                        .x = @intCast(@min(255, @max(0, tryGetIntFromTable.unwrap(luau, luau.toInteger(-2))))),
+                        .y = @intCast(@min(255, @max(0, tryGetIntFromTable.unwrap(luau, luau.toInteger(-1))))),
                     } };
                     luau.pop(2);
                     continue;

@@ -3,6 +3,7 @@ const renderer = @import("renderer.zig");
 const common = @import("common");
 const Connector = @import("./simConnector.zig").SimConnector;
 const Clock = common.Clock;
+const loadModuleFromLuau = common.luau.loader.loadModuleFromLuau;
 
 fn start(clock: *Clock, logger: anytype, is_active: *bool) void {
     if (clock.*.startClock(is_active)) {} else |err| {
@@ -33,23 +34,28 @@ pub fn main() void {
         .tile_pointer = &tiles,
     };
 
-    var clock = Clock{
-        .interface = connector.connectorInterface(),
-        .has_event_loop_started = false,
-        .modules = &[_]common.module.ClockModule{},
-        .allocator = allocator,
-    };
+    if (loadModuleFromLuau("test", allocator)) |test_module| {
+        var module_array = [_]common.module.ClockModule{test_module.*};
+        var clock = Clock{
+            .interface = connector.connectorInterface(),
+            .has_event_loop_started = false,
+            .modules = &module_array,
+            .allocator = allocator,
+        };
 
-    var is_active: bool = true;
+        var is_active: bool = true;
 
-    if (std.Thread.spawn(.{}, start, .{ &clock, logger, &is_active })) |_| {
-        logger.info("Started clock connector...", .{});
-    } else |err| switch (err) {
-        error.Unexpected => logger.err("There was an unexpected error with the clock thread!", .{}),
-        else => |any_err| logger.err("There was an error with the clock thread: {s}", .{@errorName(any_err)}),
-    }
+        if (std.Thread.spawn(.{}, start, .{ &clock, logger, &is_active })) |_| {
+            logger.info("Started clock connector...", .{});
+        } else |err| switch (err) {
+            error.Unexpected => logger.err("There was an unexpected error with the clock thread!", .{}),
+            else => |any_err| logger.err("There was an error with the clock thread: {s}", .{@errorName(any_err)}),
+        }
 
-    if (renderer.startSimulator(logger, &tiles, &is_active)) {} else |err| {
-        logger.err("There was an error with the simulator window: {s}", .{@errorName(err)});
+        if (renderer.startSimulator(logger, &tiles, &is_active)) {} else |err| {
+            logger.err("There was an error with the simulator window: {s}", .{@errorName(err)});
+        }
+    } else |e| {
+        logger.err("Error loading test module from Luau: {s}", .{@errorName(e)});
     }
 }
