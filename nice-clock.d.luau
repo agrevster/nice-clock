@@ -9,6 +9,7 @@ export type GlobalDatetime = {
 
 export type GlobalNiceClock = {
 	modulebuilder: (name: string, timelimit: number, imagenames: {string}) -> ClockModuleBuilder,
+	fonts: Fonts,
 }
 
 -- niceclock
@@ -25,6 +26,12 @@ export type ClockModuleBuilder = {
 	build: (self: ClockModuleBuilder) ->  ClockModule,
 	-- Components
 	tile: (self: ClockModuleBuilder, pos: Pos, color: Color) -> ClockModuleBuilder,
+	box: (self: ClockModuleBuilder, pos: Pos, width: number, height: number, fill_inside: boolean, color: Color) -> ClockModuleBuilder,
+	circle: (self: ClockModuleBuilder, pos: Pos, radius: number, outline_thickness: number, color: Color) -> ClockModuleBuilder,
+	image: (self: ClockModuleBuilder, pos: Pos, image_name: string) -> ClockModuleBuilder,
+	char: (self: ClockModuleBuilder, pos: Pos, font: string, char: string, color: Color) -> ClockModuleBuilder,
+	text: (self: ClockModuleBuilder, pos: Pos, font: string, text: string, color: Color) -> ClockModuleBuilder,
+	wrappedtext: (self: ClockModuleBuilder, pos: Pos, font: string, text: string, color: Color, line_spacing: number) -> ClockModuleBuilder,
 }
 
 export type ClockModule = {
@@ -50,6 +57,17 @@ export type Color = {
 export type Pos = {
 	y: number,
 	x: number,
+}
+
+
+export type Fonts = {
+	Font5x8: string,
+	Font5x8_2: string,
+	Font6x12: string,
+	Font6x13: string,
+	Font7x13: string,
+	Font7x14: string,
+	Font12x24: string,
 }
 
 -- datetime

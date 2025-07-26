@@ -7,6 +7,7 @@ const LuauTry = common.luau.loader.LuauTry;
 const LuauArg = common.luau.import_components.LuauArg;
 const luau_error = common.luau.loader.luau_error;
 const generateLuauComponentBuilderFunctions = common.luau.import_components.generateLuauComponentBuilderFunctions;
+const generateLuauFontFields = common.luau.import_components.generateLuauFontFields;
 
 ///Sends the exported functions to luau.
 pub fn load_export(luau: *Luau) void {
@@ -14,6 +15,7 @@ pub fn load_export(luau: *Luau) void {
 
     luau.pushFunction(wrap(moduleBuilder));
     luau.setField(-2, "modulebuilder");
+    generateLuauFontFields(luau);
 
     luau.setGlobal("niceclock");
 }

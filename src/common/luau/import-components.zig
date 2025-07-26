@@ -10,6 +10,12 @@ const logger = common.luau.loader.logger;
 
 const LuauComponentType = enum(u8) {
     TileComponent,
+    BoxComponent,
+    CircleComponent,
+    ImageComponent,
+    CharComponent,
+    TextComponent,
+    WrappedTextComponent,
 };
 
 pub const LuauArg = union(enum) {
@@ -17,10 +23,11 @@ pub const LuauArg = union(enum) {
     int: zlua.Integer,
     bool: bool,
     float: zlua.Number,
+    char: u8,
     pos: common.components.ComponentPos,
     color: common.Color,
 
-    const ArgFetchError = error{ NotInUnion, IndexNotInArray };
+    const ArgFetchError = error{ NotInUnion, IndexNotInArray, ValidationError };
 
     pub fn getStringOrError(list: []LuauArg, index: usize) ArgFetchError![:0]const u8 {
         const arg = try getArgOrError(list, index);
@@ -45,6 +52,14 @@ pub const LuauArg = union(enum) {
         }
     }
 
+    pub fn getI8IntOrError(list: []LuauArg, index: usize) ArgFetchError!i8 {
+        const arg = try getArgOrError(list, index);
+        switch (arg) {
+            .int => |i| return std.math.lossyCast(i8, i),
+            else => return ArgFetchError.NotInUnion,
+        }
+    }
+
     pub fn getFloatOrError(list: []LuauArg, index: usize) ArgFetchError!zlua.Number {
         const arg = try getArgOrError(list, index);
         switch (arg) {
@@ -57,6 +72,33 @@ pub const LuauArg = union(enum) {
         const arg = try getArgOrError(list, index);
         switch (arg) {
             .bool => |b| return b,
+            else => return ArgFetchError.NotInUnion,
+        }
+    }
+
+    pub fn getCharOrError(list: []LuauArg, index: usize) ArgFetchError!u8 {
+        const arg = try getArgOrError(list, index);
+        switch (arg) {
+            .string => |b| {
+                if (b.len > 1 or b.len == 0) {
+                    std.log.err("Invalid char length: {d}", .{b.len});
+                    return ArgFetchError.ValidationError;
+                }
+                return b[0];
+            },
+            else => return ArgFetchError.NotInUnion,
+        }
+    }
+
+    pub fn getFontOrError(list: []LuauArg, index: usize) ArgFetchError!common.font.FontStore {
+        const arg = try getArgOrError(list, index);
+        switch (arg) {
+            .string => |b| {
+                return std.meta.stringToEnum(common.font.FontStore, b) orelse {
+                    std.log.err("Invalid font: {s}", .{b});
+                    return ArgFetchError.ValidationError;
+                };
+            },
             else => return ArgFetchError.NotInUnion,
         }
     }
@@ -139,4 +181,14 @@ pub fn generateLuauComponentBuilderFunctions(luau: *Luau) void {
         luau.pushClosure(zlua.wrap(componentFn), 1);
         luau.setField(-2, component_function_name);
     }
+}
+
+pub fn generateLuauFontFields(luau: *Luau) void {
+    luau.newTable();
+    for (std.enums.values(common.font.FontStore)) |component| {
+        const enum_tag = @tagName(component);
+        _ = luau.pushStringZ(enum_tag);
+        luau.setField(-2, enum_tag);
+    }
+    luau.setField(-2, "fonts");
 }
