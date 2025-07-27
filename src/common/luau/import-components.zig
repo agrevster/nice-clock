@@ -5,6 +5,7 @@ const Luau = zlua.Lua;
 const components = common.components;
 const componentFn = common.luau.exports.nice_clock.component_fn;
 const ClockComponentTable = common.luau.exports.nice_clock.ClockComponentTable;
+const AnimationTable = common.luau.exports.nice_clock.AnimationTable;
 const luau_error = common.luau.loader.luau_error;
 const logger = common.luau.loader.logger;
 
@@ -16,6 +17,8 @@ const LuauComponentType = enum(u8) {
     CharComponent,
     TextComponent,
     WrappedTextComponent,
+    HorizontalScrollingTextComponent,
+    VerticalScrollingTextComponent,
 };
 
 pub const LuauArg = union(enum) {
@@ -25,6 +28,7 @@ pub const LuauArg = union(enum) {
     float: zlua.Number,
     char: u8,
     pos: common.components.ComponentPos,
+    animation: AnimationTable,
     color: common.Color,
 
     const ArgFetchError = error{ NotInUnion, IndexNotInArray, ValidationError };
@@ -56,6 +60,14 @@ pub const LuauArg = union(enum) {
         const arg = try getArgOrError(list, index);
         switch (arg) {
             .int => |i| return std.math.lossyCast(i8, i),
+            else => return ArgFetchError.NotInUnion,
+        }
+    }
+
+    pub fn getI32IntOrError(list: []LuauArg, index: usize) ArgFetchError!i32 {
+        const arg = try getArgOrError(list, index);
+        switch (arg) {
+            .int => |i| return std.math.lossyCast(i32, i),
             else => return ArgFetchError.NotInUnion,
         }
     }
@@ -118,6 +130,15 @@ pub const LuauArg = union(enum) {
             else => return ArgFetchError.NotInUnion,
         }
     }
+
+    pub fn getAnimationOrError(list: []LuauArg, index: usize) ArgFetchError!AnimationTable {
+        const arg = try getArgOrError(list, index);
+        switch (arg) {
+            .animation => |b| return b,
+            else => return ArgFetchError.NotInUnion,
+        }
+    }
+
     pub fn getArgOrError(list: []LuauArg, index: usize) ArgFetchError!LuauArg {
         if (index >= list.len or index < 0) return ArgFetchError.IndexNotInArray;
         return list[index];

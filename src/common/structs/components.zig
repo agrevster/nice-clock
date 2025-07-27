@@ -574,6 +574,41 @@ pub const HorizontalScrollingTextComponent = struct {
         };
     }
 
+    pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
+        const start_pos_arg = try LuauArg.getPosOrError(args, 0);
+        const font_arg = try LuauArg.getFontOrError(args, 1);
+        const text_arg = try LuauArg.getStringOrError(args, 2);
+        const color_arg = try LuauArg.getColorOrError(args, 3);
+        const cutoff_x_arg = try LuauArg.getU8IntOrError(args, 4);
+        const text_pos_arg = try LuauArg.getI32IntOrError(args, 5);
+        const animation_arg = try LuauArg.getAnimationOrError(args, 6);
+
+        if (start_pos_arg.x < cutoff_x_arg) {
+            logger.err("x pos should be greater than cutoff x!", .{});
+            return LuauComponentConstructorError.ValidationError;
+        }
+
+        const start_pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
+        const font = allocator.create(common.font.FontStore) catch return LuauComponentConstructorError.MemoryError;
+        const text = allocator.dupeZ(u8, text_arg) catch return LuauComponentConstructorError.MemoryError;
+        const color = allocator.create(Color) catch return LuauComponentConstructorError.MemoryError;
+        const cutoff_x = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
+        const text_pos = allocator.create(i32) catch return LuauComponentConstructorError.MemoryError;
+        const comp = allocator.create(HorizontalScrollingTextComponent) catch return LuauComponentConstructorError.MemoryError;
+        const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
+
+        std.mem.copyForwards(u8, text, text_arg);
+
+        start_pos.* = ComponentPos{ .x = start_pos_arg.x, .y = start_pos_arg.y };
+        color.* = Color{ .r = color_arg.r, .g = color_arg.g, .b = color_arg.b };
+        font.* = font_arg;
+        cutoff_x.* = cutoff_x_arg;
+        text_pos.* = text_pos_arg;
+        comp.* = HorizontalScrollingTextComponent{ .start_pos = start_pos.*, .color = color.*, .font = font.*, .text = text, .text_pos = text_pos.*, .cutoff_x = cutoff_x.* };
+        ret.* = AnyComponent{ .animated = comp.*.animation(animation_arg.duration, animation_arg.loop, animation_arg.speed) };
+        return ret;
+    }
+
     fn update_animation(ctx: *anyopaque, clock: *Clock, frame_number: u32) void {
         const comp: *HorizontalScrollingTextComponent = @ptrCast(@alignCast(ctx));
         _ = clock;
@@ -665,6 +700,52 @@ pub const VerticalScrollingTextComponent = struct {
             .speed = speed,
             .update_animation = &update_animation,
         };
+    }
+
+    pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
+        const start_pos_arg = try LuauArg.getPosOrError(args, 0);
+        const width_arg = try LuauArg.getU8IntOrError(args, 1);
+        const height_arg = try LuauArg.getU8IntOrError(args, 2);
+        const font_arg = try LuauArg.getFontOrError(args, 3);
+        const text_arg = try LuauArg.getStringOrError(args, 4);
+        const color_arg = try LuauArg.getColorOrError(args, 5);
+        const text_pos_arg = try LuauArg.getI32IntOrError(args, 6);
+        const line_spacing_arg = try LuauArg.getU8IntOrError(args, 7);
+        const animation_arg = try LuauArg.getAnimationOrError(args, 8);
+
+        const start_pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
+        const width = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
+        const height = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
+        const font = allocator.create(common.font.FontStore) catch return LuauComponentConstructorError.MemoryError;
+        const text = allocator.dupeZ(u8, text_arg) catch return LuauComponentConstructorError.MemoryError;
+        const color = allocator.create(Color) catch return LuauComponentConstructorError.MemoryError;
+        const text_pos = allocator.create(i32) catch return LuauComponentConstructorError.MemoryError;
+        const line_spacing = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
+        const comp = allocator.create(VerticalScrollingTextComponent) catch return LuauComponentConstructorError.MemoryError;
+        const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
+
+        std.mem.copyForwards(u8, text, text_arg);
+
+        start_pos.* = ComponentPos{ .x = start_pos_arg.x, .y = start_pos_arg.y };
+        width.* = width_arg;
+        height.* = height_arg;
+        font.* = font_arg;
+        color.* = Color{ .r = color_arg.r, .g = color_arg.g, .b = color_arg.b };
+        text_pos.* = text_pos_arg;
+        line_spacing.* = line_spacing_arg;
+        comp.* = VerticalScrollingTextComponent{
+            .start_pos = start_pos.*,
+            .color = color.*,
+            .font = font.*,
+            .text = text,
+            .starting_text_pos = text_pos.*,
+            .text_pos = text_pos.*,
+            .width = width.*,
+            .height = height.*,
+            .line_spacing = line_spacing.*,
+        };
+        ret.* = AnyComponent{ .animated = comp.*.animation(animation_arg.duration, animation_arg.loop, animation_arg.speed) };
+        return ret;
     }
 
     fn update_animation(ctx: *anyopaque, clock: *Clock, frame_number: u32) void {

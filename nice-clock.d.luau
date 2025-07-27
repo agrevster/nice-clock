@@ -30,8 +30,10 @@ export type ClockModuleBuilder = {
 	circle: (self: ClockModuleBuilder, pos: Pos, radius: number, outline_thickness: number, color: Color) -> ClockModuleBuilder,
 	image: (self: ClockModuleBuilder, pos: Pos, image_name: string) -> ClockModuleBuilder,
 	char: (self: ClockModuleBuilder, pos: Pos, font: string, char: string, color: Color) -> ClockModuleBuilder,
-	text: (self: ClockModuleBuilder, pos: Pos, font: string, text: string, color: Color) -> ClockModuleBuilder,
+	text: (self: ClockModuleBuilder, pos: Pos, font: string, text: string, color: Color)-> ClockModuleBuilder,
 	wrappedtext: (self: ClockModuleBuilder, pos: Pos, font: string, text: string, color: Color, line_spacing: number) -> ClockModuleBuilder,
+	horizontalscrollingtext: (self: ClockModuleBuilder, pos: Pos, font: string, text: string, color: Color, cutof_x: number, text_pos: number, animation: Animation) -> ClockModuleBuilder,
+	verticalscrollingtext: (self: ClockModuleBuilder, pos: Pos, width: number, height: number, font: string, text: string, color: Color, text_pos: number,line_spacing: number, animation: Animation) -> ClockModuleBuilder,
 }
 
 export type ClockModule = {
@@ -57,6 +59,12 @@ export type Color = {
 export type Pos = {
 	y: number,
 	x: number,
+}
+
+export type Animation = {
+	duration: number,
+	loop: boolean,
+	speed: number,
 }
 
 

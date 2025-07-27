@@ -27,6 +27,7 @@ const tryPushImagenames = LuauTry(void, "Failed to push imagenames table.");
 const tryPushComponents = LuauTry(void, "Failed to push components table.");
 const tryParseBuilderStruct = LuauTry(ModuleBuilderTable, "Failed to parse builder struct from luau table.");
 const tryGetIntFromTable = LuauTry(zlua.Integer, "Failed to get int from table.");
+const tryGetBoolFromTable = LuauTry(bool, "Failed to get bool from table.");
 
 const ModuleBuilderTable = struct {
     name: []const u8,
@@ -69,6 +70,8 @@ const ModuleBuilderTable = struct {
 };
 
 pub const ClockComponentTable = struct { number: u8, props: []common.luau.import_components.LuauArg };
+
+pub const AnimationTable = struct { duration: u32, loop: bool, speed: i16 };
 
 fn createModuleBuilderLuauTable(luau: *Luau, module_name: [:0]const u8, module_time: zlua.Integer, image_names: [][:0]const u8) void {
     luau.newTable();
@@ -154,8 +157,6 @@ fn build_fn(luau: *Luau) i32 {
     tryPushComponents.unwrap(luau, luau.pushAny(builder_table.components));
     luau.setField(-2, "components");
 
-    // generateLuauComponentBuilderFunctions(luau);
-
     return 1;
 }
 
@@ -193,6 +194,7 @@ pub fn component_fn(luau: *Luau) i32 {
 
     const Number = zlua.LuaType.number;
     const Nil = zlua.LuaType.nil;
+    const Boolean = zlua.LuaType.boolean;
     //Validate arguments (we start at 1 because luau is weird)
     for (2..top + 1) |index| {
         const i: i32 = @intCast(index);
@@ -208,12 +210,16 @@ pub fn component_fn(luau: *Luau) i32 {
 
                 const x = luau.getField(i, "x");
                 const y = luau.getField(i, "y");
-                luau.pop(5);
 
-                if ((r != Number or g != Number or b != Number) and (x != Number or y != Number)) luau_error(luau, "Table should be a Color or a Postion.");
+                const duration = luau.getField(i, "duration");
+                const loop = luau.getField(i, "loop");
+                const speed = luau.getField(i, "speed");
+                luau.pop(8);
+
+                if ((r != Number or g != Number or b != Number) and (x != Number or y != Number) and (duration != Number or loop != Boolean or speed != Number)) luau_error(luau, "Table should be a Color, Position or Animation.");
 
                 // RGB struct
-                if ((r == Number and g == Number and b == Number) and (x == Nil and y == Nil)) {
+                if ((r == Number and g == Number and b == Number) and (x == Nil and y == Nil) and (duration == Nil and loop == Nil and speed == Nil)) {
                     _ = luau.getField(i, "r");
                     _ = luau.getField(i, "g");
                     _ = luau.getField(i, "b");
@@ -226,7 +232,7 @@ pub fn component_fn(luau: *Luau) i32 {
                     continue;
                 }
 
-                if ((r == Nil and g == Nil and b == Nil) and (x == Number and y == Number)) {
+                if ((r == Nil and g == Nil and b == Nil) and (x == Number and y == Number) and (duration == Nil and loop == Nil and speed == Nil)) {
                     _ = luau.getField(i, "x");
                     _ = luau.getField(i, "y");
                     args[index - 2] = LuauArg{ .pos = .{
@@ -236,8 +242,22 @@ pub fn component_fn(luau: *Luau) i32 {
                     luau.pop(2);
                     continue;
                 }
+
+                if ((r == Nil and g == Nil and b == Nil) and (x == Nil and y == Nil) and (duration == Number and loop == Boolean and speed == Number)) {
+                    _ = luau.getField(i, "duration");
+                    _ = luau.getField(i, "loop");
+                    _ = luau.getField(i, "speed");
+                    args[index - 2] = LuauArg{ .animation = .{
+                        .duration = @intCast(@min(4294967296, @max(0, tryGetIntFromTable.unwrap(luau, luau.toInteger(-3))))),
+                        .loop = tryGetBoolFromTable.unwrap(luau, luau.toBoolean(-2)),
+                        .speed = @intCast(@min(32767, @max(-32767, tryGetIntFromTable.unwrap(luau, luau.toInteger(-1))))),
+                    } };
+                    luau.pop(3);
+                    continue;
+                }
+
                 //Error to prevent mixing and matching...
-                luau_error(luau, "Table should be a Color or a Postion.");
+                luau_error(luau, "Table should be a Color, Position or Animation.");
             },
             else => {
                 luau_error(luau, "Invalid argument type!");
