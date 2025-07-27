@@ -159,17 +159,13 @@ pub const TileComponent = struct {
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
-        const pos_arg = try LuauArg.getPosOrError(args, 0);
-        const color_arg = try LuauArg.getColorOrError(args, 1);
+        const pos = try LuauArg.getPosOrError(args, 0);
+        const color = try LuauArg.getColorOrError(args, 1);
 
-        const color = allocator.create(Color) catch return LuauComponentConstructorError.MemoryError;
-        const pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
         const comp = allocator.create(TileComponent) catch return LuauComponentConstructorError.MemoryError;
         const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
 
-        color.* = Color{ .r = color_arg.r, .g = color_arg.g, .b = color_arg.b };
-        pos.* = ComponentPos{ .x = pos_arg.x, .y = pos_arg.y };
-        comp.* = TileComponent{ .pos = pos.*, .color = color.* };
+        comp.* = TileComponent{ .pos = pos, .color = color };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
     }
@@ -193,26 +189,16 @@ pub const BoxComponent = struct {
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
-        const pos_arg = try LuauArg.getPosOrError(args, 0);
-        const width_arg = try LuauArg.getU8IntOrError(args, 1);
-        const height_arg = try LuauArg.getU8IntOrError(args, 2);
-        const fill_inside_arg = try LuauArg.getBoolOrError(args, 3);
-        const color_arg = try LuauArg.getColorOrError(args, 4);
+        const pos = try LuauArg.getPosOrError(args, 0);
+        const width = try LuauArg.getU8IntOrError(args, 1);
+        const height = try LuauArg.getU8IntOrError(args, 2);
+        const fill_inside = try LuauArg.getBoolOrError(args, 3);
+        const color = try LuauArg.getColorOrError(args, 4);
 
-        const pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
-        const width = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
-        const height = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
-        const fill_inside = allocator.create(bool) catch return LuauComponentConstructorError.MemoryError;
-        const color = allocator.create(Color) catch return LuauComponentConstructorError.MemoryError;
         const comp = allocator.create(BoxComponent) catch return LuauComponentConstructorError.MemoryError;
         const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
 
-        pos.* = ComponentPos{ .x = pos_arg.x, .y = pos_arg.y };
-        width.* = width_arg;
-        height.* = height_arg;
-        fill_inside.* = fill_inside_arg;
-        color.* = Color{ .r = color_arg.r, .g = color_arg.g, .b = color_arg.b };
-        comp.* = BoxComponent{ .pos = pos.*, .color = color.*, .width = width.*, .height = height.*, .fill_inside = fill_inside.* };
+        comp.* = BoxComponent{ .pos = pos, .color = color, .width = width, .height = height, .fill_inside = fill_inside };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
     }
@@ -249,23 +235,15 @@ pub const CircleComponent = struct {
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
-        const pos_arg = try LuauArg.getPosOrError(args, 0);
-        const radius_arg = try LuauArg.getU8IntOrError(args, 1);
-        const outline_thickness_arg = try LuauArg.getU8IntOrError(args, 2);
-        const color_arg = try LuauArg.getColorOrError(args, 3);
+        const pos = try LuauArg.getPosOrError(args, 0);
+        const radius = try LuauArg.getU8IntOrError(args, 1);
+        const outline_thickness = try LuauArg.getU8IntOrError(args, 2);
+        const color = try LuauArg.getColorOrError(args, 3);
 
-        const pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
-        const radius = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
-        const outline_thickness = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
-        const color = allocator.create(Color) catch return LuauComponentConstructorError.MemoryError;
         const comp = allocator.create(CircleComponent) catch return LuauComponentConstructorError.MemoryError;
         const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
 
-        pos.* = ComponentPos{ .x = pos_arg.x, .y = pos_arg.y };
-        radius.* = radius_arg;
-        outline_thickness.* = outline_thickness_arg;
-        color.* = Color{ .r = color_arg.r, .g = color_arg.g, .b = color_arg.b };
-        comp.* = CircleComponent{ .pos = pos.*, .color = color.*, .radius = radius.*, .outline_thickness = outline_thickness.* };
+        comp.* = CircleComponent{ .pos = pos, .color = color, .radius = radius, .outline_thickness = outline_thickness };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
     }
@@ -347,23 +325,15 @@ pub const CharComponent = struct {
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
-        const pos_arg = try LuauArg.getPosOrError(args, 0);
-        const font_arg = try LuauArg.getFontOrError(args, 1);
-        const char_arg = try LuauArg.getCharOrError(args, 2);
-        const color_arg = try LuauArg.getColorOrError(args, 3);
+        const pos = try LuauArg.getPosOrError(args, 0);
+        const font = try LuauArg.getFontOrError(args, 1);
+        const char = try LuauArg.getCharOrError(args, 2);
+        const color = try LuauArg.getColorOrError(args, 3);
 
-        const pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
-        const font = allocator.create(common.font.FontStore) catch return LuauComponentConstructorError.MemoryError;
-        const char = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
-        const color = allocator.create(Color) catch return LuauComponentConstructorError.MemoryError;
         const comp = allocator.create(CharComponent) catch return LuauComponentConstructorError.MemoryError;
         const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
 
-        pos.* = ComponentPos{ .x = pos_arg.x, .y = pos_arg.y };
-        color.* = Color{ .r = color_arg.r, .g = color_arg.g, .b = color_arg.b };
-        font.* = font_arg;
-        char.* = char_arg;
-        comp.* = CharComponent{ .pos = pos.*, .color = color.*, .font = font.*, .char = char.* };
+        comp.* = CharComponent{ .pos = pos, .color = color, .font = font, .char = char };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
     }
@@ -386,24 +356,18 @@ pub const TextComponent = struct {
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
-        const pos_arg = try LuauArg.getPosOrError(args, 0);
-        const font_arg = try LuauArg.getFontOrError(args, 1);
+        const pos = try LuauArg.getPosOrError(args, 0);
+        const font = try LuauArg.getFontOrError(args, 1);
         const text_arg = try LuauArg.getStringOrError(args, 2);
-        const color_arg = try LuauArg.getColorOrError(args, 3);
+        const color = try LuauArg.getColorOrError(args, 3);
 
-        const pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
-        const font = allocator.create(common.font.FontStore) catch return LuauComponentConstructorError.MemoryError;
-        const text = allocator.dupeZ(u8, text_arg) catch return LuauComponentConstructorError.MemoryError;
-        const color = allocator.create(Color) catch return LuauComponentConstructorError.MemoryError;
         const comp = allocator.create(TextComponent) catch return LuauComponentConstructorError.MemoryError;
         const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
+        const text = allocator.dupeZ(u8, text_arg) catch return LuauComponentConstructorError.MemoryError;
 
         std.mem.copyForwards(u8, text, text_arg);
 
-        pos.* = ComponentPos{ .x = pos_arg.x, .y = pos_arg.y };
-        color.* = Color{ .r = color_arg.r, .g = color_arg.g, .b = color_arg.b };
-        font.* = font_arg;
-        comp.* = TextComponent{ .pos = pos.*, .color = color.*, .font = font.*, .text = text };
+        comp.* = TextComponent{ .pos = pos, .color = color, .font = font, .text = text };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
     }
@@ -436,27 +400,19 @@ pub const WrappedTextComponent = struct {
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
-        const pos_arg = try LuauArg.getPosOrError(args, 0);
-        const font_arg = try LuauArg.getFontOrError(args, 1);
+        const pos = try LuauArg.getPosOrError(args, 0);
+        const font = try LuauArg.getFontOrError(args, 1);
         const text_arg = try LuauArg.getStringOrError(args, 2);
-        const color_arg = try LuauArg.getColorOrError(args, 3);
-        const line_spacing_arg = try LuauArg.getI8IntOrError(args, 4);
+        const color = try LuauArg.getColorOrError(args, 3);
+        const line_spacing = try LuauArg.getI8IntOrError(args, 4);
 
-        const pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
-        const font = allocator.create(common.font.FontStore) catch return LuauComponentConstructorError.MemoryError;
         const text = allocator.dupeZ(u8, text_arg) catch return LuauComponentConstructorError.MemoryError;
-        const color = allocator.create(Color) catch return LuauComponentConstructorError.MemoryError;
-        const line_spacing = allocator.create(i8) catch return LuauComponentConstructorError.MemoryError;
         const comp = allocator.create(WrappedTextComponent) catch return LuauComponentConstructorError.MemoryError;
         const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
 
         std.mem.copyForwards(u8, text, text_arg);
 
-        pos.* = ComponentPos{ .x = pos_arg.x, .y = pos_arg.y };
-        color.* = Color{ .r = color_arg.r, .g = color_arg.g, .b = color_arg.b };
-        font.* = font_arg;
-        line_spacing.* = line_spacing_arg;
-        comp.* = WrappedTextComponent{ .pos = pos.*, .color = color.*, .font = font.*, .text = text, .line_spacing = line_spacing.* };
+        comp.* = WrappedTextComponent{ .pos = pos, .color = color, .font = font, .text = text, .line_spacing = line_spacing };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
     }
@@ -513,17 +469,15 @@ pub const ImageComponent = struct {
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
-        const pos_arg = try LuauArg.getPosOrError(args, 0);
+        const pos = try LuauArg.getPosOrError(args, 0);
         const image_name_arg = try LuauArg.getStringOrError(args, 1);
 
-        const pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
         const image_name = allocator.dupeZ(u8, image_name_arg) catch return LuauComponentConstructorError.MemoryError;
         const comp = allocator.create(ImageComponent) catch return LuauComponentConstructorError.MemoryError;
         const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
 
-        pos.* = ComponentPos{ .x = pos_arg.x, .y = pos_arg.y };
         std.mem.copyForwards(u8, image_name, image_name_arg);
-        comp.* = ImageComponent{ .pos = pos.*, .image_name = image_name };
+        comp.* = ImageComponent{ .pos = pos, .image_name = image_name };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
     }
@@ -575,36 +529,33 @@ pub const HorizontalScrollingTextComponent = struct {
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
-        const start_pos_arg = try LuauArg.getPosOrError(args, 0);
-        const font_arg = try LuauArg.getFontOrError(args, 1);
+        const start_pos = try LuauArg.getPosOrError(args, 0);
+        const font = try LuauArg.getFontOrError(args, 1);
         const text_arg = try LuauArg.getStringOrError(args, 2);
-        const color_arg = try LuauArg.getColorOrError(args, 3);
-        const cutoff_x_arg = try LuauArg.getU8IntOrError(args, 4);
-        const text_pos_arg = try LuauArg.getI32IntOrError(args, 5);
+        const color = try LuauArg.getColorOrError(args, 3);
+        const cutoff_x = try LuauArg.getU8IntOrError(args, 4);
+        const text_pos = try LuauArg.getI32IntOrError(args, 5);
         const animation_arg = try LuauArg.getAnimationOrError(args, 6);
 
-        if (start_pos_arg.x < cutoff_x_arg) {
+        if (start_pos.x < cutoff_x) {
             logger.err("x pos should be greater than cutoff x!", .{});
             return LuauComponentConstructorError.ValidationError;
         }
 
-        const start_pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
-        const font = allocator.create(common.font.FontStore) catch return LuauComponentConstructorError.MemoryError;
         const text = allocator.dupeZ(u8, text_arg) catch return LuauComponentConstructorError.MemoryError;
-        const color = allocator.create(Color) catch return LuauComponentConstructorError.MemoryError;
-        const cutoff_x = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
-        const text_pos = allocator.create(i32) catch return LuauComponentConstructorError.MemoryError;
         const comp = allocator.create(HorizontalScrollingTextComponent) catch return LuauComponentConstructorError.MemoryError;
         const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
 
         std.mem.copyForwards(u8, text, text_arg);
 
-        start_pos.* = ComponentPos{ .x = start_pos_arg.x, .y = start_pos_arg.y };
-        color.* = Color{ .r = color_arg.r, .g = color_arg.g, .b = color_arg.b };
-        font.* = font_arg;
-        cutoff_x.* = cutoff_x_arg;
-        text_pos.* = text_pos_arg;
-        comp.* = HorizontalScrollingTextComponent{ .start_pos = start_pos.*, .color = color.*, .font = font.*, .text = text, .text_pos = text_pos.*, .cutoff_x = cutoff_x.* };
+        comp.* = HorizontalScrollingTextComponent{
+            .start_pos = start_pos,
+            .color = color,
+            .font = font,
+            .text = text,
+            .text_pos = text_pos,
+            .cutoff_x = cutoff_x,
+        };
         ret.* = AnyComponent{ .animated = comp.*.animation(animation_arg.duration, animation_arg.loop, animation_arg.speed) };
         return ret;
     }
@@ -703,46 +654,32 @@ pub const VerticalScrollingTextComponent = struct {
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
-        const start_pos_arg = try LuauArg.getPosOrError(args, 0);
-        const width_arg = try LuauArg.getU8IntOrError(args, 1);
-        const height_arg = try LuauArg.getU8IntOrError(args, 2);
-        const font_arg = try LuauArg.getFontOrError(args, 3);
+        const start_pos = try LuauArg.getPosOrError(args, 0);
+        const width = try LuauArg.getU8IntOrError(args, 1);
+        const height = try LuauArg.getU8IntOrError(args, 2);
+        const font = try LuauArg.getFontOrError(args, 3);
         const text_arg = try LuauArg.getStringOrError(args, 4);
-        const color_arg = try LuauArg.getColorOrError(args, 5);
-        const text_pos_arg = try LuauArg.getI32IntOrError(args, 6);
-        const line_spacing_arg = try LuauArg.getU8IntOrError(args, 7);
+        const color = try LuauArg.getColorOrError(args, 5);
+        const text_pos = try LuauArg.getI32IntOrError(args, 6);
+        const line_spacing = try LuauArg.getU8IntOrError(args, 7);
         const animation_arg = try LuauArg.getAnimationOrError(args, 8);
 
-        const start_pos = allocator.create(ComponentPos) catch return LuauComponentConstructorError.MemoryError;
-        const width = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
-        const height = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
-        const font = allocator.create(common.font.FontStore) catch return LuauComponentConstructorError.MemoryError;
         const text = allocator.dupeZ(u8, text_arg) catch return LuauComponentConstructorError.MemoryError;
-        const color = allocator.create(Color) catch return LuauComponentConstructorError.MemoryError;
-        const text_pos = allocator.create(i32) catch return LuauComponentConstructorError.MemoryError;
-        const line_spacing = allocator.create(u8) catch return LuauComponentConstructorError.MemoryError;
         const comp = allocator.create(VerticalScrollingTextComponent) catch return LuauComponentConstructorError.MemoryError;
         const ret = allocator.create(AnyComponent) catch return LuauComponentConstructorError.MemoryError;
 
         std.mem.copyForwards(u8, text, text_arg);
 
-        start_pos.* = ComponentPos{ .x = start_pos_arg.x, .y = start_pos_arg.y };
-        width.* = width_arg;
-        height.* = height_arg;
-        font.* = font_arg;
-        color.* = Color{ .r = color_arg.r, .g = color_arg.g, .b = color_arg.b };
-        text_pos.* = text_pos_arg;
-        line_spacing.* = line_spacing_arg;
         comp.* = VerticalScrollingTextComponent{
-            .start_pos = start_pos.*,
-            .color = color.*,
-            .font = font.*,
+            .start_pos = start_pos,
+            .color = color,
+            .font = font,
             .text = text,
-            .starting_text_pos = text_pos.*,
-            .text_pos = text_pos.*,
-            .width = width.*,
-            .height = height.*,
-            .line_spacing = line_spacing.*,
+            .starting_text_pos = text_pos,
+            .text_pos = text_pos,
+            .width = width,
+            .height = height,
+            .line_spacing = line_spacing,
         };
         ret.* = AnyComponent{ .animated = comp.*.animation(animation_arg.duration, animation_arg.loop, animation_arg.speed) };
         return ret;
