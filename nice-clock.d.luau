@@ -23,7 +23,6 @@ export type ClockModuleBuilder = {
 	deinit_fn: nil | () -> (),
 	init: (self: ClockModuleBuilder, fn: () -> ()) -> ClockModuleBuilder,
 	deinit: (self: ClockModuleBuilder, fn: () -> ()) -> ClockModuleBuilder,
-	build: (self: ClockModuleBuilder) ->  ClockModule,
 	-- Components
 	tile: (self: ClockModuleBuilder, pos: Pos, color: Color) -> ClockModuleBuilder,
 	box: (self: ClockModuleBuilder, pos: Pos, width: number, height: number, fill_inside: boolean, color: Color) -> ClockModuleBuilder,

@@ -58,9 +58,8 @@ const ModuleBuilderTable = struct {
         pushFunctions(luau, -2);
     }
 
+    ///Pushes all the builder table's functions to luau.
     fn pushFunctions(luau: *Luau, index: i32) void {
-        luau.pushFunction(wrap(build_fn));
-        luau.setField(index, "build");
         luau.pushFunction(wrap(set_init_fn));
         luau.setField(index, "init");
         luau.pushFunction(wrap(set_deinit_fn));
@@ -69,10 +68,14 @@ const ModuleBuilderTable = struct {
     }
 };
 
+///Used to represent a ClockComponent in luau.
 pub const ClockComponentTable = struct { number: u8, props: []common.luau.import_components.LuauArg };
 
+///Used to represent a clock animation argument in luau.
+///For creating animated components.
 pub const AnimationTable = struct { duration: u32, loop: bool, speed: i16 };
 
+///Creates a new module builder table in luau from the given Zig arguments.
 fn createModuleBuilderLuauTable(luau: *Luau, module_name: [:0]const u8, module_time: zlua.Integer, image_names: [][:0]const u8) void {
     luau.newTable();
 
@@ -103,6 +106,8 @@ fn createModuleBuilderLuauTable(luau: *Luau, module_name: [:0]const u8, module_t
 
 // Functions
 
+///(Luau)
+///Creates a new module builder table used to create clock modules from luau.
 fn moduleBuilder(luau: *Luau) i32 {
     luau.checkType(1, zlua.LuaType.string);
     luau.checkType(2, zlua.LuaType.number);
@@ -132,34 +137,8 @@ fn moduleBuilder(luau: *Luau) i32 {
     return 1;
 }
 
-fn build_fn(luau: *Luau) i32 {
-    luau.checkType(1, zlua.LuaType.table);
-
-    const builder_table = tryParseBuilderStruct.unwrap(luau, luau.toStruct(ModuleBuilderTable, luau.allocator(), true, 1));
-
-    luau.newTable();
-
-    const init_fn_type = luau.getField(1, "init_fn");
-    if (init_fn_type != zlua.LuaType.function and init_fn_type != zlua.LuaType.nil) luau_error(luau, "Invalid init fn type...");
-    luau.setField(-2, "init");
-    const deinit_fn_type = luau.getField(1, "deinit_fn");
-    if (deinit_fn_type != zlua.LuaType.function and deinit_fn_type != zlua.LuaType.nil) luau_error(luau, "Invalid deinit fn type...");
-    luau.setField(-2, "deinit");
-
-    _ = luau.pushString(builder_table.name);
-    luau.setField(-2, "name");
-    luau.pushInteger(@intCast(builder_table.timelimit));
-    luau.setField(-2, "timelimit");
-
-    tryPushImagenames.unwrap(luau, luau.pushAny(builder_table.imagenames));
-    luau.setField(-2, "imagenames");
-
-    tryPushComponents.unwrap(luau, luau.pushAny(builder_table.components));
-    luau.setField(-2, "components");
-
-    return 1;
-}
-
+///(Luau)
+///Used to append an init function to the table.
 fn set_init_fn(luau: *Luau) i32 {
     luau.checkType(1, zlua.LuaType.table);
     luau.checkType(2, zlua.LuaType.function);
@@ -172,6 +151,8 @@ fn set_init_fn(luau: *Luau) i32 {
     return 1;
 }
 
+///(Luau)
+///Used to append a deinit function to the table.
 fn set_deinit_fn(luau: *Luau) i32 {
     luau.checkType(1, zlua.LuaType.table);
     luau.checkType(2, zlua.LuaType.function);
@@ -184,6 +165,9 @@ fn set_deinit_fn(luau: *Luau) i32 {
     return 1;
 }
 
+///(Luau)
+///Used to append a specific component to the builder table.
+///Must be pushed as a closure (1 upvalue component ID index from enum)
 pub fn component_fn(luau: *Luau) i32 {
     luau.checkType(1, .table);
 

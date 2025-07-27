@@ -9,6 +9,8 @@ const AnimationTable = common.luau.exports.nice_clock.AnimationTable;
 const luau_error = common.luau.loader.luau_error;
 const logger = common.luau.loader.logger;
 
+///Each field of this enum represents a component from `common.components` that will be pushed to the luau module builder.
+///The component struct must have the function _from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent_.
 const LuauComponentType = enum(u8) {
     TileComponent,
     BoxComponent,
@@ -21,6 +23,12 @@ const LuauComponentType = enum(u8) {
     VerticalScrollingTextComponent,
 };
 
+/// Represents a single argument passed to a Luau clock component builder function.
+/// To support additional types or table fields from Luau, modify component_fn in `luau/exports/nice-clock.zig`.
+///
+/// Each field in the union is used to represent a different type.
+/// Parsing specific type variants like u8 for int should be done as a method and not by adding a separate field.
+/// Structs are different story... Avoid adding new structs if at all possible.
 pub const LuauArg = union(enum) {
     string: [:0]const u8,
     int: zlua.Integer,
@@ -145,9 +153,13 @@ pub const LuauArg = union(enum) {
     }
 };
 
+///Represents all of the errors that are thrown by a component's the from_luau function.
 pub const LuauComponentConstructorError = error{ BadValue, MemoryError, OtherError } || LuauArg.ArgFetchError;
+//Used to represent a pointer to a from_luau function. Every function used to create a component from a luau builder function MUST follow this.
 const LuauComponentConstructor = *const fn (args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*components.AnyComponent;
 
+///Creates a list of functions used to create components for luau component builder functions.
+///Each index corresponds to the index of the LuauComponentType field which should be the name of a component struct with a from_luau function.
 fn generateLuauComponentConstructors() []const LuauComponentConstructor {
     const luau_component_enum_fields = @typeInfo(LuauComponentType).@"enum".fields;
 
@@ -164,7 +176,10 @@ fn generateLuauComponentConstructors() []const LuauComponentConstructor {
     return creator_functions_const[0..];
 }
 
+///The possible errors from importing a RootComponent from luau.
 pub const RootComponentImportError = error{ MemoryError, OtherError, InvalidComponentError, LuauParseError } || LuauComponentConstructorError;
+
+///Attempts to read a component builder table in luau and returns a RootComponent or error.
 pub fn rootComponentFromLuau(luau: *Luau, allocator: std.mem.Allocator) RootComponentImportError!*components.RootComponent {
     const component_constructors = comptime generateLuauComponentConstructors();
     _ = luau.getField(1, "components");
@@ -189,6 +204,7 @@ pub fn rootComponentFromLuau(luau: *Luau, allocator: std.mem.Allocator) RootComp
     return root;
 }
 
+///Pushes a luau function for each field in the LuauComponentType enum use to build components form luau.
 pub fn generateLuauComponentBuilderFunctions(luau: *Luau) void {
     for (std.enums.values(LuauComponentType), 0..) |component, index| {
         // And this is why we use Luau for modules... Imagine having to do all this to change a string
@@ -204,6 +220,8 @@ pub fn generateLuauComponentBuilderFunctions(luau: *Luau) void {
     }
 }
 
+///Pushes each field of the FontStore enum to Luau.
+///Used to give easy references to all of the available fonts.
 pub fn generateLuauFontFields(luau: *Luau) void {
     luau.newTable();
     for (std.enums.values(common.font.FontStore)) |component| {

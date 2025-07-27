@@ -29,6 +29,7 @@ pub fn load_export(luau: *Luau) void {
     luau.setGlobal("datetime");
 }
 
+///Converts the given time field into a Luau table.
 fn createTimeTableFromZig(current: Time, luau: *Luau) void {
     luau.newTable();
 
@@ -54,6 +55,7 @@ fn createTimeTableFromZig(current: Time, luau: *Luau) void {
     luau.setField(-2, "time");
 }
 
+///Converts the given date field into a luau table.
 fn createDateTableFromZig(current: Date, luau: *Luau) void {
     luau.newTable();
 
@@ -84,6 +86,7 @@ fn createDateTableFromZig(current: Date, luau: *Luau) void {
     luau.setField(-2, "date");
 }
 
+///Converts the given datetime fied into a luau table.
 fn createDatetimeTableFromZig(current: Datetime, luau: *Luau) void {
     luau.newTable();
     createDateTableFromZig(current.date, luau);
@@ -102,6 +105,7 @@ fn createDatetimeTableFromZig(current: Datetime, luau: *Luau) void {
     luau.setField(-2, "sub");
 }
 
+///Converts luau table into a Zig datetime struct.
 fn createDatetimeFromLuauTable(luau: *Luau, index: i32) Datetime {
     _ = luau.getField(index, "epoch");
     _ = luau.getField(index, "offset_minutes");
@@ -114,6 +118,7 @@ fn createDatetimeFromLuauTable(luau: *Luau, index: i32) Datetime {
     return dt;
 }
 
+///Attempts to get int from luau, if we run into issues return a default int.
 fn getIntFieldOrDefault(luau: *Luau, field_name: [:0]const u8, index: i32, default: zlua.Integer) zlua.Integer {
     _ = luau.getField(index, field_name);
     if (luau.isNoneOrNil(-1)) return default;
@@ -122,6 +127,7 @@ fn getIntFieldOrDefault(luau: *Luau, field_name: [:0]const u8, index: i32, defau
     return number;
 }
 
+///Creates a zig DatetimeDelta struct from the delta table in luau.
 fn createDeltaFromLuauTable(luau: *Luau, index: i32) Datetime.Delta {
     const years: i16 = @intCast(getIntFieldOrDefault(luau, "years", index, 0));
     const days: i32 = @intCast(getIntFieldOrDefault(luau, "days", index, 0));
@@ -129,6 +135,8 @@ fn createDeltaFromLuauTable(luau: *Luau, index: i32) Datetime.Delta {
 
     return Datetime.Delta{ .days = days, .years = years, .seconds = seconds };
 }
+
+///Creates a datetime delta table in luau from the given datetime delta struct.
 fn createDeltaTableFromZig(luau: *Luau, delta: Datetime.Delta) void {
     luau.newTable();
 
@@ -144,11 +152,15 @@ fn createDeltaTableFromZig(luau: *Luau, delta: Datetime.Delta) void {
 // Luau Functions
 //
 
+///(Luau)
+///Returns the current time in UTC.
 fn utcNow(luau: *Luau) i32 {
     createDatetimeTableFromZig(Datetime.now(), luau);
     return 1;
 }
 
+///(Luau)
+///Returns the current time in the given timezone.
 fn zonedNow(luau: *Luau) i32 {
     luau.checkType(1, zlua.LuaType.string);
     if (luau.toString(1)) |time_zone_str| {
@@ -164,6 +176,8 @@ fn zonedNow(luau: *Luau) i32 {
     return 1;
 }
 
+///(Luau)
+///Creates a new datetime table from args.
 fn new(luau: *Luau) i32 {
     luau.checkType(1, zlua.LuaType.number);
     luau.checkType(2, zlua.LuaType.number);
@@ -196,6 +210,8 @@ fn new(luau: *Luau) i32 {
     return 1;
 }
 
+///(Luau)
+///Creates a datetime object from ISO format.
 fn fromISO(luau: *Luau) u32 {
     luau.checkType(1, zlua.LuaType.string);
     const timestamp = LuauTry([:0]const u8, "Error getting ISO timestamp").unwrap(luau, luau.toString(1));
@@ -251,6 +267,8 @@ fn fromISO(luau: *Luau) u32 {
     return 1;
 }
 
+///(Luau)
+///Shifts the given datetime by the given delta.
 fn shift(luau: *Luau) i32 {
     luau.checkType(1, zlua.LuaType.table);
     luau.checkType(2, zlua.LuaType.table);
@@ -262,6 +280,8 @@ fn shift(luau: *Luau) i32 {
     return 1;
 }
 
+///(Luau)
+///Subtracts one datetime from another datetime.
 fn sub(luau: *Luau) i32 {
     luau.checkType(1, zlua.LuaType.table);
     luau.checkType(2, zlua.LuaType.table);

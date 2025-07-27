@@ -17,7 +17,7 @@ fn appendu8SliceOrLog(array_list: *std.ArrayList(u8), slice: []const u8) void {
     }
 }
 
-fn print_at_index(luau: *Luau, i: i32, print_list: *std.ArrayList(u8), allocator: std.mem.Allocator) void {
+fn printAtIndex(luau: *Luau, i: i32, print_list: *std.ArrayList(u8), allocator: std.mem.Allocator) void {
     switch (luau.typeOf(i)) {
         .none => {
             appendu8SliceOrLog(print_list, "None ");
@@ -67,6 +67,8 @@ fn print_at_index(luau: *Luau, i: i32, print_list: *std.ArrayList(u8), allocator
     }
 }
 
+///(Luau)
+///Prints the given Luau args.
 fn print(luau: *Luau) i32 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
@@ -77,7 +79,7 @@ fn print(luau: *Luau) i32 {
     //Luau indexing starts at 1 (WTF)
     for (1..arg_count + 1) |i_usize| {
         const i: i32 = @intCast(i_usize);
-        print_at_index(luau, i, &print_list, arena.allocator());
+        printAtIndex(luau, i, &print_list, arena.allocator());
     }
     print_logger.info("{s}", .{print_list.items});
 

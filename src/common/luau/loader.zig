@@ -3,16 +3,9 @@ const zlua = @import("zlua");
 const common = @import("../common.zig");
 const Luau = zlua.Lua;
 
-const Error = error{
-    OtherError,
-    LuauError,
-    FileNotFound,
-    DebugModule,
-    ModuleParsingError,
-};
-
 pub const logger = std.log.scoped(.luau_interpreter);
 
+///Reads a luau file located in _(cwd)/modules/_.
 fn read_module_file(file: []const u8, allocator: std.mem.Allocator) error{ OutOfMemory, FileNotFound, OtherError }![]const u8 {
     const file_name = std.fmt.allocPrint(allocator, "./modules/{s}.luau", .{file}) catch return error.OutOfMemory;
     defer allocator.free(file_name);
@@ -26,6 +19,10 @@ fn read_module_file(file: []const u8, allocator: std.mem.Allocator) error{ OutOf
     return file_contents;
 }
 
+///Used to help with error handling when working with Luau.
+/// T should be the expected return type without error union.
+/// Use unwrap to run the check.
+/// If T contains an error raises a luau error with the given message and logs the error in Zig.
 pub fn LuauTry(comptime T: type, error_message: []const u8) type {
     return struct {
         pub fn unwrap(luau: *zlua.Lua, item: anyerror!T) T {
@@ -39,11 +36,23 @@ pub fn LuauTry(comptime T: type, error_message: []const u8) type {
     };
 }
 
+///Raises a luau error and prevents the Zig program from continuing.
 pub fn luau_error(luau: *Luau, message: []const u8) noreturn {
     _ = luau.pushString(message);
     luau.raiseError();
 }
 
+///All of the possible errors that could occur when loading a clock module from Luau.
+const Error = error{
+    OtherError,
+    LuauError,
+    FileNotFound,
+    DebugModule,
+    ModuleParsingError,
+};
+
+///Attempts to read the given luau module file and if it returns a Luau module builder converts the Luau table into a ClockModule.
+///If the module does not return the Luau code will still be ran but this function will return a DebugModule error. This is useful for testing in Luau.
 pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Allocator) Error!*common.module.ClockModule {
     // Interpret the file
     const luau_file = read_module_file(module_file_name, allocator) catch |e| {
