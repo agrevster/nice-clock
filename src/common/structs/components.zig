@@ -420,7 +420,7 @@ pub const WrappedTextComponent = struct {
     ///Allows for addition of negative i8 `spacing` to u8 `initial`.
     ///*If the number is negative returns `0`*
     //This is pretty clumsy but it does the job, and fingers crossed no one will overflow because the screen is only 64x32
-    fn process_spacing(initial: u8, spacing: i8) u8 {
+    fn processSpacing(initial: u8, spacing: i8) u8 {
         var x = initial;
 
         if (spacing >= 0) {
@@ -441,7 +441,7 @@ pub const WrappedTextComponent = struct {
 
         for (self.text) |char| {
             if (char == '\n') {
-                y += process_spacing(font.height, self.line_spacing);
+                y += processSpacing(font.height, self.line_spacing);
                 x = self.pos.x;
                 continue;
             }
@@ -449,7 +449,7 @@ pub const WrappedTextComponent = struct {
             if (x + font.width >= 64) {
                 x = self.pos.x;
 
-                y += process_spacing(font.height, self.line_spacing);
+                y += processSpacing(font.height, self.line_spacing);
 
                 if (y > 31 - font.height) break; //We don't want to draw text off the screen
             }
@@ -487,7 +487,7 @@ pub const ImageComponent = struct {
     fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
         const self: *const ImageComponent = @ptrCast(@alignCast(ctx));
 
-        const image = try clock.image_store.get_image(self.image_name);
+        const image = try clock.image_store.getImage(self.image_name);
 
         for (0..image.height) |y| {
             const y_u8: u8 = @intCast(y);
@@ -567,7 +567,7 @@ pub const HorizontalScrollingTextComponent = struct {
         comp.text_pos += 1;
     }
 
-    fn draw_char_column_if_possible(clock: *Clock, y_pos: u8, x_pos: u8, font: common.font.BDF, char: u8, column: u8, color: Color) ComponentError!void {
+    fn drawCharColumnIfPossible(clock: *Clock, y_pos: u8, x_pos: u8, font: common.font.BDF, char: u8, column: u8, color: Color) ComponentError!void {
         if (y_pos > 31 or x_pos > 64) return;
         if (column >= font.width) return;
         const glyph = font.glyphs.get(char) orelse font.glyphs.get(font.default_char).?;
@@ -591,7 +591,7 @@ pub const HorizontalScrollingTextComponent = struct {
         }
     }
 
-    fn get_char_and_y(text: []const u8, font: common.font.BDF, text_pixel_x: usize) ?[2]usize {
+    fn getCharAndY(text: []const u8, font: common.font.BDF, text_pixel_x: usize) ?[2]usize {
         const char_index: usize = text_pixel_x / font.width;
         const char_y: usize = text_pixel_x % font.width;
         if (char_index >= text.len or char_y >= font.width) return null;
@@ -617,10 +617,10 @@ pub const HorizontalScrollingTextComponent = struct {
 
             const text_pixel_x_usize: usize = @intCast(@max(0, text_pixel_x));
 
-            if (get_char_and_y(self.text, font, text_pixel_x_usize)) |info| {
+            if (getCharAndY(self.text, font, text_pixel_x_usize)) |info| {
                 const x_u8: u8 = @intCast(x);
                 const column: u8 = @truncate(info[1]);
-                try draw_char_column_if_possible(clock, self.start_pos.y, x_u8, font, self.text[info[0]], column, self.color);
+                try drawCharColumnIfPossible(clock, self.start_pos.y, x_u8, font, self.text[info[0]], column, self.color);
             }
         }
     }
@@ -692,7 +692,7 @@ pub const VerticalScrollingTextComponent = struct {
         comp.text_pos += 1;
     }
 
-    fn draw_char_if_possible(clock: *Clock, y_pos: i9, x_pos: i9, font: common.font.BDF, char: u8, color: Color) ComponentError!void {
+    fn drawCharIfPossible(clock: *Clock, y_pos: i9, x_pos: i9, font: common.font.BDF, char: u8, color: Color) ComponentError!void {
         if (y_pos < -@as(i9, @intCast(font.height))) return;
         const glyph = font.glyphs.get(char) orelse font.glyphs.get(font.default_char).?;
         const bytes_per_row = (font.width + 7) / 8;
@@ -757,7 +757,7 @@ pub const VerticalScrollingTextComponent = struct {
                 var x: u8 = self.start_pos.x;
                 for (line.slice()) |char| {
                     const y: i9 = @intCast(window_y + text_y);
-                    try draw_char_if_possible(clock, y, x, font, char, self.color);
+                    try drawCharIfPossible(clock, y, x, font, char, self.color);
                     x += font.width;
                 }
             }

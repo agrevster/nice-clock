@@ -5,7 +5,7 @@ const Luau = zlua.Lua;
 const wrap = zlua.wrap;
 const LuauTry = common.luau.loader.LuauTry;
 const LuauArg = common.luau.import_components.LuauArg;
-const luau_error = common.luau.loader.luau_error;
+const luauError = common.luau.loader.luauError;
 const generateLuauComponentBuilderFunctions = common.luau.import_components.generateLuauComponentBuilderFunctions;
 const generateLuauFontFields = common.luau.import_components.generateLuauFontFields;
 
@@ -49,10 +49,10 @@ const ModuleBuilderTable = struct {
 
         //Push copy of init_fn and deinit_fn
         const init_fn_type = luau.getField(builder_table_index, "init_fn");
-        if (init_fn_type != zlua.LuaType.function and init_fn_type != zlua.LuaType.nil) luau_error(luau, "Invalid init fn type...");
+        if (init_fn_type != zlua.LuaType.function and init_fn_type != zlua.LuaType.nil) luauError(luau, "Invalid init fn type...");
         luau.setField(-2, "init_fn");
         const deinit_fn_type = luau.getField(builder_table_index, "deinit_fn");
-        if (deinit_fn_type != zlua.LuaType.function and deinit_fn_type != zlua.LuaType.nil) luau_error(luau, "Invalid deinit fn type...");
+        if (deinit_fn_type != zlua.LuaType.function and deinit_fn_type != zlua.LuaType.nil) luauError(luau, "Invalid deinit fn type...");
         luau.setField(-2, "deinit_fn");
 
         pushFunctions(luau, -2);
@@ -60,9 +60,9 @@ const ModuleBuilderTable = struct {
 
     ///Pushes all the builder table's functions to luau.
     fn pushFunctions(luau: *Luau, index: i32) void {
-        luau.pushFunction(wrap(set_init_fn));
+        luau.pushFunction(wrap(setInitFn));
         luau.setField(index, "init");
-        luau.pushFunction(wrap(set_deinit_fn));
+        luau.pushFunction(wrap(setDeinitFn));
         luau.setField(index, "deinit");
         generateLuauComponentBuilderFunctions(luau);
     }
@@ -118,7 +118,7 @@ fn moduleBuilder(luau: *Luau) i32 {
     var image_names: [][:0]const u8 = undefined;
 
     const string_list_len: usize = @intCast(@max(0, luau.objectLen(3)));
-    image_names = luau.allocator().alloc([:0]const u8, string_list_len) catch luau_error(luau, "Error allocating image_names.");
+    image_names = luau.allocator().alloc([:0]const u8, string_list_len) catch luauError(luau, "Error allocating image_names.");
     errdefer luau.allocator().free(image_names);
 
     const get_string_from_list = LuauTry([:0]const u8, "Failed to parse string from image names list.");
@@ -126,7 +126,7 @@ fn moduleBuilder(luau: *Luau) i32 {
     for (1..string_list_len + 1) |i| {
         const index: i32 = @intCast(i);
         const t = luau.rawGetIndex(3, index);
-        if (t != zlua.LuaType.string) luau_error(luau, "Expected list of type string.");
+        if (t != zlua.LuaType.string) luauError(luau, "Expected list of type string.");
         image_names[i - 1] = get_string_from_list.unwrap(luau, luau.toString(-1));
 
         luau.pop(1);
@@ -139,7 +139,7 @@ fn moduleBuilder(luau: *Luau) i32 {
 
 ///(Luau)
 ///Used to append an init function to the table.
-fn set_init_fn(luau: *Luau) i32 {
+fn setInitFn(luau: *Luau) i32 {
     luau.checkType(1, zlua.LuaType.table);
     luau.checkType(2, zlua.LuaType.function);
 
@@ -153,7 +153,7 @@ fn set_init_fn(luau: *Luau) i32 {
 
 ///(Luau)
 ///Used to append a deinit function to the table.
-fn set_deinit_fn(luau: *Luau) i32 {
+fn setDeinitFn(luau: *Luau) i32 {
     luau.checkType(1, zlua.LuaType.table);
     luau.checkType(2, zlua.LuaType.function);
 
@@ -168,13 +168,13 @@ fn set_deinit_fn(luau: *Luau) i32 {
 ///(Luau)
 ///Used to append a specific component to the builder table.
 ///Must be pushed as a closure (1 upvalue component ID index from enum)
-pub fn component_fn(luau: *Luau) i32 {
+pub fn componentFn(luau: *Luau) i32 {
     luau.checkType(1, .table);
 
     const top: usize = @intCast(luau.getTop());
-    var args = luau.allocator().alloc(LuauArg, top - 1) catch luau_error(luau, "Failed to allocate memory for arg list.");
+    var args = luau.allocator().alloc(LuauArg, top - 1) catch luauError(luau, "Failed to allocate memory for arg list.");
 
-    const component_id = luau.toInteger(Luau.upvalueIndex(1)) catch luau_error(luau, "Failed to get component_id from closure.");
+    const component_id = luau.toInteger(Luau.upvalueIndex(1)) catch luauError(luau, "Failed to get component_id from closure.");
 
     const Number = zlua.LuaType.number;
     const Nil = zlua.LuaType.nil;
@@ -200,7 +200,7 @@ pub fn component_fn(luau: *Luau) i32 {
                 const speed = luau.getField(i, "speed");
                 luau.pop(8);
 
-                if ((r != Number or g != Number or b != Number) and (x != Number or y != Number) and (duration != Number or loop != Boolean or speed != Number)) luau_error(luau, "Table should be a Color, Position or Animation.");
+                if ((r != Number or g != Number or b != Number) and (x != Number or y != Number) and (duration != Number or loop != Boolean or speed != Number)) luauError(luau, "Table should be a Color, Position or Animation.");
 
                 // RGB struct
                 if ((r == Number and g == Number and b == Number) and (x == Nil and y == Nil) and (duration == Nil and loop == Nil and speed == Nil)) {
@@ -241,10 +241,10 @@ pub fn component_fn(luau: *Luau) i32 {
                 }
 
                 //Error to prevent mixing and matching...
-                luau_error(luau, "Table should be a Color, Position or Animation.");
+                luauError(luau, "Table should be a Color, Position or Animation.");
             },
             else => {
-                luau_error(luau, "Invalid argument type!");
+                luauError(luau, "Invalid argument type!");
             },
         }
     }
@@ -253,11 +253,11 @@ pub fn component_fn(luau: *Luau) i32 {
     var builder_table = tryParseBuilderStruct.unwrap(luau, luau.toStruct(ModuleBuilderTable, luau.allocator(), true, 1));
 
     var new_components = luau.allocator().alloc(ClockComponentTable, builder_table.components.len + 1) catch {
-        luau_error(luau, "Error appending to the component table.");
+        luauError(luau, "Error appending to the component table.");
     };
 
     const clock_compoent = luau.allocator().create(ClockComponentTable) catch {
-        luau_error(luau, "Error creating module builder table.");
+        luauError(luau, "Error creating module builder table.");
     };
 
     std.mem.copyBackwards(ClockComponentTable, new_components, builder_table.components);

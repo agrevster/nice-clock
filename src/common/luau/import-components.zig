@@ -3,10 +3,10 @@ const common = @import("../common.zig");
 const zlua = @import("zlua");
 const Luau = zlua.Lua;
 const components = common.components;
-const componentFn = common.luau.exports.nice_clock.component_fn;
+const componentFn = common.luau.exports.nice_clock.componentFn;
 const ClockComponentTable = common.luau.exports.nice_clock.ClockComponentTable;
 const AnimationTable = common.luau.exports.nice_clock.AnimationTable;
-const luau_error = common.luau.loader.luau_error;
+const luauError = common.luau.loader.luauError;
 const logger = common.luau.loader.logger;
 
 ///Each field of this enum represents a component from `common.components` that will be pushed to the luau module builder.
@@ -24,7 +24,7 @@ const LuauComponentType = enum(u8) {
 };
 
 /// Represents a single argument passed to a Luau clock component builder function.
-/// To support additional types or table fields from Luau, modify component_fn in `luau/exports/nice-clock.zig`.
+/// To support additional types or table fields from Luau, modify componentFn in `luau/exports/nice-clock.zig`.
 ///
 /// Each field in the union is used to represent a different type.
 /// Parsing specific type variants like u8 for int should be done as a method and not by adding a separate field.
@@ -210,7 +210,7 @@ pub fn generateLuauComponentBuilderFunctions(luau: *Luau) void {
         // And this is why we use Luau for modules... Imagine having to do all this to change a string
         const enum_tag = @tagName(component);
         const size = std.mem.replacementSize(u8, enum_tag, "Component", "");
-        const component_function_name = luau.allocator().allocSentinel(u8, size, '\x00') catch luau_error(luau, "Memory error with generating builder function.");
+        const component_function_name = luau.allocator().allocSentinel(u8, size, '\x00') catch luauError(luau, "Memory error with generating builder function.");
         _ = std.mem.replace(u8, enum_tag, "Component", "", component_function_name);
         _ = std.ascii.lowerString(component_function_name, component_function_name);
 

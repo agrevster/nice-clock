@@ -114,7 +114,7 @@ pub const FontStore = enum {
         const font_file_names = @typeInfo(FontStore).@"enum".fields;
 
         inline for (font_file_names, 0..) |font_file_name, i| {
-            const ff = try load_font_from_file(allocator, font_file_name.name[4..]);
+            const ff = try loadFontFromFile(allocator, font_file_name.name[4..]);
             errdefer ff.deinit(allocator);
             fonts[i] = ff;
         }
@@ -130,7 +130,7 @@ pub const FontStore = enum {
     }
 
     ///Attempts to read the contents of a .bdf file located at `./assets/fonts/` and parse a BDF from the text in the file.
-    fn load_font_from_file(allocator: std.mem.Allocator, font_name: []const u8) !BDF {
+    fn loadFontFromFile(allocator: std.mem.Allocator, font_name: []const u8) !BDF {
         var arena = std.heap.ArenaAllocator.init(allocator);
         defer arena.deinit();
 
@@ -376,7 +376,7 @@ test "big font" {
 }
 
 test "loadFontFromFile" {
-    var file_font = try FontStore.load_font_from_file(std.testing.allocator, "5x8");
+    var file_font = try FontStore.loadFontFromFile(std.testing.allocator, "5x8");
     defer file_font.deinit(std.testing.allocator);
 
     try std.testing.expect(file_font.width == 5);

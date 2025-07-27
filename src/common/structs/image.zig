@@ -90,23 +90,23 @@ pub const ImageStore = struct {
 
     ///Deallocates the memory created by `init` as well as all of the images.
     pub fn deinit(self: *ImageStore) void {
-        self.deinit_all_images();
+        self.deinitAllImages();
         self.image_map.deinit();
     }
 
     ///Adds an image to the store, this parses `assets/{IMAGE_NAME}.ppm`.
-    pub fn add_image(self: *ImageStore, image_filename: []const u8) Error!void {
-        const image_file = try load_image_from_file(self.allocator, image_filename);
+    pub fn addImage(self: *ImageStore, image_filename: []const u8) Error!void {
+        const image_file = try loadImageFromFile(self.allocator, image_filename);
         try self.image_map.put(image_filename, image_file);
     }
 
     ///Gets an image from the store. If it is not there a `ImageNotInStore` error will be returned.
-    pub fn get_image(self: *ImageStore, image_filename: []const u8) Error!PPM {
+    pub fn getImage(self: *ImageStore, image_filename: []const u8) Error!PPM {
         if (!self.image_map.contains(image_filename)) return Error.ImageNotInStore;
         return self.image_map.get(image_filename).?;
     }
 
-    fn load_image_from_file(allocator: std.mem.Allocator, image_name: []const u8) Error!PPM {
+    fn loadImageFromFile(allocator: std.mem.Allocator, image_name: []const u8) Error!PPM {
         var arena = std.heap.ArenaAllocator.init(allocator);
         defer arena.deinit();
 
@@ -125,16 +125,16 @@ pub const ImageStore = struct {
     }
 
     ///Attempts to add all of a module's required images to the image store.
-    pub fn add_images_for_module(self: *ImageStore, module: *common.module.ClockModule) Error!void {
+    pub fn addImagesForModule(self: *ImageStore, module: *common.module.ClockModule) Error!void {
         if (module.image_names) |image_names| {
             for (image_names) |image_name| {
-                try self.add_image(image_name);
+                try self.addImage(image_name);
             }
         }
     }
 
     ///Clears the image store a deallocates all images stored in it.
-    pub fn deinit_all_images(self: *ImageStore) void {
+    pub fn deinitAllImages(self: *ImageStore) void {
         var it = self.image_map.valueIterator();
 
         while (it.next()) |entry| {
@@ -171,7 +171,7 @@ test {
 }
 
 test "load_image_from_file" {
-    var file = try ImageStore.load_image_from_file(testing.allocator, "test");
+    var file = try ImageStore.loadImageFromFile(testing.allocator, "test");
     file.deinit(testing.allocator);
 
     try testing.expect(file.width == 5);
@@ -182,8 +182,8 @@ test "ImageStore" {
     var store = ImageStore.init(testing.allocator);
     defer store.deinit();
 
-    try store.add_image("test");
-    const file = try store.get_image("test");
+    try store.addImage("test");
+    const file = try store.getImage("test");
     try testing.expect(file.width == 5);
     try testing.expect(file.height == 8);
 }

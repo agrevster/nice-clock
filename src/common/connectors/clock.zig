@@ -26,10 +26,10 @@ pub const CommonConnector = struct {
         var current_module = self.modules[0];
 
         while (is_active.*) {
-            self.image_store.add_images_for_module(&current_module) catch |e| {
+            self.image_store.addImagesForModule(&current_module) catch |e| {
                 logger.err("Error loading images for module -> {s}", .{@errorName(e)});
             };
-            defer self.image_store.deinit_all_images();
+            defer self.image_store.deinitAllImages();
             current_module.render(self);
             self.interface.clearScreen(self.interface.ctx);
             current_module = self.modules[std.crypto.random.intRangeAtMost(usize, 0, self.modules.len - 1)];

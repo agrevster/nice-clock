@@ -6,7 +6,7 @@ const Luau = zlua.Lua;
 pub const logger = std.log.scoped(.luau_interpreter);
 
 ///Reads a luau file located in _(cwd)/modules/_.
-fn read_module_file(file: []const u8, allocator: std.mem.Allocator) error{ OutOfMemory, FileNotFound, OtherError }![]const u8 {
+fn readModuleFile(file: []const u8, allocator: std.mem.Allocator) error{ OutOfMemory, FileNotFound, OtherError }![]const u8 {
     const file_name = std.fmt.allocPrint(allocator, "./modules/{s}.luau", .{file}) catch return error.OutOfMemory;
     defer allocator.free(file_name);
     const file_contents = std.fs.cwd().readFileAlloc(allocator, file_name, 1000000) catch |e| switch (e) {
@@ -30,14 +30,14 @@ pub fn LuauTry(comptime T: type, error_message: []const u8) type {
                 return item_no_err;
             } else |err| {
                 logger.err("LuauTry caught: {s}. Expected type: {s}", .{ @errorName(err), @typeName(T) });
-                luau_error(luau, error_message);
+                luauError(luau, error_message);
             }
         }
     };
 }
 
 ///Raises a luau error and prevents the Zig program from continuing.
-pub fn luau_error(luau: *Luau, message: []const u8) noreturn {
+pub fn luauError(luau: *Luau, message: []const u8) noreturn {
     _ = luau.pushString(message);
     luau.raiseError();
 }
@@ -55,7 +55,7 @@ const Error = error{
 ///If the module does not return the Luau code will still be ran but this function will return a DebugModule error. This is useful for testing in Luau.
 pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Allocator) Error!*common.module.ClockModule {
     // Interpret the file
-    const luau_file = read_module_file(module_file_name, allocator) catch |e| {
+    const luau_file = readModuleFile(module_file_name, allocator) catch |e| {
         logger.err("{s}", .{@errorName(e)});
         return Error.OtherError;
     };
