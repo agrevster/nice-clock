@@ -17,6 +17,20 @@ pub fn main() void {
     defer arena.deinit();
     const logger = std.log.scoped(.Simulator);
 
+    //Allow for passing module file name via command line arguments
+    const args = std.process.argsAlloc(allocator) catch |e| {
+        logger.err("Error allocating arguments for simulator: {s}", .{@errorName(e)});
+        std.process.exit(1);
+    };
+
+    var filename: *const []const u8 = undefined;
+
+    if (args.len > 1) {
+        filename = &args[1][0..];
+    } else {
+        filename = &"test";
+    }
+
     var tiles: [32][64]common.Color = undefined;
 
     for (0..32) |y| {
@@ -27,6 +41,7 @@ pub fn main() void {
 
     if (common.font.FontStore.init(allocator)) {} else |err| {
         logger.err("{s}", .{@errorName(err)});
+        std.process.exit(1);
     }
 
     var connector = Connector{
@@ -34,7 +49,7 @@ pub fn main() void {
         .tile_pointer = &tiles,
     };
 
-    if (loadModuleFromLuau("test", allocator)) |test_module| {
+    if (loadModuleFromLuau(filename.*, allocator)) |test_module| {
         var module_array = [_]common.module.ClockModule{test_module.*};
         var clock = Clock{
             .interface = connector.connectorInterface(),
@@ -54,8 +69,9 @@ pub fn main() void {
 
         if (renderer.startSimulator(logger, &tiles, &is_active)) {} else |err| {
             logger.err("There was an error with the simulator window: {s}", .{@errorName(err)});
+            std.process.exit(1);
         }
     } else |e| {
-        logger.err("Error loading test module from Luau: {s}", .{@errorName(e)});
+        logger.err("Error loading file: {s}.luau from Luau: {s}", .{ filename.*, @errorName(e) });
     }
 }
