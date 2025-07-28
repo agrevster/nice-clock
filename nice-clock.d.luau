@@ -12,6 +12,28 @@ export type GlobalNiceClock = {
 	fonts: Fonts,
 }
 
+export type GlobalHTTP = {
+	fetch: (url: string, method: string, body: string | nil, content_type: string | nil, authorization: string | nil) -> HTTPResponse,
+	methods: Methods
+}
+
+-- HTTP
+export type HTTPResponse = {
+	status: number,
+	body: string,
+}
+
+export type Methods = {
+	GET: string,
+	HEAD: string,
+	POST: string,
+	PUT: string,
+	DELETE: string,
+	CONNECT: string,
+	OPTIONS: string,
+	TRACE: string,
+}
+
 -- niceclock
 
 export type ClockModuleBuilder = {
@@ -115,3 +137,4 @@ export type DatetimeDelta = {
 -- Declarations
 declare datetime: GlobalDatetime
 declare niceclock: GlobalNiceClock
+declare http: GlobalHTTP

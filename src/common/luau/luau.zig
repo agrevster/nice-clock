@@ -6,4 +6,5 @@ pub const exports = struct {
     pub const global = @import("exports/global.zig");
     pub const time = @import("exports/time.zig");
     pub const nice_clock = @import("exports/nice-clock.zig");
+    pub const http = @import("exports/http.zig");
 };
