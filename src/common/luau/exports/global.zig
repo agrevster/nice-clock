@@ -1,12 +1,20 @@
 const std = @import("std");
 const zlua = @import("zlua");
+const common = @import("../../common.zig");
 const Luau = zlua.Lua;
 const wrap = zlua.wrap;
+const LuauTry = common.luau.loader.LuauTry;
+const luauError = common.luau.loader.luauError;
+const logger = common.luau.loader.logger;
 
 ///Sends the exported functions to luau.
 pub fn load_export(luau: *Luau) void {
-    luau.pushFunction(wrap(print));
+    luau.pushFunction(wrap(print_fn));
     luau.setGlobal("print");
+    luau.pushFunction(wrap(error_fn));
+    luau.setGlobal("error");
+    luau.pushFunction(wrap(getenv_fn));
+    luau.setGlobal("getenv");
 }
 
 const print_logger = std.log.scoped(.luau_print);
@@ -69,7 +77,7 @@ fn printAtIndex(luau: *Luau, i: i32, print_list: *std.ArrayList(u8), allocator: 
 
 ///(Luau)
 ///Prints the given Luau args.
-fn print(luau: *Luau) i32 {
+fn print_fn(luau: *Luau) i32 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
 
@@ -84,4 +92,40 @@ fn print(luau: *Luau) i32 {
     print_logger.info("{s}", .{print_list.items});
 
     return 0;
+}
+
+///(Luau)
+///Throws a luau error with the given error message.
+fn error_fn(luau: *Luau) i32 {
+    const message = luau.checkString(1);
+
+    print_logger.err("{s}", .{message});
+    luauError(luau, message);
+
+    return 0;
+}
+
+///(Luau)
+///Attempts to get a variable from the endowment, if there is none returns nil.
+fn getenv_fn(luau: *Luau) i32 {
+    const key = luau.checkString(1)[0..];
+
+    if (!std.unicode.utf8ValidateSlice(key)) luauError(luau, "Invalid path format: must be UTF-8");
+    const allocator = std.heap.page_allocator;
+
+    const has_var = std.process.hasEnvVar(allocator, key) catch luauError(luau, "Memory error or formatting error with hasEnvVar.");
+
+    if (!has_var) {
+        luau.pushNil();
+        return 1;
+    }
+
+    const value = std.process.getEnvVarOwned(allocator, key) catch |e| {
+        logger.err("Error attempting to get environment variable: {s}", .{@errorName(e)});
+        luauError(luau, "Error attempting to get environment variable.");
+    };
+
+    _ = luau.pushString(value);
+
+    return 1;
 }

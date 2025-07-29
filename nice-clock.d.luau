@@ -17,6 +17,9 @@ export type GlobalHTTP = {
 	methods: Methods
 }
 
+declare function error(message: string): nil
+declare function getenv(key: string): string | nil
+
 -- HTTP
 export type HTTPResponse = {
 	status: number,

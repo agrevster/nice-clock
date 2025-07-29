@@ -70,6 +70,8 @@ const tryToString = LuauTry([:0]const u8, "Failed to parse string from Luau!");
 
 //Luau functions
 
+///(Luau)
+///Sends an HTTP request and returns the response and the status code in a Luau table.
 fn fetch_fn(luau: *Luau) i32 {
     const allocator = std.heap.page_allocator;
 
