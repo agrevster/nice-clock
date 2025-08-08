@@ -5,6 +5,7 @@ const Luau = zlua.Lua;
 const components = common.components;
 const componentFn = common.luau.exports.nice_clock.componentFn;
 const ClockComponentTable = common.luau.exports.nice_clock.ClockComponentTable;
+const CustomAnimationTable = common.luau.exports.nice_clock.CustomAnimationTable;
 const AnimationTable = common.luau.exports.nice_clock.AnimationTable;
 const luauError = common.luau.loader.luauError;
 const logger = common.luau.loader.logger;
@@ -182,6 +183,8 @@ pub const RootComponentImportError = error{ MemoryError, OtherError, InvalidComp
 ///Attempts to read a component builder table in luau and returns a RootComponent or error.
 pub fn rootComponentFromLuau(luau: *Luau, allocator: std.mem.Allocator) RootComponentImportError!*components.RootComponent {
     const component_constructors = comptime generateLuauComponentConstructors();
+
+    //Parse components
     _ = luau.getField(1, "components");
     const component_array = luau.toAnyInternal([]ClockComponentTable, luau.allocator(), true, -1) catch {
         return error.LuauParseError;
@@ -198,7 +201,40 @@ pub fn rootComponentFromLuau(luau: *Luau, allocator: std.mem.Allocator) RootComp
         }
     }
 
+    //Parse animations
+
+    _ = luau.getField(1, "animations");
+    const animation_array = luau.toAnyInternal([]CustomAnimationTable, luau.allocator(), true, -1) catch {
+        return error.LuauParseError;
+    };
+
+    const parsed_animations = allocator.alloc(components.CustomAnimation, animation_array.len) catch return error.MemoryError;
+
+    for (animation_array, 0..) |animation, i| {
+        //We need to copy the text field of every custom animation as well because Luau owns the memory for the strings.
+
+        for (animation.states, 0..) |state, state_index| {
+            if (state.text) |text| {
+                const owned_state_text = allocator.dupe(u8, text) catch return error.MemoryError;
+                animation.states[state_index].text = owned_state_text;
+            }
+        }
+
+        parsed_animations[i] = components.CustomAnimation{
+            .loop = animation.animation.loop,
+            .speed = animation.animation.speed,
+            .current_index = 0,
+            .current_timestamp = 0,
+            .max_timestamp = animation.animation.duration,
+            .component_indexes = animation.component_indexes,
+            .states = animation.states,
+        };
+    }
+
+    //Build root component
+
     var root = allocator.create(components.RootComponent) catch return error.MemoryError;
+    root.custom_animations = parsed_animations;
     root.components = parsed_components;
 
     return root;

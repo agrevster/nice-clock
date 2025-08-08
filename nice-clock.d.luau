@@ -8,7 +8,7 @@ export type GlobalDatetime = {
 }
 
 export type GlobalNiceClock = {
-	modulebuilder: (name: string, timelimit: number, imagenames: {string}) -> ClockModuleBuilder,
+	modulebuilder: (name: string, timelimit: number, imagenames: {string}, animations: {CustomAnimation}) -> ClockModuleBuilder,
 	fonts: Fonts,
 }
 
@@ -44,6 +44,7 @@ export type ClockModuleBuilder = {
 	timelimit: number,
 	components: {ClockComponent},
 	imagenames: {string},
+	animations: {CustomAnimation},
 	init_fn: nil | () -> (),
 	deinit_fn: nil | () -> (),
 	init: (self: ClockModuleBuilder, fn: () -> ()) -> ClockModuleBuilder,
@@ -65,8 +66,22 @@ export type ClockModule = {
 	timelimit: number,
 	components: {ClockComponent},
 	imagenames: {string},
+	animations: {CustomAnimation},
 	init: nil | () -> (),
 	deinit: nil | () -> (),
+}
+
+export type CustomAnimation = {
+	animation: Animation,
+	component_indexes: {number},
+	states: {CustomAnimationState},
+}
+
+export type CustomAnimationState = {
+	timestamp: number,
+	color: Color?,
+	pos: Pos?,
+	text: string?,
 }
 
 export type ClockComponent = {

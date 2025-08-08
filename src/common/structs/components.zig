@@ -25,6 +25,7 @@ pub const ComponentPos = struct {
 ///
 /// `ctx` should point to a component struct's `@This`
 /// `draw` should point to a function used to draw the component.
+/// `custom_animation_update` should point to the function that is called whenever the custom animation that this component is part of updates.
 ///
 /// If you need to a access `*@This` in draw use this block
 ///
@@ -34,6 +35,7 @@ pub const ComponentPos = struct {
 pub const Component = struct {
     ctx: *anyopaque,
     draw: *const fn (ctx: *anyopaque, clock: *Clock) ComponentError!void,
+    custom_animation_update: *const fn (ctx: *anyopaque, state: CustomAnimationState) void,
 };
 
 ///This struct represents a `Component` with an animation. Duration is how many ticks the animation lasts while speed is used to specify how long in between ticks.
@@ -50,6 +52,55 @@ pub const AnimationComponent = struct {
             .internal_frame = 0,
         };
     }
+};
+
+///This struct is used to represent a custom clock animation where a user specifies states of the components at a given index.
+pub const CustomAnimation = struct {
+    ///The indexes of the components you wish to update as part of the custom animation.
+    component_indexes: []u9,
+    /// The states of the components at the given indexes at a given time stamp.
+    states: []CustomAnimationState,
+    /// Used to stored the current time stamp value of the custom animation.
+    current_timestamp: u32,
+    /// The index of the custom animation's state `(states)`.
+    current_index: usize,
+    ///The maximum value of `current_timestamp`. Think of this like `duration` on normal animations.
+    max_timestamp: u32,
+    ///Whether or not the animation should start over after `current_timestamp` reaches `max_timestamp`.
+    loop: bool,
+    ///The speed of the animation larger the speed the slower.
+    speed: i16,
+
+    ///Runs custom_animation_update for every child component.
+    pub fn updateAllComponents(self: CustomAnimation, components: []const AnyComponent) error{InvalidArgument}!void {
+        const state = self.states[self.current_index];
+        //Now that we know we need to update update all components.
+        for (self.component_indexes) |component_index| {
+            //Make sure the component index is a valid one.
+            if (component_index >= components.len) {
+                logger.err("Invalid component index: {d}. Components len: {d}", .{ component_index, components.len });
+                return error.InvalidArgument;
+            }
+
+            //Update the component
+            switch (components[component_index]) {
+                .normal => |component| component.custom_animation_update(component.ctx, state),
+                .animated => |animated| animated.component.custom_animation_update(animated.component.ctx, state),
+            }
+        }
+    }
+};
+
+///Used to represent the state of the animation at a given time stamp.
+pub const CustomAnimationState = struct {
+    ///The time stamp where the animation state should be applied.
+    timestamp: u32,
+    ///The color state of all components part of this animation.
+    color: ?Color = null,
+    ///The pos state of all components part of this animation.
+    pos: ?ComponentPos = null,
+    ///The text state of all components part of this animation.
+    text: ?[]const u8 = null,
 };
 
 ///An internal wrapper used to ensure that animations update only when they should.
@@ -80,10 +131,13 @@ pub const AnyComponent = union(enum) { animated: AnimationComponent, normal: Com
 
 ///Each module has a root component which is responsible for drawing every component
 pub const RootComponent = struct {
+    ///The list of all the components inside of the root.
     components: []const AnyComponent,
+    ///Used to create custom animations via specifying the state of given components at a given time.
+    custom_animations: []common.components.CustomAnimation,
 
     ///Returns the speed of the fastest child's animation updates or `null` if there are no animated components. *or animated components with 0 as speed*
-    fn getFastestAnimationSpeed(self: *const RootComponent) ?i16 {
+    fn getFastestAnimationSpeed(self: *RootComponent) ?i16 {
         var max: i16 = 0;
         for (self.components) |any_component| {
             if (any_component == AnyComponent.animated) {
@@ -95,7 +149,7 @@ pub const RootComponent = struct {
     }
 
     ///This function draws each component in order. It redraws each component `fps` time per second and stop drawing after `time_limit_s` seconds.
-    pub fn render(self: *const RootComponent, clock: *Clock, fps: u8, time_limit_s: u64) ComponentError!void {
+    pub fn render(self: *RootComponent, clock: *Clock, fps: u8, time_limit_s: u64) ComponentError!void {
         const u64_fps: u64 = @intCast(fps);
         const sleep_time_ns = time.ns_per_s / u64_fps;
         const fastest_animation: ?i16 = self.getFastestAnimationSpeed();
@@ -128,7 +182,33 @@ pub const RootComponent = struct {
             if ((timer.read() / time.ns_per_s) > time_limit_s) break;
             clock.interface.clearScreen(clock.interface.ctx);
 
-            // Update + draw animated components
+            //Before we draw hardcoded animated components we need to do the custom ones so they can move the normal ones around.
+            for (self.custom_animations) |*animation| {
+                if (animation.current_timestamp > animation.max_timestamp) {
+                    if (!animation.loop) continue;
+                    animation.current_timestamp = 0;
+                    animation.current_index = 0;
+                    try animation.updateAllComponents(self.components);
+                }
+
+                //I copied this from my earlier update animation code from TimedAnimation.
+                if (animation.speed > 0 and frame % @as(u32, @intCast(animation.speed)) == 0) {
+                    animation.current_timestamp += 1;
+
+                    if (animation.current_index >= animation.states.len) {
+                        logger.err("The index marked as current state: {d} >= all size of the states list: {d}.", .{ animation.current_index, animation.states.len });
+                        return error.InvalidArgument;
+                    }
+
+                    //Do we need to update?
+                    if (animation.current_index + 1 < animation.states.len and animation.current_timestamp >= animation.states[animation.current_index + 1].timestamp) {
+                        animation.current_index += 1;
+                        try animation.updateAllComponents(self.components);
+                    }
+                }
+            }
+
+            // Update + draw hardcoded animated components
             for (timed_animations[0..timed_count]) |*timed| {
                 timed.update_animation(clock, frame);
                 if (fastest_animation != null and fastest_animation == timed.base.speed) clock.interface.clearScreen(clock.interface.ctx);
@@ -155,7 +235,7 @@ pub const TileComponent = struct {
     color: Color,
 
     pub fn component(self: *TileComponent) Component {
-        return Component{ .ctx = self, .draw = &draw };
+        return Component{ .ctx = self, .draw = &draw, .custom_animation_update = &custom_animation_update };
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
@@ -168,6 +248,12 @@ pub const TileComponent = struct {
         comp.* = TileComponent{ .pos = pos, .color = color };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
+    }
+
+    fn custom_animation_update(ctx: *anyopaque, state: CustomAnimationState) void {
+        const self: *TileComponent = @ptrCast(@alignCast(ctx));
+        if (state.color) |c| self.color = c;
+        if (state.pos) |p| self.pos = p;
     }
 
     fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
@@ -185,7 +271,7 @@ pub const BoxComponent = struct {
     color: Color,
 
     pub fn component(self: *BoxComponent) Component {
-        return Component{ .ctx = self, .draw = &draw };
+        return Component{ .ctx = self, .draw = &draw, .custom_animation_update = &custom_animation_update };
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
@@ -201,6 +287,12 @@ pub const BoxComponent = struct {
         comp.* = BoxComponent{ .pos = pos, .color = color, .width = width, .height = height, .fill_inside = fill_inside };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
+    }
+
+    fn custom_animation_update(ctx: *anyopaque, state: CustomAnimationState) void {
+        const self: *BoxComponent = @ptrCast(@alignCast(ctx));
+        if (state.color) |c| self.color = c;
+        if (state.pos) |p| self.pos = p;
     }
 
     fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
@@ -231,7 +323,7 @@ pub const CircleComponent = struct {
     color: Color,
 
     pub fn component(self: *CircleComponent) Component {
-        return Component{ .ctx = self, .draw = &draw };
+        return Component{ .ctx = self, .draw = &draw, .custom_animation_update = &custom_animation_update };
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
@@ -246,6 +338,12 @@ pub const CircleComponent = struct {
         comp.* = CircleComponent{ .pos = pos, .color = color, .radius = radius, .outline_thickness = outline_thickness };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
+    }
+
+    fn custom_animation_update(ctx: *anyopaque, state: CustomAnimationState) void {
+        const self: *CircleComponent = @ptrCast(@alignCast(ctx));
+        if (state.color) |c| self.color = c;
+        if (state.pos) |p| self.pos = p;
     }
 
     fn setTileIfValid(clock: *Clock, y: OverflowError!u8, x: OverflowError!u8, color: Color) void {
@@ -321,7 +419,13 @@ pub const CharComponent = struct {
     color: Color,
 
     pub fn component(self: *CharComponent) Component {
-        return Component{ .ctx = self, .draw = &draw };
+        return Component{ .ctx = self, .draw = &draw, .custom_animation_update = &custom_animation_update };
+    }
+
+    fn custom_animation_update(ctx: *anyopaque, state: CustomAnimationState) void {
+        const self: *CharComponent = @ptrCast(@alignCast(ctx));
+        if (state.color) |c| self.color = c;
+        if (state.pos) |p| self.pos = p;
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
@@ -352,7 +456,7 @@ pub const TextComponent = struct {
     color: Color,
 
     pub fn component(self: *TextComponent) Component {
-        return Component{ .ctx = self, .draw = &draw };
+        return Component{ .ctx = self, .draw = &draw, .custom_animation_update = &custom_animation_update };
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
@@ -370,6 +474,13 @@ pub const TextComponent = struct {
         comp.* = TextComponent{ .pos = pos, .color = color, .font = font, .text = text };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
+    }
+
+    fn custom_animation_update(ctx: *anyopaque, state: CustomAnimationState) void {
+        const self: *TextComponent = @ptrCast(@alignCast(ctx));
+        if (state.color) |c| self.color = c;
+        if (state.pos) |p| self.pos = p;
+        if (state.text) |t| self.text = t;
     }
 
     fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
@@ -396,7 +507,7 @@ pub const WrappedTextComponent = struct {
     line_spacing: i8 = 0,
 
     pub fn component(self: *WrappedTextComponent) Component {
-        return Component{ .ctx = self, .draw = &draw };
+        return Component{ .ctx = self, .draw = &draw, .custom_animation_update = &custom_animation_update };
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
@@ -415,6 +526,13 @@ pub const WrappedTextComponent = struct {
         comp.* = WrappedTextComponent{ .pos = pos, .color = color, .font = font, .text = text, .line_spacing = line_spacing };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
+    }
+
+    fn custom_animation_update(ctx: *anyopaque, state: CustomAnimationState) void {
+        const self: *WrappedTextComponent = @ptrCast(@alignCast(ctx));
+        if (state.color) |c| self.color = c;
+        if (state.pos) |p| self.pos = p;
+        if (state.text) |t| self.text = t;
     }
 
     ///Allows for addition of negative i8 `spacing` to u8 `initial`.
@@ -465,7 +583,7 @@ pub const ImageComponent = struct {
     image_name: []const u8,
 
     pub fn component(self: *ImageComponent) Component {
-        return Component{ .ctx = self, .draw = &draw };
+        return Component{ .ctx = self, .draw = &draw, .custom_animation_update = &custom_animation_update };
     }
 
     pub fn from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent {
@@ -480,6 +598,11 @@ pub const ImageComponent = struct {
         comp.* = ImageComponent{ .pos = pos, .image_name = image_name };
         ret.* = AnyComponent{ .normal = comp.*.component() };
         return ret;
+    }
+
+    fn custom_animation_update(ctx: *anyopaque, state: CustomAnimationState) void {
+        const self: *ImageComponent = @ptrCast(@alignCast(ctx));
+        if (state.pos) |p| self.pos = p;
     }
 
     const black = common.Color{ .r = 0, .g = 0, .b = 0 };
@@ -515,7 +638,7 @@ pub const HorizontalScrollingTextComponent = struct {
 
     ///WARNING: This is for internal use only. If you want to draw this use animation()
     fn component(self: *HorizontalScrollingTextComponent) Component {
-        return Component{ .ctx = self, .draw = &draw };
+        return Component{ .ctx = self, .draw = &draw, .custom_animation_update = &custom_animation_update };
     }
 
     pub fn animation(self: *HorizontalScrollingTextComponent, duration: u32, loop: bool, speed: i16) AnimationComponent {
@@ -558,6 +681,13 @@ pub const HorizontalScrollingTextComponent = struct {
         };
         ret.* = AnyComponent{ .animated = comp.*.animation(animation_arg.duration, animation_arg.loop, animation_arg.speed) };
         return ret;
+    }
+
+    fn custom_animation_update(ctx: *anyopaque, state: CustomAnimationState) void {
+        const self: *HorizontalScrollingTextComponent = @ptrCast(@alignCast(ctx));
+        if (state.color) |c| self.color = c;
+        if (state.pos) |p| self.start_pos = p;
+        if (state.text) |t| self.text = t;
     }
 
     fn update_animation(ctx: *anyopaque, clock: *Clock, frame_number: u32) void {
@@ -640,7 +770,7 @@ pub const VerticalScrollingTextComponent = struct {
 
     ///WARNING: This is for internal use only. If you want to draw this use animation()
     fn component(self: *VerticalScrollingTextComponent) Component {
-        return Component{ .ctx = self, .draw = &draw };
+        return Component{ .ctx = self, .draw = &draw, .custom_animation_update = &custom_animation_update };
     }
 
     pub fn animation(self: *VerticalScrollingTextComponent, duration: u32, loop: bool, speed: i16) AnimationComponent {
@@ -683,6 +813,13 @@ pub const VerticalScrollingTextComponent = struct {
         };
         ret.* = AnyComponent{ .animated = comp.*.animation(animation_arg.duration, animation_arg.loop, animation_arg.speed) };
         return ret;
+    }
+
+    fn custom_animation_update(ctx: *anyopaque, state: CustomAnimationState) void {
+        const self: *VerticalScrollingTextComponent = @ptrCast(@alignCast(ctx));
+        if (state.color) |c| self.color = c;
+        if (state.pos) |p| self.start_pos = p;
+        if (state.text) |t| self.text = t;
     }
 
     fn update_animation(ctx: *anyopaque, clock: *Clock, frame_number: u32) void {

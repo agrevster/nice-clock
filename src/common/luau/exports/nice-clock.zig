@@ -25,6 +25,7 @@ pub fn load_export(luau: *Luau) void {
 // Luau trys for standard error message formats.
 const tryPushImagenames = LuauTry(void, "Failed to push imagenames table.");
 const tryPushComponents = LuauTry(void, "Failed to push components table.");
+const tryPushAnimations = LuauTry(void, "Failed to push animations table.");
 const tryParseBuilderStruct = LuauTry(ModuleBuilderTable, "Failed to parse builder struct from luau table.");
 const tryGetIntFromTable = LuauTry(zlua.Integer, "Failed to get int from table.");
 const tryGetBoolFromTable = LuauTry(bool, "Failed to get bool from table.");
@@ -33,6 +34,7 @@ const ModuleBuilderTable = struct {
     name: []const u8,
     timelimit: u32,
     imagenames: [][]const u8,
+    animations: []CustomAnimationTable,
     components: []ClockComponentTable,
 
     /// Pushes a module builder struct onto the stack with a copy of init_fn and deinit_fn from the given builder_table_index
@@ -46,6 +48,8 @@ const ModuleBuilderTable = struct {
         luau.setField(-2, "imagenames");
         tryPushComponents.unwrap(luau, luau.pushAny(self.components));
         luau.setField(-2, "components");
+        tryPushAnimations.unwrap(luau, luau.pushAny(self.animations));
+        luau.setField(-2, "animations");
 
         //Push copy of init_fn and deinit_fn
         const init_fn_type = luau.getField(builder_table_index, "init_fn");
@@ -75,8 +79,15 @@ pub const ClockComponentTable = struct { number: u8, props: []common.luau.import
 ///For creating animated components.
 pub const AnimationTable = struct { duration: u32, loop: bool, speed: i16 };
 
+///Used to represent a CustomAnimation in luau.
+pub const CustomAnimationTable = struct {
+    animation: AnimationTable,
+    states: []common.components.CustomAnimationState,
+    component_indexes: []u9, //A u9 in the big 25? I have somehow tell toAny that this isn't a string and besides... (511 components is too many anyways)
+};
+
 ///Creates a new module builder table in luau from the given Zig arguments.
-fn createModuleBuilderLuauTable(luau: *Luau, module_name: [:0]const u8, module_time: zlua.Integer, image_names: [][:0]const u8) void {
+fn createModuleBuilderLuauTable(luau: *Luau, module_name: [:0]const u8, module_time: zlua.Integer, image_names: [][:0]const u8, animations: []CustomAnimationTable) void {
     luau.newTable();
 
     _ = luau.pushString(module_name);
@@ -93,6 +104,9 @@ fn createModuleBuilderLuauTable(luau: *Luau, module_name: [:0]const u8, module_t
     }
     luau.setField(-2, "imagenames");
 
+    tryPushAnimations.unwrap(luau, luau.pushAny(animations));
+    luau.setField(-2, "animations");
+
     luau.newTable();
     luau.setField(-2, "components");
 
@@ -104,6 +118,55 @@ fn createModuleBuilderLuauTable(luau: *Luau, module_name: [:0]const u8, module_t
     ModuleBuilderTable.pushFunctions(luau, -2);
 }
 
+///Converts a luau table into a slice of CustomAnimation table zig struct.
+fn toAnimationTablesOrError(luau: *Luau, index: i32) []CustomAnimationTable {
+    const animation_table_len: usize = @intCast(luau.objectLen(index));
+
+    const tables = luau.allocator().alloc(CustomAnimationTable, animation_table_len) catch {
+        luauError(luau, "Failed to allocate animation tables for toTablesOrError...");
+    };
+    errdefer luau.allocator().free(tables);
+
+    //Loop through the array of tables
+    for (1..animation_table_len + 1) |i| {
+        //Get table len
+        const array_item = luau.rawGetIndex(index, @intCast(i));
+        if (array_item != zlua.LuaType.table) luauError(luau, "Expected list of type: table.");
+
+        //Parse component_indexes
+        const indexes_obj = luau.getField(-1, "component_indexes");
+        if (indexes_obj != zlua.LuaType.table) luauError(luau, "Invalid type for component_indexes: must be table!");
+        const component_indxes = luau.toSlice(u9, luau.allocator(), -1) catch {
+            luauError(luau, "Failed to parse component_indexes from luau!");
+        };
+        luau.pop(1);
+
+        //Parse animation
+        const animation_obj = luau.getField(-1, "animation");
+        if (animation_obj != zlua.LuaType.table) luauError(luau, "Invalid type for animation: must be table!");
+        const animation = luau.toAnyInternal(AnimationTable, luau.allocator(), true, -1) catch {
+            luauError(luau, "Failed to parse animation from luau!");
+        };
+        luau.pop(1);
+
+        //Parse states
+        const states_obj = luau.getField(-1, "states");
+        if (states_obj != zlua.LuaType.table) luauError(luau, "Invalid type for states: must be table!");
+        const states = luau.toAnyInternal([]common.components.CustomAnimationState, luau.allocator(), true, -1) catch {
+            luauError(luau, "Failed to parse states from luau!");
+        };
+
+        luau.pop(2);
+
+        tables[i - 1] = CustomAnimationTable{
+            .animation = animation,
+            .component_indexes = component_indxes,
+            .states = states,
+        };
+    }
+    return tables;
+}
+
 // Functions
 
 ///(Luau)
@@ -112,10 +175,13 @@ fn moduleBuilder(luau: *Luau) i32 {
     luau.checkType(1, zlua.LuaType.string);
     luau.checkType(2, zlua.LuaType.number);
     luau.checkType(3, zlua.LuaType.table);
+    luau.checkType(4, zlua.LuaType.table);
 
     const module_name = LuauTry([:0]const u8, "Failed to parse name string.").unwrap(luau, luau.toString(1));
     const time_limit = LuauTry(zlua.Integer, "Failed to parse time limit integer.").unwrap(luau, luau.toInteger(2));
     var image_names: [][:0]const u8 = undefined;
+
+    const animations = toAnimationTablesOrError(luau, 4);
 
     const string_list_len: usize = @intCast(@max(0, luau.objectLen(3)));
     image_names = luau.allocator().alloc([:0]const u8, string_list_len) catch luauError(luau, "Error allocating image_names.");
@@ -132,7 +198,7 @@ fn moduleBuilder(luau: *Luau) i32 {
         luau.pop(1);
     }
 
-    createModuleBuilderLuauTable(luau, module_name, time_limit, image_names);
+    createModuleBuilderLuauTable(luau, module_name, time_limit, image_names, animations);
 
     return 1;
 }

@@ -1,10 +1,29 @@
-return niceclock.modulebuilder("Test Module", 30, {"test"})
-	:tile({y=1,x=0}, {r=255,g=0,b=0})
-	:box({x=20,y=10},4,6,false,{r=0,g=255,b=0})
-	:circle({x=10,y=8}, 5, 1, {r=0,g=0,b=255})
-	:image({x=30,y=10},"test")
-	:char({x=30,y=20}, niceclock.fonts.Font5x8, 'e', {r=255,g=255,b=0})
-	:text({y=0,x=15}, niceclock.fonts.Font5x8, "Hello", {r=0,g=255,b=255})
-	:wrappedtext({y=0,x=0}, niceclock.fonts.Font5x8, "c\nu\nh", {r=255,b=255,g=255}, -1)
-	:horizontalscrollingtext({y=22,x=30}, niceclock.fonts.Font5x8_2, "Hello cuh", {r=255,g=0,b=0}, 0, -64, {loop=true, speed=3,duration=10})
-	:verticalscrollingtext({y=0,x=40}, 30, 32, niceclock.fonts.Font5x8, "Hello Mario", {r=255,g=0,b=255}, -29, 0, {loop=true,speed=4,duration=10})
+return niceclock
+	.modulebuilder("Test Module", 30, { "test" }, {})
+	:tile({ y = 1, x = 0 }, { r = 255, g = 0, b = 0 })
+	:box({ x = 20, y = 10 }, 4, 6, false, { r = 0, g = 255, b = 0 })
+	:circle({ x = 10, y = 8 }, 5, 1, { r = 0, g = 0, b = 255 })
+	:image({ x = 30, y = 10 }, "test")
+	:char({ x = 30, y = 20 }, niceclock.fonts.Font5x8, "e", { r = 255, g = 255, b = 0 })
+	:text({ y = 0, x = 15 }, niceclock.fonts.Font5x8, "Hello", { r = 0, g = 255, b = 255 })
+	:wrappedtext({ y = 0, x = 0 }, niceclock.fonts.Font5x8, "c\nu\nh", { r = 255, b = 255, g = 255 }, -1)
+	:horizontalscrollingtext(
+		{ y = 22, x = 30 },
+		niceclock.fonts.Font5x8_2,
+		"Hello cuh",
+		{ r = 255, g = 0, b = 0 },
+		0,
+		-64,
+		{ loop = true, speed = 3, duration = 10 }
+	)
+	:verticalscrollingtext(
+		{ y = 0, x = 40 },
+		30,
+		32,
+		niceclock.fonts.Font5x8,
+		"Hello Mario",
+		{ r = 255, g = 0, b = 255 },
+		-29,
+		0,
+		{ loop = true, speed = 4, duration = 10 }
+	)
