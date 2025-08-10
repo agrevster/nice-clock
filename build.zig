@@ -11,28 +11,7 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
     });
 
-    const sim_exe = b.addExecutable(.{
-        .name = "nice-clock-sim",
-        .root_source_file = b.path("src/simulator/simulator.zig"),
-        .target = target,
-        .optimize = std.builtin.OptimizeMode.Debug,
-    });
-
-    //
-    // Dependencies
-    //
-    if (target.result.os.tag == .linux) {
-        // The SDL package doesn't work for Linux yet, so we rely on system
-        // packages for now.
-        sim_exe.linkSystemLibrary("SDL2");
-        sim_exe.linkLibC();
-    } else {
-        const sdl_dep = b.dependency("SDL", .{
-            .optimize = .ReleaseFast,
-            .target = target,
-        });
-        sim_exe.linkLibrary(sdl_dep.artifact("SDL2"));
-    }
+    //Common deps
     const time_dep = b.dependency("datetime", .{
         .target = target,
         .optimize = optimize,
@@ -48,25 +27,54 @@ pub fn build(b: *std.Build) !void {
     common_lib.addImport("zlua", lua_dep.module("zlua"));
     common_lib.addImport("datetime", time_dep.module("datetime"));
 
-    sim_exe.root_module.addImport("common", common_lib);
+    const ClockTarget = enum {
+        sim,
+        hardware,
+    };
 
-    //Sim
-    b.installArtifact(sim_exe);
+    const clock_target_option = b.option(ClockTarget, "clock-target", "Used to speicify if you are building the clock for a simulator or hardware. Default: sim") orelse .sim;
 
-    const sim_run_cmd = b.addRunArtifact(sim_exe);
+    //Only build for the specified platform
 
-    sim_run_cmd.step.dependOn(b.getInstallStep());
+    // Sim
+    if (clock_target_option == .sim) {
+        const sim_exe = b.addExecutable(.{
+            .name = "nice-clock-sim",
+            .root_source_file = b.path("src/simulator/simulator.zig"),
+            .target = target,
+            .optimize = std.builtin.OptimizeMode.Debug,
+        });
 
-    if (b.args) |args| {
-        sim_run_cmd.addArgs(args);
-    }
+        if (target.result.os.tag == .linux) {
+            // The SDL package doesn't work for Linux yet, so we rely on system
+            // packages for now.
+            sim_exe.linkSystemLibrary("SDL2");
+            sim_exe.linkLibC();
+        } else {
+            const sdl_dep = b.dependency("SDL", .{
+                .optimize = .ReleaseFast,
+                .target = target,
+            });
+            sim_exe.linkLibrary(sdl_dep.artifact("SDL2"));
+        }
 
-    const sim_run_step = b.step("run-sim", "Run the clock sim");
-    sim_run_step.dependOn(&sim_run_cmd.step);
+        sim_exe.root_module.addImport("common", common_lib);
+        b.installArtifact(sim_exe);
 
-    //Hardware
-    //TODO: Find a better way to determine if we are on clock hardware.
-    if (builtin.os.tag == .linux) {
+        const sim_run_cmd = b.addRunArtifact(sim_exe);
+
+        sim_run_cmd.step.dependOn(b.getInstallStep());
+
+        if (b.args) |args| {
+            sim_run_cmd.addArgs(args);
+        }
+
+        const sim_run_step = b.step("run", "Run the clock sim");
+        sim_run_step.dependOn(&sim_run_cmd.step);
+        const check = b.step("check", "Check if code compiles");
+        check.dependOn(&sim_exe.step);
+    } else {
+        //Hardware
         const hardware_exe = b.addExecutable(.{
             .name = "nice-clock-hardware",
             .root_source_file = b.path("src/hardware/hardware.zig"),
@@ -105,6 +113,8 @@ pub fn build(b: *std.Build) !void {
 
         const hardware_run_step = b.step("run-hardware", "Run the clock hardware");
         hardware_run_step.dependOn(&hardware_run_cmd.step);
+        const check = b.step("check", "Check if code compiles");
+        check.dependOn(&hardware_exe.step);
     }
 
     // Rest
@@ -114,7 +124,4 @@ pub fn build(b: *std.Build) !void {
 
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_lib_tests.step);
-
-    const check = b.step("check", "Check if foo compiles");
-    check.dependOn(&sim_exe.step);
 }
