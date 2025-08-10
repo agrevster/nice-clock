@@ -49,6 +49,7 @@ pub fn build(b: *std.Build) !void {
 
     sim_exe.root_module.addImport("common", common_lib);
 
+    //Sim
     b.installArtifact(sim_exe);
 
     const sim_run_cmd = b.addRunArtifact(sim_exe);
@@ -59,6 +60,39 @@ pub fn build(b: *std.Build) !void {
         sim_run_cmd.addArgs(args);
     }
 
+    const sim_run_step = b.step("run-sim", "Run the clock sim");
+    sim_run_step.dependOn(&sim_run_cmd.step);
+
+    //Hardware
+    const hardware_exe = b.addExecutable(.{
+        .name = "nice-clock-hardware",
+        .root_source_file = b.path("src/hardware/hardware.zig"),
+        .target = target,
+        .optimize = std.builtin.OptimizeMode.ReleaseSafe,
+    });
+
+    hardware_exe.root_module.addImport("common", common_lib);
+    hardware_exe.addIncludePath(b.path("include/rpi-rgb-led-matrix/include"));
+    hardware_exe.addCSourceFiles(.{ .root = b.path("include/rpi-rgb-led-matrix/lib"), .files = &[_][]const u8{
+        "led-matrix-c.cc",
+    } });
+    hardware_exe.linkLibC();
+
+    b.installArtifact(hardware_exe);
+
+    const hardware_run_cmd = b.addRunArtifact(hardware_exe);
+
+    hardware_run_cmd.step.dependOn(b.getInstallStep());
+
+    if (b.args) |args| {
+        hardware_run_cmd.addArgs(args);
+    }
+
+    const hardware_run_step = b.step("run", "Run the clock hardware");
+    hardware_run_step.dependOn(&hardware_run_cmd.step);
+
+    // Rest
+
     const common_lib_tests = b.addTest(.{ .root_module = common_lib });
     const run_lib_tests = b.addRunArtifact(common_lib_tests);
 
@@ -67,7 +101,4 @@ pub fn build(b: *std.Build) !void {
 
     const check = b.step("check", "Check if foo compiles");
     check.dependOn(&sim_exe.step);
-
-    const sim_run_step = b.step("run-sim", "Run the clock sim");
-    sim_run_step.dependOn(&sim_run_cmd.step);
 }

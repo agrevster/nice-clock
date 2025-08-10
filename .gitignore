@@ -45,3 +45,4 @@ docgen_tmp/
 .dep-docs
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,zig
+./include/*
