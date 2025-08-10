@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
@@ -64,32 +65,47 @@ pub fn build(b: *std.Build) !void {
     sim_run_step.dependOn(&sim_run_cmd.step);
 
     //Hardware
-    const hardware_exe = b.addExecutable(.{
-        .name = "nice-clock-hardware",
-        .root_source_file = b.path("src/hardware/hardware.zig"),
-        .target = target,
-        .optimize = std.builtin.OptimizeMode.ReleaseSafe,
-    });
+    //TODO: Find a better way to determine if we are on clock hardware.
+    if (builtin.os.tag == .linux) {
+        const hardware_exe = b.addExecutable(.{
+            .name = "nice-clock-hardware",
+            .root_source_file = b.path("src/hardware/hardware.zig"),
+            .target = target,
+            .optimize = std.builtin.OptimizeMode.ReleaseSafe,
+        });
 
-    hardware_exe.root_module.addImport("common", common_lib);
-    hardware_exe.addIncludePath(b.path("include/rpi-rgb-led-matrix/include"));
-    hardware_exe.addCSourceFiles(.{ .root = b.path("include/rpi-rgb-led-matrix/lib"), .files = &[_][]const u8{
-        "led-matrix-c.cc",
-    } });
-    hardware_exe.linkLibC();
+        hardware_exe.root_module.addImport("common", common_lib);
+        hardware_exe.addIncludePath(b.path("include/rpi-rgb-led-matrix/include"));
 
-    b.installArtifact(hardware_exe);
+        hardware_exe.addCSourceFiles(.{ .root = b.path("include/rpi-rgb-led-matrix/lib"), .files = &[_][]const u8{
+            "led-matrix-c.cc",
+            "gpio.cc",
+            "content-streamer.cc",
+            "framebuffer.cc",
+            "hardware-mapping.c",
+            "options-initialize.cc",
+            "pixel-mapper.cc",
+            "thread.cc",
+            "led-matrix.cc",
+            "bdf-font.cc",
+            "graphics.cc",
+            "multiplex-mappers.cc",
+        } });
+        hardware_exe.linkLibC();
 
-    const hardware_run_cmd = b.addRunArtifact(hardware_exe);
+        b.installArtifact(hardware_exe);
 
-    hardware_run_cmd.step.dependOn(b.getInstallStep());
+        const hardware_run_cmd = b.addRunArtifact(hardware_exe);
 
-    if (b.args) |args| {
-        hardware_run_cmd.addArgs(args);
+        hardware_run_cmd.step.dependOn(b.getInstallStep());
+
+        if (b.args) |args| {
+            hardware_run_cmd.addArgs(args);
+        }
+
+        const hardware_run_step = b.step("run-hardware", "Run the clock hardware");
+        hardware_run_step.dependOn(&hardware_run_cmd.step);
     }
-
-    const hardware_run_step = b.step("run", "Run the clock hardware");
-    hardware_run_step.dependOn(&hardware_run_cmd.step);
 
     // Rest
 
