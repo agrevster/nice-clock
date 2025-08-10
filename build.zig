@@ -3,7 +3,7 @@ const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
+    const optimize = b.standardOptimizeOption(.{ .preferred_optimize_mode = std.builtin.OptimizeMode.ReleaseSafe });
 
     const common_lib = b.addModule("common", .{
         .root_source_file = b.path("src/common/common.zig"),
@@ -79,7 +79,7 @@ pub fn build(b: *std.Build) !void {
             .name = "nice-clock-hardware",
             .root_source_file = b.path("src/hardware/hardware.zig"),
             .target = target,
-            .optimize = std.builtin.OptimizeMode.ReleaseSafe,
+            .optimize = optimize,
         });
 
         hardware_exe.root_module.addImport("common", common_lib);
