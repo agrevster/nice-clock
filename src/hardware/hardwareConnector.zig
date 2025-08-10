@@ -19,8 +19,9 @@ pub const HardwareConnector = struct {
             .chain_length = 1,
             .rows = 32,
             .cols = 64,
-            .limit_refresh_rate_hz = 61,
+            .limit_refresh_rate_hz = 65,
             .hardware_mapping = "adafruit-hat",
+            .disable_hardware_pulsing = true,
         };
 
         self.matrix = driver.led_matrix_create_from_options(self.options, 0, null);
@@ -49,7 +50,7 @@ pub const HardwareConnector = struct {
             std.log.debug("Out of bounds: ({},{})!", .{ y, x });
             return connector.ConnectorError.TileOutOfBounds;
         }
-        driver.led_canvas_set_pixel(self.tile_cache, y, x, color.r, color.b, color.g);
+        driver.led_canvas_set_pixel(self.tile_cache, x, y, color.r, color.b, color.g);
     }
 
     pub fn clearScreen(ctx: *anyopaque) void {
