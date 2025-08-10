@@ -1,5 +1,6 @@
 const std = @import("std");
 const common = @import("../common.zig");
+const loadModuleFromLuau = common.luau.loader.loadModuleFromLuau;
 
 pub const ClockConnectorError = error{ EventLoopAlreadyStarted, NoModules };
 
@@ -9,9 +10,15 @@ const logger = std.log.scoped(.common_connector);
 pub const CommonConnector = struct {
     interface: common.Connector.ConnectorInterface,
     has_event_loop_started: bool,
-    modules: []common.module.ClockModule,
+    modules: []const common.module.ClockModuleSource,
     allocator: std.mem.Allocator,
     image_store: common.image.ImageStore = undefined,
+
+    inline fn load_images_for_module(self: *CommonConnector, module: *common.module.ClockModule) void {
+        self.image_store.addImagesForModule(module) catch |e| {
+            logger.err("Error loading images for module -> {s}", .{@errorName(e)});
+        };
+    }
 
     /// Used to start up the clock, should only be called once
     pub fn startClock(self: *CommonConnector, is_active: *bool) ClockConnectorError!void {
@@ -26,11 +33,23 @@ pub const CommonConnector = struct {
         var current_module = self.modules[0];
 
         while (is_active.*) {
-            self.image_store.addImagesForModule(&current_module) catch |e| {
-                logger.err("Error loading images for module -> {s}", .{@errorName(e)});
-            };
-            defer self.image_store.deinitAllImages();
-            current_module.render(self);
+            switch (current_module) {
+                .builtin => |module| {
+                    self.load_images_for_module(module);
+                    module.render(self);
+                    defer self.image_store.deinitAllImages();
+                },
+                .custom => |module_filename| {
+                    if (loadModuleFromLuau(module_filename.*, self.allocator)) |module| {
+                        self.load_images_for_module(module);
+                        module.render(self);
+                        defer self.image_store.deinitAllImages();
+                        defer self.allocator.destroy(module);
+                    } else |e| {
+                        logger.err("Error loading file: {s}.luau from Luau: {s}", .{ module_filename, @errorName(e) });
+                    }
+                },
+            }
             self.interface.clearScreen(self.interface.ctx);
             current_module = self.modules[std.crypto.random.intRangeAtMost(usize, 0, self.modules.len - 1)];
         }

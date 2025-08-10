@@ -1,12 +1,14 @@
 const std = @import("std");
 const common = @import("../common.zig");
 
-///Used to specify the creator of the clock module
-///`Builtin` => For modules used internally by the clock. Ex error displaying and startup
-///`Custom` => For modules created by users.
-pub const ClockModuleType = enum {
-    Builtin,
-    Custom,
+///Used to specify the creator of the clock module and how it should be retrieved.
+///`builtin` => For modules used defined internally with Zig. (Just a pointer to the module)
+///`custom` => For modules defined by users using Luau. (The Luau file's name)
+pub const ClockModuleSource = union(enum) {
+    ///A pointer to the clock module.
+    builtin: *ClockModule,
+    ///The Luau module file's name.
+    custom: *const []const u8,
 };
 
 ///The clock is made up of modules, each modules should serve a distinct purpose, ex displaying time.
@@ -17,8 +19,6 @@ pub const ClockModule = struct {
     root_component: common.components.RootComponent,
     ///How many seconds the module should be active for before switching
     time_limit_s: u64,
-    ///The type of the module see: `ClockModuleType`
-    module_type: ClockModuleType = ClockModuleType.Custom,
     ///Used to tell the clock's image store which images the module needs loaded.
     image_names: ?[]const []const u8,
 

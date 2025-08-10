@@ -42,25 +42,22 @@ pub fn main() void {
     }
     defer connector.deinit();
 
-    if (loadModuleFromLuau(filename.*, allocator)) |test_module| {
-        var module_array = [_]common.module.ClockModule{test_module.*};
-        var clock = Clock{
-            .interface = connector.connectorInterface(),
-            .has_event_loop_started = false,
-            .modules = &module_array,
-            .allocator = allocator,
-        };
+    var modules = [_]common.module.ClockModuleSource{common.module.ClockModuleSource{ .custom = filename }};
 
-        var is_active: bool = true;
+    var clock = Clock{
+        .interface = connector.connectorInterface(),
+        .has_event_loop_started = false,
+        .modules = &modules,
+        .allocator = allocator,
+    };
 
-        if (std.Thread.spawn(.{}, start, .{ &clock, logger, &is_active })) |t| {
-            logger.info("Started clock connector...", .{});
-            t.join();
-        } else |err| switch (err) {
-            error.Unexpected => logger.err("There was an unexpected error with the clock thread!", .{}),
-            else => |any_err| logger.err("There was an error with the clock thread: {s}", .{@errorName(any_err)}),
-        }
-    } else |e| {
-        logger.err("Error loading file: {s}.luau from Luau: {s}", .{ filename.*, @errorName(e) });
+    var is_active: bool = true;
+
+    if (std.Thread.spawn(.{}, start, .{ &clock, logger, &is_active })) |t| {
+        logger.info("Started clock connector...", .{});
+        t.join();
+    } else |err| switch (err) {
+        error.Unexpected => logger.err("There was an unexpected error with the clock thread!", .{}),
+        else => |any_err| logger.err("There was an error with the clock thread: {s}", .{@errorName(any_err)}),
     }
 }

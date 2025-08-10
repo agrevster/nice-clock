@@ -49,29 +49,26 @@ pub fn main() void {
         .tile_pointer = &tiles,
     };
 
-    if (loadModuleFromLuau(filename.*, allocator)) |test_module| {
-        var module_array = [_]common.module.ClockModule{test_module.*};
-        var clock = Clock{
-            .interface = connector.connectorInterface(),
-            .has_event_loop_started = false,
-            .modules = &module_array,
-            .allocator = allocator,
-        };
+    var modules = [_]common.module.ClockModuleSource{common.module.ClockModuleSource{ .custom = filename }};
 
-        var is_active: bool = true;
+    var clock = Clock{
+        .interface = connector.connectorInterface(),
+        .has_event_loop_started = false,
+        .modules = &modules,
+        .allocator = allocator,
+    };
 
-        if (std.Thread.spawn(.{}, start, .{ &clock, logger, &is_active })) |_| {
-            logger.info("Started clock connector...", .{});
-        } else |err| switch (err) {
-            error.Unexpected => logger.err("There was an unexpected error with the clock thread!", .{}),
-            else => |any_err| logger.err("There was an error with the clock thread: {s}", .{@errorName(any_err)}),
-        }
+    var is_active: bool = true;
 
-        if (renderer.startSimulator(logger, &tiles, &is_active)) {} else |err| {
-            logger.err("There was an error with the simulator window: {s}", .{@errorName(err)});
-            std.process.exit(1);
-        }
-    } else |e| {
-        logger.err("Error loading file: {s}.luau from Luau: {s}", .{ filename.*, @errorName(e) });
+    if (std.Thread.spawn(.{}, start, .{ &clock, logger, &is_active })) |_| {
+        logger.info("Started clock connector...", .{});
+    } else |err| switch (err) {
+        error.Unexpected => logger.err("There was an unexpected error with the clock thread!", .{}),
+        else => |any_err| logger.err("There was an error with the clock thread: {s}", .{@errorName(any_err)}),
+    }
+
+    if (renderer.startSimulator(logger, &tiles, &is_active)) {} else |err| {
+        logger.err("There was an error with the simulator window: {s}", .{@errorName(err)});
+        std.process.exit(1);
     }
 }

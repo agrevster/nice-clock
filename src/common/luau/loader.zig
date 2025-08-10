@@ -43,7 +43,7 @@ pub fn luauError(luau: *Luau, message: []const u8) noreturn {
 }
 
 ///All of the possible errors that could occur when loading a clock module from Luau.
-const Error = error{
+pub const Error = error{
     OtherError,
     LuauError,
     FileNotFound,
