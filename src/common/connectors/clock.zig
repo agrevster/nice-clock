@@ -40,7 +40,7 @@ pub const CommonConnector = struct {
                     defer self.image_store.deinitAllImages();
                 },
                 .custom => |module_filename| {
-                    if (loadModuleFromLuau(module_filename.*, self.allocator)) |module| {
+                    if (loadModuleFromLuau(module_filename, self.allocator)) |module| {
                         self.load_images_for_module(module);
                         module.render(self);
                         defer self.image_store.deinitAllImages();

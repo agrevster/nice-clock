@@ -8,7 +8,7 @@ pub const ClockModuleSource = union(enum) {
     ///A pointer to the clock module.
     builtin: *ClockModule,
     ///The Luau module file's name.
-    custom: *const []const u8,
+    custom: []const u8,
 };
 
 ///The clock is made up of modules, each modules should serve a distinct purpose, ex displaying time.

@@ -23,12 +23,12 @@ pub fn main() void {
         std.process.exit(1);
     };
 
-    var filename: *const []const u8 = undefined;
+    var filenames: []const u8 = undefined;
 
     if (args.len > 1) {
-        filename = &args[1][0..];
+        filenames = args[1][0..];
     } else {
-        filename = &"test";
+        filenames = "test";
     }
 
     var tiles: [32][64]common.Color = undefined;
@@ -49,12 +49,35 @@ pub fn main() void {
         .tile_pointer = &tiles,
     };
 
-    var modules = [_]common.module.ClockModuleSource{common.module.ClockModuleSource{ .custom = filename }};
+    //Create list of module sources from filenames variable
+
+    var modules = std.ArrayList(common.module.ClockModuleSource).init(allocator);
+
+    var filenames_iterator = std.mem.splitSequence(u8, filenames, ",");
+
+    while (filenames_iterator.next()) |filename| {
+        //We have to make a copy of the string to append it because otherwise the loop will reuse the memory.
+        const new_filename = allocator.dupe(u8, filename) catch |e| {
+            logger.err("Error copying filename string for filename: {s}. {s}", .{ filename, @errorName(e) });
+            return;
+        };
+
+        const new_source = allocator.create(common.module.ClockModuleSource) catch |e| {
+            logger.err("Error creating module source for filename: {s}. {s}", .{ filename, @errorName(e) });
+            return;
+        };
+
+        new_source.* = .{ .custom = new_filename };
+
+        modules.append(new_source.*) catch |e| {
+            logger.err("Error appending item: {s} to modules: {s}", .{ filename, @errorName(e) });
+        };
+    }
 
     var clock = Clock{
         .interface = connector.connectorInterface(),
         .has_event_loop_started = false,
-        .modules = &modules,
+        .modules = modules.items,
         .allocator = allocator,
     };
 
