@@ -53,8 +53,9 @@ pub fn main() void {
 
         var is_active: bool = true;
 
-        if (std.Thread.spawn(.{}, start, .{ &clock, logger, &is_active })) |_| {
+        if (std.Thread.spawn(.{}, start, .{ &clock, logger, &is_active })) |t| {
             logger.info("Started clock connector...", .{});
+            t.join();
         } else |err| switch (err) {
             error.Unexpected => logger.err("There was an unexpected error with the clock thread!", .{}),
             else => |any_err| logger.err("There was an error with the clock thread: {s}", .{@errorName(any_err)}),
