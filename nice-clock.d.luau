@@ -144,6 +144,7 @@ export type Time = {
 	second: number,
 	am_pm: string,
 	twelve_hour: number,
+	padded_minute: string,
 }
 
 export type DatetimeDelta = {

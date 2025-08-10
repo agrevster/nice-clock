@@ -1,8 +1,8 @@
 local time = datetime.now("America/Chicago").time
 
 local time_text = if time.twelve_hour > 9
-	then `{time.twelve_hour}:{time.minute}`
-	else ` {time.twelve_hour}:{time.minute}`
+	then `{time.twelve_hour}:{time.padded_minute}`
+	else ` {time.twelve_hour}:{time.padded_minute}`
 
 local blink_animation: CustomAnimation = {
 	component_indexes = { 0 },

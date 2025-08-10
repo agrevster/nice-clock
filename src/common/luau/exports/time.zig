@@ -4,6 +4,7 @@ const datetime = @import("datetime").datetime;
 const loader = @import("../loader.zig");
 const logger = loader.logger;
 const LuauTry = loader.LuauTry;
+const luauError = loader.luauError;
 const Datetime = datetime.Datetime;
 const Time = datetime.Time;
 const Date = datetime.Date;
@@ -29,6 +30,8 @@ pub fn load_export(luau: *Luau) void {
     luau.setGlobal("datetime");
 }
 
+const tryBufPrint = LuauTry([]u8, "Failed write padded_mintue to buffer!");
+
 ///Converts the given time field into a Luau table.
 fn createTimeTableFromZig(current: Time, luau: *Luau) void {
     luau.newTable();
@@ -51,6 +54,12 @@ fn createTimeTableFromZig(current: Time, luau: *Luau) void {
         luau.pushInteger(current.hour);
     }
     luau.setField(-2, "twelve_hour");
+
+    const padded_minute_buffer = luau.allocator().alloc(u8, 2) catch luauError(luau, "Failed to allocate space for padded mintue buffer!");
+
+    _ = tryBufPrint.unwrap(luau, std.fmt.bufPrint(padded_minute_buffer, "{d:0>2}", .{current.minute}));
+    _ = luau.pushString(padded_minute_buffer);
+    luau.setField(-2, "padded_minute");
 
     luau.setField(-2, "time");
 }
