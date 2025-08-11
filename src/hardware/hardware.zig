@@ -25,9 +25,9 @@ pub fn main() void {
     var filenames: []const u8 = undefined;
 
     if (args.len > 1) {
-        filenames = &args[1][0..];
+        filenames = args[1][0..];
     } else {
-        filenames = &"test";
+        filenames = "test";
     }
 
     if (common.font.FontStore.init(allocator)) {} else |err| {
