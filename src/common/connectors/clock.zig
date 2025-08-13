@@ -46,6 +46,10 @@ pub const CommonConnector = struct {
                         defer self.image_store.deinitAllImages();
                         defer self.allocator.destroy(module);
                     } else |e| {
+                        if (e == error.DebugModule) {
+                            logger.warn("Attempted to run a non-module. (This likely means you are debugging)", .{});
+                            std.process.exit(1);
+                        }
                         logger.err("Error loading file: {s}.luau from Luau: {s}", .{ module_filename, @errorName(e) });
                     }
                 },

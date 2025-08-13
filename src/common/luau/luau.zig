@@ -7,4 +7,5 @@ pub const exports = struct {
     pub const time = @import("exports/time.zig");
     pub const nice_clock = @import("exports/nice-clock.zig");
     pub const http = @import("exports/http.zig");
+    pub const json = @import("exports/json.zig");
 };

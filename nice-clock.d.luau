@@ -17,6 +17,11 @@ export type GlobalHTTP = {
 	methods: Methods
 }
 
+export type GlobalJson = {
+	load: (str: string) -> any,
+	dump: (obj: any) -> string,
+}
+
 declare function error(message: string): nil
 declare function getenv(key: string): string | nil
 
@@ -157,3 +162,4 @@ export type DatetimeDelta = {
 declare datetime: GlobalDatetime
 declare niceclock: GlobalNiceClock
 declare http: GlobalHTTP
+declare json: GlobalJson

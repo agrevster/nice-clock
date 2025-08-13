@@ -79,6 +79,7 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     common.luau.exports.time.load_export(luau);
     common.luau.exports.nice_clock.load_export(luau);
     common.luau.exports.http.load_export(luau);
+    common.luau.exports.json.load_export(luau);
 
     const luau_bytecode = zlua.compile(allocator, luau_file, .{}) catch |e| switch (e) {
         error.OutOfMemory => return Error.OtherError,
