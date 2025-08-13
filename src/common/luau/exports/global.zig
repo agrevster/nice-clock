@@ -46,28 +46,29 @@ fn printAtIndex(luau: *Luau, i: i32, print_list: *std.ArrayList(u8), allocator: 
             appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "{} ", .{val}) catch "Error");
         },
         .table => {
-            const is_array = luau.rawGetIndex(i, 1) != zlua.LuaType.nil;
-            luau.pop(1);
-            if (is_array) {
-                appendu8SliceOrLog(print_list, "[");
-                const len: usize = @intCast(@max(0, luau.objectLen(i)));
-                for (1..len + 1) |index| {
-                    _ = luau.rawGetIndex(i, @as(i32, @intCast(index)));
-                    appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "<{s}>,", .{luau.typeNameIndex(-1)}) catch "Error");
-                    luau.pop(1);
+            appendu8SliceOrLog(print_list, "{ ");
+            luau.pushNil();
+            while (luau.next(i)) {
+                const key_index = luau.getTop() - 1;
+                const val_index = luau.getTop();
+
+                const key_type = luau.typeOf(key_index);
+
+                switch (key_type) {
+                    .string => {
+                        appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "{s}=", .{luau.toString(-2) catch "Error"}) catch "Error");
+                    },
+                    .number => {
+                        appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "{d}=", .{luau.toInteger(-2) catch 0}) catch "Error");
+                    },
+                    else => {
+                        appendu8SliceOrLog(print_list, "Error");
+                    },
                 }
-                appendu8SliceOrLog(print_list, "]");
-            } else {
-                appendu8SliceOrLog(print_list, "{");
-                luau.pushNil();
-                while (luau.next(i)) {
-                    const key = luau.toString(-2) catch std.fmt.allocPrint(allocator, "<{s}>", .{luau.typeNameIndex(-2)}) catch "Error";
-                    const value = luau.toString(-1) catch std.fmt.allocPrint(allocator, "<{s}>", .{luau.typeNameIndex(-1)}) catch "Error";
-                    appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "{s} = {s};", .{ key, value }) catch "Error");
-                    luau.pop(1);
-                }
-                appendu8SliceOrLog(print_list, "} ");
+                printAtIndex(luau, val_index, print_list, allocator);
+                luau.pop(1);
             }
+            appendu8SliceOrLog(print_list, "} ");
         },
         else => {
             appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "<{s}> ", .{luau.typeNameIndex(i)}) catch "Error");
