@@ -9,7 +9,7 @@ pub const PPM = struct {
     height: u8,
     pixles: []Color,
 
-    pub const Error = error{ InvalidFileType, FailedToParseHeader, UnsuportedMaxColor };
+    pub const Error = error{ InvalidFileType, FailedToParseHeader, UnsuportedMaxColor, Overflow };
 
     ///Parses a PPM image file into a `PPM` struct.
     pub fn parsePPM(allocator: std.mem.Allocator, input: []const u8) !PPM {
@@ -40,16 +40,13 @@ pub const PPM = struct {
         if (width == null or height == null or max_color_value == null) return Error.FailedToParseHeader;
         if (max_color_value.? > 255) return Error.UnsuportedMaxColor;
 
-        const width_u16: u16 = @intCast(width.?);
-        const height_u16: u16 = @intCast(height.?);
+        const pixle_count: u16 = try std.math.mul(u16, @intCast(width.?), @intCast(height.?));
 
-        pixles = try allocator.alloc(Color, width_u16 * height_u16);
+        pixles = try allocator.alloc(Color, pixle_count);
         errdefer allocator.free(pixles);
 
         //Loop through the raster and convert the u8s to RGB values.
         var pixle_iterator = std.mem.window(u8, lines.next().?, 3, 3);
-
-        const pixle_count: u16 = width.? * height.?;
 
         for (0..(pixle_count)) |i| {
             const pixle = pixle_iterator.next().?;
