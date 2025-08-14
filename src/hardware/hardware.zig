@@ -53,8 +53,9 @@ pub fn main() void {
 
     var is_active: bool = true;
 
-    if (std.Thread.spawn(.{}, utils.startClock, .{ &clock, logger, &is_active })) |_| {
+    if (std.Thread.spawn(.{}, utils.startClock, .{ &clock, logger, &is_active })) |t| {
         logger.info("Started clock connector...", .{});
+        t.join();
     } else |e| {
         logger.err("There was an error with the clock thread: {s}", .{@errorName(e)});
         std.process.exit(1);
