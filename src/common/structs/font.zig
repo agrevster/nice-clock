@@ -1,4 +1,5 @@
 const std = @import("std");
+const common = @import("../common.zig");
 const startsWith = std.mem.startsWith;
 const parseInt = std.fmt.parseInt;
 
@@ -131,11 +132,11 @@ pub const FontStore = enum {
 
     ///Attempts to read the contents of a .bdf file located at `./assets/fonts/` and parse a BDF from the text in the file.
     fn loadFontFromFile(allocator: std.mem.Allocator, font_name: []const u8) !BDF {
-        var arena = std.heap.ArenaAllocator.init(allocator);
-        defer arena.deinit();
+        const file_name = try std.fmt.allocPrint(allocator, "./fonts/{s}.bdf", .{font_name});
+        defer allocator.free(file_name);
 
-        const file_name = try std.fmt.allocPrint(arena.allocator(), "./assets/fonts/{s}.bdf", .{font_name});
-        const font_file = try std.fs.cwd().readFileAlloc(arena.allocator(), file_name, 1000000);
+        const font_file = try common.connector_utils.readResource(allocator, file_name, .ASSET);
+        defer allocator.free(font_file);
         return try BDF.parseBDF(allocator, font_file);
     }
 };

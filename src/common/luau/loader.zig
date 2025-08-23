@@ -84,7 +84,6 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     const luau_bytecode = zlua.compile(allocator, luau_file, .{}) catch |e| switch (e) {
         error.OutOfMemory => return Error.OtherError,
     };
-    defer allocator.free(luau_bytecode);
 
     luau.loadBytecode("...", luau_bytecode) catch {
         const error_str = luau.toString(-1) catch "ERR";

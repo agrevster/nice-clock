@@ -6,13 +6,14 @@ const loadModuleFromLuau = common.luau.loader.loadModuleFromLuau;
 const utils = common.connector_utils;
 
 pub fn main() void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    const allocator = arena.allocator();
-    defer arena.deinit();
     const logger = std.log.scoped(.Hardware);
+    const allocator = std.heap.page_allocator;
 
     //Allow for passing module file name via command line arguments
-    const args = std.process.argsAlloc(allocator) catch |e| {
+    var args_arena = std.heap.ArenaAllocator.init(allocator);
+    const args_allocator = args_arena.allocator();
+    defer args_arena.deinit();
+    const args = std.process.argsAlloc(args_allocator) catch |e| {
         logger.err("Error allocating arguments for simulator: {s}", .{@errorName(e)});
         std.process.exit(1);
     };
@@ -30,6 +31,8 @@ pub fn main() void {
         std.process.exit(1);
     }
 
+    defer common.font.FontStore.deinit(allocator);
+
     var connector = Connector{};
 
     if (connector.init()) |_| {} else |_| {
@@ -43,6 +46,7 @@ pub fn main() void {
     defer modules.deinit();
 
     utils.loadModuleFiles(allocator, filenames, logger, &modules);
+    defer utils.unloadModuleFiles(allocator, &modules);
 
     var clock = Clock{
         .interface = connector.connectorInterface(),
@@ -51,7 +55,7 @@ pub fn main() void {
         .allocator = allocator,
     };
 
-    var is_active: bool = true;
+    var is_active = std.atomic.Value(bool).init(true);
 
     if (std.Thread.spawn(.{}, utils.startClock, .{ &clock, logger, &is_active })) |t| {
         logger.info("Started clock connector...", .{});

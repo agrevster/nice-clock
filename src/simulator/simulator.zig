@@ -7,13 +7,17 @@ const loadModuleFromLuau = common.luau.loader.loadModuleFromLuau;
 const utils = common.connector_utils;
 
 pub fn main() void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    const allocator = arena.allocator();
-    defer arena.deinit();
+    var gpa = std.heap.DebugAllocator(.{ .thread_safe = false }).init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var args_arena = std.heap.ArenaAllocator.init(allocator);
+    const args_allocator = args_arena.allocator();
+    defer args_arena.deinit();
     const logger = std.log.scoped(.Simulator);
 
     //Allow for passing module file name via command line arguments
-    const args = std.process.argsAlloc(allocator) catch |e| {
+    const args = std.process.argsAlloc(args_allocator) catch |e| {
         logger.err("Error allocating arguments for simulator: {s}", .{@errorName(e)});
         std.process.exit(1);
     };
@@ -38,15 +42,16 @@ pub fn main() void {
         logger.err("Error loading fonts: {s}", .{@errorName(err)});
         std.process.exit(1);
     }
+    defer common.font.FontStore.deinit(allocator);
 
     var connector = Connector{
         .blank_tiles = tiles,
         .tile_pointer = &tiles,
     };
 
-    var modules = std.ArrayList(common.module.ClockModuleSource).init(allocator);
-    defer modules.deinit();
+    var modules = std.ArrayList(*common.module.ClockModuleSource).init(allocator);
     utils.loadModuleFiles(allocator, filenames, logger, &modules);
+    defer utils.unloadModuleFiles(allocator, &modules);
 
     var clock = Clock{
         .interface = connector.connectorInterface(),
@@ -55,17 +60,17 @@ pub fn main() void {
         .allocator = allocator,
     };
 
-    var is_active: bool = true;
+    var is_active = std.atomic.Value(bool).init(true);
 
-    if (std.Thread.spawn(.{}, utils.startClock, .{ &clock, logger, &is_active })) |_| {
+    if (std.Thread.spawn(.{}, utils.startClock, .{ &clock, logger, &is_active })) |t| {
         logger.info("Started clock connector...", .{});
+        if (renderer.startSimulator(logger, &tiles, &is_active)) {} else |err| {
+            logger.err("There was an error with the simulator window: {s}", .{@errorName(err)});
+            std.process.exit(1);
+        }
+        t.detach();
     } else |e| {
         logger.err("There was an error with the clock thread: {s}", .{@errorName(e)});
-        std.process.exit(1);
-    }
-
-    if (renderer.startSimulator(logger, &tiles, &is_active)) {} else |err| {
-        logger.err("There was an error with the simulator window: {s}", .{@errorName(err)});
         std.process.exit(1);
     }
 }

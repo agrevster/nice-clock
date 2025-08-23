@@ -104,17 +104,17 @@ pub const ImageStore = struct {
     }
 
     fn loadImageFromFile(allocator: std.mem.Allocator, image_name: []const u8) Error!PPM {
-        var arena = std.heap.ArenaAllocator.init(allocator);
-        defer arena.deinit();
+        const file_name = std.fmt.allocPrint(allocator, "./images/{s}.ppm", .{image_name}) catch return Error.OutOfMemory;
+        defer allocator.free(file_name);
 
-        const file_name = std.fmt.allocPrint(arena.allocator(), "./assets/images/{s}.ppm", .{image_name}) catch return Error.OutOfMemory;
-        const image_file = std.fs.cwd().readFileAlloc(arena.allocator(), file_name, 1000000) catch |e| switch (e) {
+        const image_file = common.connector_utils.readResource(allocator, file_name, .ASSET) catch |e| switch (e) {
             error.FileNotFound => return Error.InvalidFile,
             inline else => {
                 logger.err("Error loading image from file: {s} -> {s}", .{ file_name, @errorName(e) });
                 return error.ImageLoadingError;
             },
         };
+        defer allocator.free(image_file);
         return PPM.parsePPM(allocator, image_file) catch |e| {
             logger.err("Error parsing PPM: {s} -> {s}", .{ file_name, @errorName(e) });
             return Error.ImageLoadingError;
