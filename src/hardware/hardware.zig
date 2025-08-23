@@ -7,7 +7,9 @@ const utils = common.connector_utils;
 
 pub fn main() void {
     const logger = std.log.scoped(.Hardware);
-    const allocator = std.heap.page_allocator;
+    var gpa = std.heap.DebugAllocator(.{ .thread_safe = false }).init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
 
     //Allow for passing module file name via command line arguments
     var args_arena = std.heap.ArenaAllocator.init(allocator);
@@ -42,7 +44,7 @@ pub fn main() void {
 
     //Create list of module sources from filenames variable
 
-    var modules = std.ArrayList(common.module.ClockModuleSource).init(allocator);
+    var modules = std.ArrayList(*common.module.ClockModuleSource).init(allocator);
     defer modules.deinit();
 
     utils.loadModuleFiles(allocator, filenames, logger, &modules);
