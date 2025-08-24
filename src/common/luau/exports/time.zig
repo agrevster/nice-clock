@@ -51,7 +51,7 @@ fn createTimeTableFromZig(current: Time, luau: *Luau) void {
     if (current.hour > 12) {
         luau.pushInteger(current.hour - 12);
     } else {
-        luau.pushInteger(current.hour);
+        if (current.hour == 0) luau.pushInteger(12) else luau.pushInteger(current.hour);
     }
     luau.setField(-2, "twelve_hour");
 
