@@ -4,20 +4,20 @@ local lat = getenv("NICE_CLOCK_WEATHER_LAT")
 local lon = getenv("NICE_CLOCK_WEATHER_LON")
 
 local colors = {
-	white = { r = 255, g = 255, b = 255 },
-	min = { r = 4, g = 165, b = 229 },
-	max = { r = 221, g = 120, b = 120 },
+  white = { r = 255, g = 255, b = 255 },
+  min = { r = 4, g = 165, b = 229 },
+  max = { r = 221, g = 120, b = 120 },
 }
 
 --- Code
 
 local url =
-	`https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=uv_index_clear_sky_max,temperature_2m_min,temperature_2m_max&current=weather_code,is_day,temperature_2m&timezone=America%2FChicago&forecast_days=1&timeformat=unixtime&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch`
+  `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=uv_index_clear_sky_max,temperature_2m_min,temperature_2m_max&current=weather_code,is_day,temperature_2m&timezone=America%2FChicago&forecast_days=1&timeformat=unixtime&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch`
 
 local res = http.fetch(url, http.methods.GET, nil, nil, nil)
 
 if res.status >= 300 then
-	error(`Error fetching wether data: {res.body}`)
+  error(`Error fetching wether data: {res.body}`)
 end
 local data = json.load(res.body)
 
@@ -54,13 +54,13 @@ local image_for_code =
 -- stylua: ignore end
 
 function get_temp_pos(temp: string): number
-	return if #temp > 2 then 47 else 52
+  return if #temp > 2 then 47 else 52
 end
 
 return niceclock
-	.modulebuilder("Weather", 20, { `weather/{image_for_code}` }, {})
-	:text({ x = get_temp_pos(daily_min_temp), y = 4 }, niceclock.fonts.Font5x8, daily_max_temp, colors.max)
-	:text({ x = get_temp_pos(current_temp), y = 12 }, niceclock.fonts.Font5x8, current_temp, colors.white)
-	:text({ x = get_temp_pos(daily_min_temp), y = 20 }, niceclock.fonts.Font5x8, daily_min_temp, colors.min)
-	:box({ x = if big then 45 else 50, y = 1 }, if big then 18 else 13, 30, false, colors.white)
-	:image({ x = 0, y = 0 }, `weather/{image_for_code}`)
+  .modulebuilder("Weather", 20, { `weather/{image_for_code}` }, {})
+  :text({ x = get_temp_pos(daily_min_temp), y = 4 }, niceclock.fonts.Font5x8, daily_max_temp, colors.max)
+  :text({ x = get_temp_pos(current_temp), y = 12 }, niceclock.fonts.Font5x8, current_temp, colors.white)
+  :text({ x = get_temp_pos(daily_min_temp), y = 20 }, niceclock.fonts.Font5x8, daily_min_temp, colors.min)
+  :box({ x = if big then 45 else 50, y = 1 }, if big then 18 else 13, 30, false, colors.white)
+  :image({ x = 0, y = 0 }, `weather/{image_for_code}`)
