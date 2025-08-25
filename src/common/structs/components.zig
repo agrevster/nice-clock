@@ -578,6 +578,7 @@ pub const WrappedTextComponent = struct {
 };
 
 ///Used to draw an image onto the screen.
+///Setting image_name to empty draws nothing
 pub const ImageComponent = struct {
     pos: ComponentPos,
     image_name: []const u8,
@@ -603,12 +604,17 @@ pub const ImageComponent = struct {
     fn custom_animation_update(ctx: *anyopaque, state: CustomAnimationState) void {
         const self: *ImageComponent = @ptrCast(@alignCast(ctx));
         if (state.pos) |p| self.pos = p;
+        if (state.text) |t| {
+            self.image_name = t;
+        }
     }
 
     const black = common.Color{ .r = 0, .g = 0, .b = 0 };
 
     fn draw(ctx: *anyopaque, clock: *Clock) ComponentError!void {
         const self: *const ImageComponent = @ptrCast(@alignCast(ctx));
+
+        if (std.mem.eql(u8, "empty", self.image_name)) return;
 
         const image = try clock.image_store.getImage(self.image_name);
 

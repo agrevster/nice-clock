@@ -20,6 +20,7 @@ pub const SimConnector = struct {
 
     pub fn setTile(ctx: *anyopaque, y: u8, x: u8, color: Color) connector.ConnectorError!void {
         const self: *SimConnector = @ptrCast(@alignCast(ctx));
+        if (color.elq(Color{ .r = 0, .g = 0, .b = 0 })) return;
 
         if (x > 63 or y > 31 or y < 0 or x < 0) {
             std.log.debug("Out of bounds: ({},{})!", .{ y, x });
