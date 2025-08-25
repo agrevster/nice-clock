@@ -64,7 +64,7 @@ local animations: { CustomAnimation } = {
       speed = 12,
       duration = 20,
     },
-    states = create_light_flash_animation(20, colors.border),
+    states = create_light_flash_animation(19, colors.border),
   },
   --Blink text
   {
