@@ -616,7 +616,7 @@ pub const ImageComponent = struct {
             const y_u8: u8 = @intCast(y);
             for (0..image.width) |x| {
                 const x_u8: u8 = @intCast(x);
-                const pixel = image.pixles[y * image.width + x];
+                const pixel = image.pixels[y * image.width + x];
                 if (!pixel.elq(black)) try clock.interface.setTile(clock.interface.ctx, y_u8 + self.pos.y, x_u8 + self.pos.x, pixel);
             }
         }

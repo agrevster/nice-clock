@@ -7,7 +7,7 @@ const Color = common.Color;
 pub const PPM = struct {
     width: u8,
     height: u8,
-    pixles: []Color,
+    pixels: []Color,
 
     pub const Error = error{ InvalidFileType, FailedToParseHeader, UnsuportedMaxColor, Overflow };
 
@@ -19,7 +19,7 @@ pub const PPM = struct {
         var height: ?u8 = null;
         var max_color_value: ?u16 = null;
 
-        var pixles: []Color = undefined;
+        var pixels: []Color = undefined;
 
         //Check to see if the magic numbers match
         if (!std.mem.eql(u8, lines.next().?, "P6")) return Error.InvalidFileType;
@@ -40,29 +40,37 @@ pub const PPM = struct {
         if (width == null or height == null or max_color_value == null) return Error.FailedToParseHeader;
         if (max_color_value.? > 255) return Error.UnsuportedMaxColor;
 
-        const pixle_count: u16 = try std.math.mul(u16, @intCast(width.?), @intCast(height.?));
+        const pixel_count: usize = @as(usize, width.?) * @as(usize, height.?);
+        const pixel_data = lines.rest();
 
-        pixles = try allocator.alloc(Color, pixle_count);
-        errdefer allocator.free(pixles);
+        if (pixel_data.len < pixel_count * 3)
+            return Error.FailedToParseHeader;
 
-        //Loop through the raster and convert the u8s to RGB values.
-        var pixle_iterator = std.mem.window(u8, lines.next().?, 3, 3);
+        pixels = try allocator.alloc(Color, pixel_count);
+        errdefer allocator.free(pixels);
 
-        for (0..(pixle_count)) |i| {
-            const pixle = pixle_iterator.next().?;
-            pixles[i] = Color{ .r = pixle[0], .g = pixle[1], .b = pixle[2] };
+        // //Loop through the raster and convert the u8s to RGB values.
+        // var pixel_iterator = std.mem.window(u8, lines.next().?, 3, 3);
+
+        for (0..pixel_count) |i| {
+            const base = i * 3;
+            pixels[i] = Color{
+                .r = pixel_data[base],
+                .g = pixel_data[base + 1],
+                .b = pixel_data[base + 2],
+            };
         }
 
         return PPM{
             .width = width.?,
             .height = height.?,
-            .pixles = pixles,
+            .pixels = pixels,
         };
     }
 
     ///Calls `deinit` on all loaded pixels.
     pub fn deinit(self: *PPM, allocator: std.mem.Allocator) void {
-        allocator.free(self.pixles);
+        allocator.free(self.pixels);
     }
 };
 
@@ -154,7 +162,7 @@ test {
 
     for (0..ppm.height) |y| {
         for (0..ppm.width) |x| {
-            const pixel = ppm.pixles[y * ppm.width + x];
+            const pixel = ppm.pixels[y * ppm.width + x];
             if (pixel.elq(Color{ .r = 255, .g = 0, .b = 0 })) {
                 std.debug.print("G", .{});
             } else if (pixel.elq(Color{ .r = 0, .g = 255, .b = 0 })) {
