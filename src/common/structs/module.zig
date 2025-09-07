@@ -27,7 +27,7 @@ pub const ClockModule = struct {
     ///Displays the module on the clock's screen.
     pub fn render(self: *ClockModule, clock: *common.Clock, is_active: *std.atomic.Value(bool)) void {
         self.root_component.render(clock, common.constants.fps, self.time_limit_s, is_active) catch |err| {
-            logger.err("[{s}]: {s}", .{ self.name, @errorName(err) });
+            logger.err("[{s}]: {t}", .{ self.name, err });
         };
     }
 };

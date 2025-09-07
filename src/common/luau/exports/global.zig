@@ -21,7 +21,7 @@ const print_logger = std.log.scoped(.luau_print);
 
 fn appendu8SliceOrLog(allocator: std.mem.Allocator, array_list: *std.ArrayList(u8), slice: []const u8) void {
     if (array_list.appendSlice(allocator, slice)) {} else |e| {
-        print_logger.err("Error appending slice to buffer. Slice: {s}, Err: {s}", .{ slice, @errorName(e) });
+        print_logger.err("Error appending slice to buffer. Slice: {s}, Err: {t}", .{ slice, e });
     }
 }
 
@@ -122,7 +122,7 @@ fn getenv_fn(luau: *Luau) i32 {
     }
 
     const value = std.process.getEnvVarOwned(allocator, key) catch |e| {
-        logger.err("Error attempting to get environment variable: {s}", .{@errorName(e)});
+        logger.err("Error attempting to get environment variable: {t}", .{e});
         luauError(luau, "Error attempting to get environment variable.");
     };
 

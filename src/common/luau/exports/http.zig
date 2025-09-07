@@ -98,9 +98,9 @@ fn fetch_fn(luau: *Luau) i32 {
 
     if (fetch(allocator, url[0..], method.?, &response_writer.writer, body, content_type, authorization)) |response_status| {
         if (@intFromEnum(response_status) >= 400) {
-            const message_buffer = std.fmt.allocPrint(allocator, "HTTP Error: {d} ({s})", .{ @intFromEnum(response_status), @tagName(response_status) }) catch |e| {
+            const message_buffer = std.fmt.allocPrint(allocator, "HTTP Error: {d} ({t})", .{ @intFromEnum(response_status), response_status }) catch |e| {
                 luauError(luau, "Failed to allocate http error message buffer!");
-                logger.err("Failed to allocate http error message buffer: {s}", .{@errorName(e)});
+                logger.err("Failed to allocate http error message buffer: {t}", .{e});
             };
 
             logger.err("{s}", .{message_buffer});
@@ -110,11 +110,11 @@ fn fetch_fn(luau: *Luau) i32 {
 
         const table = HTTPResponseTable{ .status = @intFromEnum(response_status), .body = response_writer.written() };
         luau.pushAny(table) catch |e| {
-            logger.err("Error pushing HTTPResponseTable from zig: {s}", .{@errorName(e)});
+            logger.err("Error pushing HTTPResponseTable from zig: {t}", .{e});
             luauError(luau, "Error pushing HTTPResponseTable from zig.");
         };
     } else |e| {
-        logger.err("Error fetching url: {s} from Luau: {s}", .{ url, @errorName(e) });
+        logger.err("Error fetching url: {s} from Luau: {t}", .{ url, e });
         luauError(luau, "Error fetching.");
     }
 

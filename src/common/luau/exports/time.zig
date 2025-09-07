@@ -180,7 +180,7 @@ fn zonedNow(luau: *Luau) i32 {
             luau.raiseError();
         }
     } else |e| {
-        logger.err("Now: {s}", .{@errorName(e)});
+        logger.err("Now: {t}", .{e});
     }
     return 1;
 }
@@ -210,7 +210,7 @@ fn new(luau: *Luau) i32 {
         } else |e| {
             _ = luau.pushString("Error creating new datetime!");
             luau.raiseError();
-            logger.err("New: {s}", .{@errorName(e)});
+            logger.err("New: {t}", .{e});
         }
     } else |_| {
         _ = luau.pushString("Invalid time zone!");

@@ -118,13 +118,13 @@ pub const ImageStore = struct {
         const image_file = common.connector_utils.readResource(allocator, file_name, .ASSET) catch |e| switch (e) {
             error.FileNotFound => return Error.InvalidFile,
             inline else => {
-                logger.err("Error loading image from file: {s} -> {s}", .{ file_name, @errorName(e) });
+                logger.err("Error loading image from file: {s} -> {t}", .{ file_name, e });
                 return error.ImageLoadingError;
             },
         };
         defer allocator.free(image_file);
         return PPM.parsePPM(allocator, image_file) catch |e| {
-            logger.err("Error parsing PPM: {s} -> {s}", .{ file_name, @errorName(e) });
+            logger.err("Error parsing PPM: {s} -> {t}", .{ file_name, e });
             return Error.ImageLoadingError;
         };
     }

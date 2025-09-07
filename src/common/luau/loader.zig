@@ -12,7 +12,7 @@ fn readModuleFile(file: []const u8, allocator: std.mem.Allocator) error{ OutOfMe
     const file_contents = std.fs.cwd().readFileAlloc(allocator, file_name, 1000000) catch |e| switch (e) {
         error.FileNotFound => return error.FileNotFound,
         inline else => {
-            logger.err("Error loading text from module file: {s} -> {s}", .{ file_name, @errorName(e) });
+            logger.err("Error loading text from module file: {s} -> {t}", .{ file_name, e });
             return error.OtherError;
         },
     };
@@ -29,7 +29,7 @@ pub fn LuauTry(comptime T: type, error_message: []const u8) type {
             if (item) |item_no_err| {
                 return item_no_err;
             } else |err| {
-                logger.err("LuauTry caught: {s}. Expected type: {s}", .{ @errorName(err), @typeName(T) });
+                logger.err("LuauTry caught: {t}. Expected type: {s}", .{ err, @typeName(T) });
                 luauError(luau, error_message);
             }
         }
@@ -56,7 +56,7 @@ pub const Error = error{
 pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Allocator) Error!*common.module.ClockModule {
     // Interpret the file
     const luau_file = readModuleFile(module_file_name, allocator) catch |e| {
-        logger.err("{s}", .{@errorName(e)});
+        logger.err("{t}", .{e});
         return Error.OtherError;
     };
     defer allocator.free(luau_file);
@@ -93,7 +93,7 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     luau.protectedCall(.{ .results = 1 }) catch |e| {
         const error_str = luau.toString(-1) catch "ERR";
         logger.err("{s}", .{error_str});
-        logger.err("{s}", .{@errorName(e)});
+        logger.err("{t}", .{e});
     };
 
     // Load module
@@ -109,14 +109,14 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     _ = luau.getField(1, "name");
     const module_name_field = luau.toString(-1) catch return Error.ModuleParsingError;
     const module_name = allocator.dupe(u8, module_name_field[0..module_name_field.len]) catch |e| {
-        logger.err("Memory error: {s}", .{@errorName(e)});
+        logger.err("Memory error: {t}", .{e});
         return Error.OtherError;
     };
 
     _ = luau.getField(1, "timelimit");
     const time_limit_field = luau.toInteger(-1) catch return Error.ModuleParsingError;
     const time_limit = allocator.create(u64) catch |e| {
-        logger.err("Memory error: {s}", .{@errorName(e)});
+        logger.err("Memory error: {t}", .{e});
         return Error.OtherError;
     };
     time_limit.* = @intCast(time_limit_field);
@@ -124,12 +124,12 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     _ = luau.getField(1, "imagenames");
     const image_names_field = luau.toAnyInternal([][]const u8, allocator, true, -1) catch return Error.ModuleParsingError;
     var image_names = allocator.dupe([]const u8, image_names_field) catch |e| {
-        logger.err("Memory error: {s}", .{@errorName(e)});
+        logger.err("Memory error: {t}", .{e});
         return Error.OtherError;
     };
     for (image_names_field, 0..) |image_name, i| {
         const new_image_name = allocator.dupe(u8, image_name) catch |e| {
-            logger.err("Memory error: {s}", .{@errorName(e)});
+            logger.err("Memory error: {t}", .{e});
             return Error.OtherError;
         };
         image_names[i] = new_image_name;
@@ -140,7 +140,7 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     if (common.luau.import_components.rootComponentFromLuau(luau, allocator)) |root| {
         root_component = root;
     } else |e| {
-        logger.err("Error creating root component for module {s}; ({s})", .{ module_name, @errorName(e) });
+        logger.err("Error creating root component for module {s}; ({t})", .{ module_name, e });
         return error.ModuleParsingError;
     }
 

@@ -16,7 +16,7 @@ pub fn main() void {
     const args_allocator = args_arena.allocator();
     defer args_arena.deinit();
     const args = std.process.argsAlloc(args_allocator) catch |e| {
-        logger.err("Error allocating arguments for simulator: {s}", .{@errorName(e)});
+        logger.err("Error allocating arguments for simulator: {t}", .{e});
         std.process.exit(1);
     };
 
@@ -29,7 +29,7 @@ pub fn main() void {
     }
 
     if (common.font.FontStore.init(allocator)) {} else |err| {
-        logger.err("Error loading fonts: {s}", .{@errorName(err)});
+        logger.err("Error loading fonts: {t}", .{err});
         std.process.exit(1);
     }
 
@@ -63,7 +63,7 @@ pub fn main() void {
         logger.info("Started clock connector...", .{});
         t.join();
     } else |e| {
-        logger.err("There was an error with the clock thread: {s}", .{@errorName(e)});
+        logger.err("There was an error with the clock thread: {t}", .{e});
         std.process.exit(1);
     }
 }

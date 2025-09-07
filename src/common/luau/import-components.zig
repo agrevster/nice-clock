@@ -197,7 +197,7 @@ pub fn rootComponentFromLuau(luau: *Luau, allocator: std.mem.Allocator) RootComp
         if (component_constructors[luau_component.number](luau_component.props, allocator)) |component| {
             parsed_components[i] = component.*;
         } else |e| {
-            logger.err("There was an error parsing component: {d} from Luau: {s}.", .{ luau_component.number, @errorName(e) });
+            logger.err("There was an error parsing component: {d} from Luau: {t}.", .{ luau_component.number, e });
         }
     }
 

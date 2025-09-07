@@ -16,19 +16,19 @@ pub fn loadModuleFiles(allocator: std.mem.Allocator, filenames: []const u8, logg
     while (filenames_iterator.next()) |filename| {
         //We have to make a copy of the string to append it because otherwise the loop will reuse the memory.
         const new_filename = allocator.dupe(u8, filename) catch |e| {
-            logger.err("Error copying filename string for filename: {s}. {s}", .{ filename, @errorName(e) });
+            logger.err("Error copying filename string for filename: {s}. {t}", .{ filename, e });
             return;
         };
 
         const new_source = allocator.create(common.module.ClockModuleSource) catch |e| {
-            logger.err("Error creating module source for filename: {s}. {s}", .{ filename, @errorName(e) });
+            logger.err("Error creating module source for filename: {s}. {t}", .{ filename, e });
             return;
         };
 
         new_source.* = .{ .custom = new_filename };
 
         modules.append(allocator, new_source) catch |e| {
-            logger.err("Error appending item: {s} to modules: {s}", .{ filename, @errorName(e) });
+            logger.err("Error appending item: {s} to modules: {t}", .{ filename, e });
             return;
         };
     }

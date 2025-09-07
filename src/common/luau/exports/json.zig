@@ -113,7 +113,7 @@ fn load_fn(luau: *Luau) i32 {
 
     //We use leaky because Luau will clean up after module is built.
     const parsed_json = json.parseFromSliceLeaky(json.Value, luau.allocator(), json_string, .{}) catch |e| {
-        logger.err("Error parsing json: {s}", .{@errorName(e)});
+        logger.err("Error parsing json: {t}", .{e});
         luauError(luau, "Error parsing json.");
     };
 
@@ -126,7 +126,7 @@ fn dump_fn(luau: *Luau) i32 {
     _ = luau.checkType(1, .table);
 
     const value = valueFromLuau(luau, 1) catch |e| {
-        logger.err("Error with valueFromLuau: {s}", .{@errorName(e)});
+        logger.err("Error with valueFromLuau: {t}", .{e});
         luauError(luau, "Error with zig json parser!");
     };
 
@@ -135,7 +135,7 @@ fn dump_fn(luau: *Luau) i32 {
     var json_string_writer = std.io.Writer.Allocating.init(luau.allocator());
 
     json_formatter.format(&json_string_writer.writer) catch |e| {
-        logger.err("Error turning json to string: {s}", .{@errorName(e)});
+        logger.err("Error turning json to string: {t}", .{e});
         luauError(luau, "Error stringifying json!");
     };
 

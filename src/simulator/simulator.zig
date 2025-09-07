@@ -18,7 +18,7 @@ pub fn main() void {
 
     //Allow for passing module file name via command line arguments
     const args = std.process.argsAlloc(args_allocator) catch |e| {
-        logger.err("Error allocating arguments for simulator: {s}", .{@errorName(e)});
+        logger.err("Error allocating arguments for simulator: {t}", .{e});
         std.process.exit(1);
     };
 
@@ -39,7 +39,7 @@ pub fn main() void {
     }
 
     if (common.font.FontStore.init(allocator)) {} else |err| {
-        logger.err("Error loading fonts: {s}", .{@errorName(err)});
+        logger.err("Error loading fonts: {t}", .{err});
         std.process.exit(1);
     }
     defer common.font.FontStore.deinit(allocator);
@@ -65,12 +65,12 @@ pub fn main() void {
     if (std.Thread.spawn(.{}, utils.startClock, .{ &clock, logger, &is_active })) |t| {
         logger.info("Started clock connector...", .{});
         if (renderer.startSimulator(logger, &tiles, &is_active)) {} else |err| {
-            logger.err("There was an error with the simulator window: {s}", .{@errorName(err)});
+            logger.err("There was an error with the simulator window: {t}", .{err});
             std.process.exit(1);
         }
         t.detach();
     } else |e| {
-        logger.err("There was an error with the clock thread: {s}", .{@errorName(e)});
+        logger.err("There was an error with the clock thread: {t}", .{e});
         std.process.exit(1);
     }
 }

@@ -16,7 +16,7 @@ pub const CommonConnector = struct {
 
     inline fn load_images_for_module(self: *CommonConnector, module: *common.module.ClockModule) void {
         self.image_store.addImagesForModule(module) catch |e| {
-            logger.err("Error loading images for module -> {s}", .{@errorName(e)});
+            logger.err("Error loading images for module -> {t}", .{e});
         };
     }
 
@@ -53,7 +53,7 @@ pub const CommonConnector = struct {
                             logger.warn("Attempted to run a non-module. (This likely means you are debugging)", .{});
                             std.process.exit(1);
                         }
-                        logger.err("Error loading file: {s}.luau from Luau: {s}", .{ module_filename, @errorName(e) });
+                        logger.err("Error loading file: {s}.luau from Luau: {t}", .{ module_filename, e });
                     }
                 },
             }
