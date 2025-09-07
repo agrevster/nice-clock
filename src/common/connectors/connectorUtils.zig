@@ -27,7 +27,7 @@ pub fn loadModuleFiles(allocator: std.mem.Allocator, filenames: []const u8, logg
 
         new_source.* = .{ .custom = new_filename };
 
-        modules.append(new_source) catch |e| {
+        modules.append(allocator, new_source) catch |e| {
             logger.err("Error appending item: {s} to modules: {s}", .{ filename, @errorName(e) });
             return;
         };
@@ -43,7 +43,7 @@ pub fn unloadModuleFiles(allocator: std.mem.Allocator, modules: *std.ArrayList(*
         }
         allocator.destroy(item);
     }
-    modules.deinit();
+    modules.deinit(allocator);
 }
 
 ///Used to specify the type of resource to read.

@@ -49,7 +49,7 @@ pub fn main() void {
         .tile_pointer = &tiles,
     };
 
-    var modules = std.ArrayList(*common.module.ClockModuleSource).init(allocator);
+    var modules = std.ArrayList(*common.module.ClockModuleSource).empty;
     utils.loadModuleFiles(allocator, filenames, logger, &modules);
     defer utils.unloadModuleFiles(allocator, &modules);
 

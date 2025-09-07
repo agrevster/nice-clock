@@ -224,7 +224,7 @@ pub const RootComponent = struct {
 
             frame += 1;
             clock.interface.updateScreen(clock.interface.ctx);
-            std.time.sleep(sleep_time_ns);
+            std.Thread.sleep(sleep_time_ns);
         }
     }
 };
@@ -866,11 +866,12 @@ pub const VerticalScrollingTextComponent = struct {
         const self: *VerticalScrollingTextComponent = @ptrCast(@alignCast(ctx));
         const font = try self.font.font();
 
-        var lines_buf: [64]std.BoundedArray(u8, 128) = undefined;
+        var lines_buf: [64]std.ArrayList(u8) = undefined;
         var lines_count: usize = 0;
         var i: usize = 0;
         while (i < self.text.len and lines_count < lines_buf.len) {
-            var line = std.BoundedArray(u8, 128).init(0) catch break;
+            var buf: [32]u8 = undefined;
+            var line = std.ArrayList(u8).initBuffer(&buf);
             var line_width: usize = 0;
             while (i < self.text.len) {
                 const c = self.text[i];
@@ -880,7 +881,7 @@ pub const VerticalScrollingTextComponent = struct {
                 }
                 const char_width = font.width;
                 if (line_width + char_width > self.width) break;
-                _ = line.append(c) catch break;
+                _ = line.appendBounded(c) catch break;
                 line_width += char_width;
                 i += 1;
             }
@@ -898,7 +899,7 @@ pub const VerticalScrollingTextComponent = struct {
         for (lines_buf[0..lines_count]) |line| {
             if (text_y + @as(i32, font.height) > 0 and text_y < self.height) {
                 var x: u8 = self.start_pos.x;
-                for (line.slice()) |char| {
+                for (line.items) |char| {
                     const y: i9 = @intCast(window_y + text_y);
                     try drawCharIfPossible(clock, y, x, font, char, self.color);
                     x += font.width;

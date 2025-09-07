@@ -44,8 +44,8 @@ pub fn main() void {
 
     //Create list of module sources from filenames variable
 
-    var modules = std.ArrayList(*common.module.ClockModuleSource).init(allocator);
-    defer modules.deinit();
+    var modules = std.ArrayList(*common.module.ClockModuleSource).empty;
+    defer modules.deinit(allocator);
 
     utils.loadModuleFiles(allocator, filenames, logger, &modules);
     defer utils.unloadModuleFiles(allocator, &modules);

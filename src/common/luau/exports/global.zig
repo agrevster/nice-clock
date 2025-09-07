@@ -19,8 +19,8 @@ pub fn load_export(luau: *Luau) void {
 
 const print_logger = std.log.scoped(.luau_print);
 
-fn appendu8SliceOrLog(array_list: *std.ArrayList(u8), slice: []const u8) void {
-    if (array_list.appendSlice(slice)) {} else |e| {
+fn appendu8SliceOrLog(allocator: std.mem.Allocator, array_list: *std.ArrayList(u8), slice: []const u8) void {
+    if (array_list.appendSlice(allocator, slice)) {} else |e| {
         print_logger.err("Error appending slice to buffer. Slice: {s}, Err: {s}", .{ slice, @errorName(e) });
     }
 }
@@ -28,25 +28,25 @@ fn appendu8SliceOrLog(array_list: *std.ArrayList(u8), slice: []const u8) void {
 fn printAtIndex(luau: *Luau, i: i32, print_list: *std.ArrayList(u8), allocator: std.mem.Allocator) void {
     switch (luau.typeOf(i)) {
         .none => {
-            appendu8SliceOrLog(print_list, "None ");
+            appendu8SliceOrLog(allocator, print_list, "None ");
         },
         .nil => {
-            appendu8SliceOrLog(print_list, "Nill ");
+            appendu8SliceOrLog(allocator, print_list, "Nill ");
         },
         .string => {
             const val = luau.toString(i) catch "Error";
-            appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "{s} ", .{val}) catch "Error");
+            appendu8SliceOrLog(allocator, print_list, std.fmt.allocPrint(allocator, "{s} ", .{val}) catch "Error");
         },
         .number => {
             const val = luau.toNumber(i) catch 0.0;
-            appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "{d} ", .{val}) catch "Error");
+            appendu8SliceOrLog(allocator, print_list, std.fmt.allocPrint(allocator, "{d} ", .{val}) catch "Error");
         },
         .boolean => {
             const val = luau.toBoolean(i);
-            appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "{} ", .{val}) catch "Error");
+            appendu8SliceOrLog(allocator, print_list, std.fmt.allocPrint(allocator, "{} ", .{val}) catch "Error");
         },
         .table => {
-            appendu8SliceOrLog(print_list, "{ ");
+            appendu8SliceOrLog(allocator, print_list, "{ ");
             luau.pushNil();
             while (luau.next(i)) {
                 const key_index = luau.getTop() - 1;
@@ -56,22 +56,22 @@ fn printAtIndex(luau: *Luau, i: i32, print_list: *std.ArrayList(u8), allocator: 
 
                 switch (key_type) {
                     .string => {
-                        appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "{s}=", .{luau.toString(-2) catch "Error"}) catch "Error");
+                        appendu8SliceOrLog(allocator, print_list, std.fmt.allocPrint(allocator, "{s}=", .{luau.toString(-2) catch "Error"}) catch "Error");
                     },
                     .number => {
-                        appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "{d}=", .{luau.toInteger(-2) catch 0}) catch "Error");
+                        appendu8SliceOrLog(allocator, print_list, std.fmt.allocPrint(allocator, "{d}=", .{luau.toInteger(-2) catch 0}) catch "Error");
                     },
                     else => {
-                        appendu8SliceOrLog(print_list, "Error");
+                        appendu8SliceOrLog(allocator, print_list, "Error");
                     },
                 }
                 printAtIndex(luau, val_index, print_list, allocator);
                 luau.pop(1);
             }
-            appendu8SliceOrLog(print_list, "} ");
+            appendu8SliceOrLog(allocator, print_list, "} ");
         },
         else => {
-            appendu8SliceOrLog(print_list, std.fmt.allocPrint(allocator, "<{s}> ", .{luau.typeNameIndex(i)}) catch "Error");
+            appendu8SliceOrLog(allocator, print_list, std.fmt.allocPrint(allocator, "<{s}> ", .{luau.typeNameIndex(i)}) catch "Error");
         },
     }
 }
@@ -82,7 +82,7 @@ fn print_fn(luau: *Luau) i32 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
 
-    var print_list = std.ArrayList(u8).init(arena.allocator());
+    var print_list = std.ArrayList(u8).empty;
 
     const arg_count: u31 = @max(0, luau.getTop());
     //Luau indexing starts at 1 (WTF)

@@ -69,7 +69,7 @@ fn valueFromLuau(luau: *Luau, index: i32) error{ InvalidType, NumberParsingError
             const is_array = luau.rawGetIndex(index, 1) != zlua.LuaType.nil;
             luau.pop(1);
             if (is_array) {
-                var array = std.ArrayList(json.Value).init(luau.allocator());
+                var array = std.array_list.Managed(json.Value).init(luau.allocator());
                 const array_len: usize = @intCast(@max(0, luau.objectLen(index)));
 
                 for (1..array_len + 1) |array_index| {
@@ -130,12 +130,16 @@ fn dump_fn(luau: *Luau) i32 {
         luauError(luau, "Error with zig json parser!");
     };
 
-    const json_string = json.stringifyAlloc(luau.allocator(), value, .{}) catch |e| {
+    const json_formatter = json.fmt(value, .{});
+
+    var json_string_writer = std.io.Writer.Allocating.init(luau.allocator());
+
+    json_formatter.format(&json_string_writer.writer) catch |e| {
         logger.err("Error turning json to string: {s}", .{@errorName(e)});
         luauError(luau, "Error stringifying json!");
     };
 
-    _ = luau.pushString(json_string);
+    _ = luau.pushString(json_string_writer.writer.buffered());
 
     return 1;
 }

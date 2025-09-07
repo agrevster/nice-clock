@@ -40,9 +40,11 @@ pub fn build(b: *std.Build) !void {
     if (clock_target_option == .sim) {
         const sim_exe = b.addExecutable(.{
             .name = "nice-clock-sim",
-            .root_source_file = b.path("src/simulator/simulator.zig"),
-            .target = target,
-            .optimize = std.builtin.OptimizeMode.Debug,
+            .root_module = b.createModule(.{
+                .root_source_file = b.path("src/simulator/simulator.zig"),
+                .target = target,
+                .optimize = std.builtin.OptimizeMode.Debug,
+            }),
         });
 
         if (target.result.os.tag == .linux) {
@@ -77,9 +79,11 @@ pub fn build(b: *std.Build) !void {
         //Hardware
         const hardware_exe = b.addExecutable(.{
             .name = "nice-clock-hardware",
-            .root_source_file = b.path("src/hardware/hardware.zig"),
-            .target = target,
-            .optimize = optimize,
+            .root_module = b.createModule(.{
+                .root_source_file = b.path("src/hardware/hardware.zig"),
+                .target = target,
+                .optimize = optimize,
+            }),
         });
 
         hardware_exe.root_module.addImport("common", common_lib);

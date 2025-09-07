@@ -34,7 +34,7 @@ fn fetch(
     allocator: std.mem.Allocator,
     url: []const u8,
     method: http.Method,
-    response_buffer: *std.ArrayList(u8),
+    response_writer: *std.io.Writer,
     body: ?[]const u8,
     content_type: ?[]const u8,
     authorization: ?[]const u8,
@@ -53,7 +53,7 @@ fn fetch(
         .method = method,
         .location = .{ .url = url },
         .keep_alive = false,
-        .response_storage = .{ .dynamic = response_buffer },
+        .response_writer = response_writer,
         .payload = body,
         .headers = .{
             .user_agent = .{ .override = "Nice-Clock" },
@@ -93,10 +93,10 @@ fn fetch_fn(luau: *Luau) i32 {
     if (luau.isString(4)) content_type = tryToString.unwrap(luau, luau.toString(4));
     if (luau.isString(5)) authorization = tryToString.unwrap(luau, luau.toString(5));
 
-    var response_buffer = std.ArrayList(u8).init(allocator);
-    defer response_buffer.deinit();
+    var response_writer = std.io.Writer.Allocating.init(allocator);
+    defer response_writer.deinit();
 
-    if (fetch(allocator, url[0..], method.?, &response_buffer, body, content_type, authorization)) |response_status| {
+    if (fetch(allocator, url[0..], method.?, &response_writer.writer, body, content_type, authorization)) |response_status| {
         if (@intFromEnum(response_status) >= 400) {
             const message_buffer = std.fmt.allocPrint(allocator, "HTTP Error: {d} ({s})", .{ @intFromEnum(response_status), @tagName(response_status) }) catch |e| {
                 luauError(luau, "Failed to allocate http error message buffer!");
@@ -108,7 +108,7 @@ fn fetch_fn(luau: *Luau) i32 {
             defer allocator.free(message_buffer);
         }
 
-        const table = HTTPResponseTable{ .status = @intFromEnum(response_status), .body = response_buffer.items };
+        const table = HTTPResponseTable{ .status = @intFromEnum(response_status), .body = response_writer.written() };
         luau.pushAny(table) catch |e| {
             logger.err("Error pushing HTTPResponseTable from zig: {s}", .{@errorName(e)});
             luauError(luau, "Error pushing HTTPResponseTable from zig.");

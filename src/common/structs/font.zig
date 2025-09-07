@@ -31,7 +31,7 @@ pub const BDF = struct {
 
         var current_char: ?u16 = null;
         var in_bitmap = false;
-        var bitmap = std.ArrayList(u8).init(allocator);
+        var bitmap = std.ArrayList(u8).empty;
 
         // If there is an error be sure to free everything
         errdefer {
@@ -40,7 +40,7 @@ pub const BDF = struct {
                 allocator.free(glyph.*);
             }
             glyphs.deinit();
-            bitmap.deinit();
+            bitmap.deinit(allocator);
         }
 
         while (lines.next()) |line| {
@@ -60,7 +60,7 @@ pub const BDF = struct {
                 bitmap.clearRetainingCapacity();
             } else if (std.mem.eql(u8, trimmed, "ENDCHAR")) {
                 if (current_char) |char| {
-                    try glyphs.put(char, try bitmap.toOwnedSlice());
+                    try glyphs.put(char, try bitmap.toOwnedSlice(allocator));
                 }
                 current_char = null;
                 in_bitmap = false;
@@ -70,7 +70,7 @@ pub const BDF = struct {
                 for (0..num_bytes) |i| {
                     const shift: u4 = @intCast(8 * (num_bytes - 1 - i));
                     const byte: u8 = @intCast((bytes >> shift) & 0xFF);
-                    try bitmap.append(byte);
+                    try bitmap.append(allocator, byte);
                 }
             }
         }

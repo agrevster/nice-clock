@@ -1,23 +1,20 @@
 .{
     .name = .nice_clock,
-
     .version = "0.0.0",
-
-    .minimum_zig_version = "0.14.1",
+    .minimum_zig_version = "0.15.1",
     .fingerprint = 0xde0f5cfd6f999b08,
-
     .dependencies = .{
         .SDL = .{
-            .url = "https://github.com/agrevster/ZIG-SDL/archive/refs/tags/1.1.tar.gz",
-            .hash = "SDL-0.0.0-rR2QyENqAACksFSn6S9BieQnMTnY3nicFXhpcAjqiKXg",
+            .url = "https://github.com/agrevster/ZIG-SDL/archive/refs/tags/1.2.tar.gz",
+            .hash = "SDL-0.0.0-rR2QyPpjAADa4DV1xnj5za9s2_gJ24AxA-2HgMxhfC72",
         },
         .zlua = .{
-            .url = "git+https://github.com/natecraddock/ziglua#317bfbe5ac8cc9839249e70f6c6a992be178139a",
-            .hash = "zlua-0.1.0-hGRpCxctBQDEQgDArJ0Kc4RDIsD-Hw3pw9pPPw_kGmmY",
+            .url = "git+https://github.com/natecraddock/ziglua#bf9fc6e6d9c24d5ba53b20acdab657f2fe6cb762",
+            .hash = "zlua-0.1.0-hGRpC444BQDrHc6QhcEeGh1eWMwFbl-c21vlGPWjKBfQ",
         },
         .datetime = .{
-            .url = "git+https://github.com/frmdstryr/zig-datetime?ref=master#feca3bca5c81409c049d8d2f4dc06012a374d085",
-            .hash = "datetime-0.8.0-cJNXzNLZAQADGScmVIKJTyogbfkbIFldrmSK8RweZ3Eg",
+            .url = "git+https://github.com/frmdstryr/zig-datetime?ref=master#3a39a21e6e34dcb0ade0ff828d0914d40ba535f3",
+            .hash = "datetime-0.8.0-cJNXzP_YAQBxQ5hkNNP6ScnG5XsqciJmeP5RVV4xwCBA",
         },
     },
     .paths = .{
