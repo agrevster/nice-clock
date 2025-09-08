@@ -130,6 +130,7 @@ export type Datetime = {
 	epoch: number,
 	shift: (self: Datetime, delta: DatetimeDelta) -> Datetime,
 	sub: (self: Datetime, datetime: Datetime) -> DatetimeDelta,
+	shiftzone: (self: Datetime, zone: string) -> Datetime,
 }
 
 export type Date = {

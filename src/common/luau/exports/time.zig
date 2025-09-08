@@ -112,6 +112,8 @@ fn createDatetimeTableFromZig(current: Datetime, luau: *Luau) void {
     luau.setField(-2, "shift");
     luau.pushFunction(wrap(sub));
     luau.setField(-2, "sub");
+    luau.pushFunction(wrap(shiftZone));
+    luau.setField(-2, "shiftzone");
 }
 
 ///Converts luau table into a Zig datetime struct.
@@ -300,5 +302,22 @@ fn sub(luau: *Luau) i32 {
     const delta = dt1.sub(dt2);
     createDeltaTableFromZig(luau, delta);
 
+    return 1;
+}
+
+fn shiftZone(luau: *Luau) i32 {
+    luau.checkType(1, zlua.LuaType.table);
+    luau.checkType(2, zlua.LuaType.string);
+
+    const dt = createDatetimeFromLuauTable(luau, 1);
+
+    if (luau.toString(2)) |time_zone_str| {
+        if (datetime.timezones.getByName(time_zone_str)) |time_zone| {
+            createDatetimeTableFromZig(dt.shiftTimezone(time_zone), luau);
+        } else |_| {
+            _ = luau.pushString("Invalid time zone!");
+            luau.raiseError();
+        }
+    } else |_| {}
     return 1;
 }
