@@ -97,17 +97,6 @@ fn fetch_fn(luau: *Luau) i32 {
     defer response_writer.deinit();
 
     if (fetch(allocator, url[0..], method.?, &response_writer.writer, body, content_type, authorization)) |response_status| {
-        if (@intFromEnum(response_status) >= 400) {
-            const message_buffer = std.fmt.allocPrint(allocator, "HTTP Error: {d} ({t})", .{ @intFromEnum(response_status), response_status }) catch |e| {
-                luauError(luau, "Failed to allocate http error message buffer!");
-                logger.err("Failed to allocate http error message buffer: {t}", .{e});
-            };
-
-            logger.err("{s}", .{message_buffer});
-            luauError(luau, message_buffer);
-            defer allocator.free(message_buffer);
-        }
-
         const table = HTTPResponseTable{ .status = @intFromEnum(response_status), .body = response_writer.written() };
         luau.pushAny(table) catch |e| {
             logger.err("Error pushing HTTPResponseTable from zig: {t}", .{e});
