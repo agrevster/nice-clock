@@ -7,12 +7,22 @@ local tickers = {
   "NVDA", -- Nvidia
   "^DJI", -- Dow
   "PLTR", -- Palantir
+  "DX-Y.NYB", -- US $
 }
+
+-- Define a custom name for the given ticker
+local custon_names = {
+  ["DX-Y.NYB"] = "USD",
+  ["^DJI"] = "DOW",
+  ["^GSPC"] = "SNP",
+}
+
 -- code
 
 local ticker = tickers[math.random(1, #tickers)]
 local random_vartime = math.random(1, 3)
 local vartime = { "1mo", "6mo", "1y" }
+local ticker_name = custon_names[ticker] or ticker
 
 local stock_data = http.fetch(`http://127.0.0.1:9820/api/stocks/{ticker}`, http.methods.GET, nil, nil, nil)
 
@@ -34,6 +44,14 @@ function tostring_with_plus(number: number): string
   return if number > 0 then `+{number}` else tostring(number)
 end
 
+function round_stock_price_to_size(price: number): string
+  local price_str = tostring(price)
+  if #price_str > 6 then
+    return tostring(math.round(price))
+  end
+  return price_str
+end
+
 stock_data = json.load(stock_data.body)
 local vartime_stock_percent = stock_data[`percent_{vartime[random_vartime]}`]
 
@@ -42,8 +60,8 @@ local vartime_color = if vartime_stock_percent > 0 then colors.green else colors
 
 return niceclock
   .modulebuilder("stocks", 20, {}, {})
-  :text({ y = 0, x = 0 }, niceclock.fonts.Font6x13, stock_data.stock, colors.white)
-  :text({ y = 24, x = 0 }, niceclock.fonts.Font5x8_2, tostring(stock_data.price), colors.white)
+  :text({ y = 0, x = 0 }, niceclock.fonts.Font6x13, ticker_name, colors.white)
+  :text({ y = 24, x = 0 }, niceclock.fonts.Font5x8_2, round_stock_price_to_size(stock_data.price), colors.white)
   -- Today
   :text({ y = 0, x = 34 }, niceclock.fonts.Font5x8, "Today", colors.white)
   :text({ y = 8, x = 34 }, niceclock.fonts.Font5x8_2, tostring_with_plus(stock_data.percent), today_color)

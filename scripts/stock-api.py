@@ -23,7 +23,7 @@ def stock_api(stock: str):
     return jsonify(
         {
             "stock": stock,
-            "price": info["regularMarketPrice"],
+            "price": round(info["regularMarketPrice"], 2),
             "percent": percent_change,
             "percent_1mo": historical_percents["1mo"],
             "percent_6mo": historical_percents["6mo"],
