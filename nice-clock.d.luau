@@ -50,10 +50,6 @@ export type ClockModuleBuilder = {
 	components: {ClockComponent},
 	imagenames: {string},
 	animations: {CustomAnimation},
-	init_fn: nil | () -> (),
-	deinit_fn: nil | () -> (),
-	init: (self: ClockModuleBuilder, fn: () -> ()) -> ClockModuleBuilder,
-	deinit: (self: ClockModuleBuilder, fn: () -> ()) -> ClockModuleBuilder,
 	-- Components
 	tile: (self: ClockModuleBuilder, pos: Pos, color: Color) -> ClockModuleBuilder,
 	box: (self: ClockModuleBuilder, pos: Pos, width: number, height: number, fill_inside: boolean, color: Color) -> ClockModuleBuilder,
@@ -72,8 +68,6 @@ export type ClockModule = {
 	components: {ClockComponent},
 	imagenames: {string},
 	animations: {CustomAnimation},
-	init: nil | () -> (),
-	deinit: nil | () -> (),
 }
 
 export type CustomAnimation = {
