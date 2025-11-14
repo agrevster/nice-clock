@@ -3,7 +3,7 @@
 
 
 ##### Contents
-[http](#http) - [json](#json) - [datetime](#datetime) - [global](#global)
+[http](#http-library) - [json](#json-library) - [datetime](#datetime-library) - [global](#datetime) - [nice-clock (**Used to make modules**)](#niceclock-library)
 
 ## `http` library
 - `http.fetch`
