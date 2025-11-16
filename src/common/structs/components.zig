@@ -769,6 +769,7 @@ pub const VerticalScrollingTextComponent = struct {
     height: u8,
     font: common.font.FontStore,
     text: []const u8,
+    lines: [][]const u8,
     color: Color,
     text_pos: i32 = 0,
     starting_text_pos: i32 = 0,
@@ -806,12 +807,42 @@ pub const VerticalScrollingTextComponent = struct {
 
         std.mem.copyForwards(u8, text, text_arg);
 
+        //Precompute lines
+        var lines_list = std.ArrayList([]const u8).empty;
+        errdefer lines_list.deinit(allocator);
+
+        var i: usize = 0;
+        const font_data = font.font() catch {
+            logger.err("Invalid font!", .{});
+            return LuauComponentConstructorError.OtherError;
+        };
+
+        while (i < text.len) {
+            var line = std.ArrayList(u8).initCapacity(allocator, 32) catch return LuauComponentConstructorError.MemoryError;
+            errdefer line.deinit(allocator);
+            var line_width: usize = 0;
+            while (i < text.len) {
+                const c = text[i];
+                if (c == '\n') {
+                    i += 1;
+                    break;
+                }
+                const char_width = font_data.width;
+                if (line_width + char_width > width) break;
+                _ = line.appendBounded(c) catch break;
+                line_width += char_width;
+                i += 1;
+            }
+            lines_list.append(allocator, line.toOwnedSlice(allocator) catch return LuauComponentConstructorError.MemoryError) catch return LuauComponentConstructorError.MemoryError;
+        }
+
         comp.* = VerticalScrollingTextComponent{
             .start_pos = start_pos,
             .color = color,
             .font = font,
             .text = text,
             .starting_text_pos = text_pos,
+            .lines = lines_list.toOwnedSlice(allocator) catch return LuauComponentConstructorError.MemoryError,
             .text_pos = text_pos,
             .width = width,
             .height = height,
@@ -866,40 +897,18 @@ pub const VerticalScrollingTextComponent = struct {
         const self: *VerticalScrollingTextComponent = @ptrCast(@alignCast(ctx));
         const font = try self.font.font();
 
-        var lines_buf: [64]std.ArrayList(u8) = undefined;
-        var lines_count: usize = 0;
-        var i: usize = 0;
-        while (i < self.text.len and lines_count < lines_buf.len) {
-            var buf: [32]u8 = undefined;
-            var line = std.ArrayList(u8).initBuffer(&buf);
-            var line_width: usize = 0;
-            while (i < self.text.len) {
-                const c = self.text[i];
-                if (c == '\n') {
-                    i += 1;
-                    break;
-                }
-                const char_width = font.width;
-                if (line_width + char_width > self.width) break;
-                _ = line.appendBounded(c) catch break;
-                line_width += char_width;
-                i += 1;
-            }
-            lines_buf[lines_count] = line;
-            lines_count += 1;
-        }
-
         const line_height: usize = font.height + @as(usize, @intCast(self.line_spacing));
-        const total_text_height: usize = lines_count * line_height;
+        const line_count = self.lines.len;
+        const total_text_height: usize = line_count * line_height;
 
         if (self.text_pos > total_text_height) self.text_pos = self.starting_text_pos;
 
         const window_y: i32 = self.start_pos.y;
         var text_y: i32 = -@as(i32, self.text_pos);
-        for (lines_buf[0..lines_count]) |line| {
+        for (self.lines[0..line_count]) |line| {
             if (text_y + @as(i32, font.height) > 0 and text_y < self.height) {
                 var x: u8 = self.start_pos.x;
-                for (line.items) |char| {
+                for (line) |char| {
                     const y: i9 = @intCast(window_y + text_y);
                     try drawCharIfPossible(clock, y, x, font, char, self.color);
                     x += font.width;
