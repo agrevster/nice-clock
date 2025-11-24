@@ -5,6 +5,8 @@
 
 [installation](#installation-and-usage) - [modules](#modules) - [simulator](#simulator)
 
+![Clock Startup Logo gif](./.github/assets/logo.gif) 
+
 
 ## Installation and usage
 *For this guide I am using [Alpine Linux (RaspberryPi version)](https://wiki.alpinelinux.org/wiki/Raspberry_Pi) rather than Raspbian, this is because Alpine is more lightweight therefore you don't have to worry as much about optimization and removing unnecessary services.*
