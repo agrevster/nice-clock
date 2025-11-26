@@ -6,6 +6,7 @@
 [installation](#installation-and-usage) - [modules](#modules) - [simulator](#simulator)
 
 ![Clock Startup Logo gif](./.github/assets/logo.gif) 
+*Image rendered in clock simulator*
 
 
 ## Installation and usage
