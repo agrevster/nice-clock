@@ -59,7 +59,7 @@ end
 
 return niceclock
   .modulebuilder("Weather", 20, { `weather/{image_for_code}` }, {})
-  :text({ x = get_temp_pos(daily_min_temp), y = 4 }, niceclock.fonts.Font5x8, daily_max_temp, colors.max)
+  :text({ x = get_temp_pos(daily_max_temp), y = 4 }, niceclock.fonts.Font5x8, daily_max_temp, colors.max)
   :text({ x = get_temp_pos(current_temp), y = 12 }, niceclock.fonts.Font5x8, current_temp, colors.white)
   :text({ x = get_temp_pos(daily_min_temp), y = 20 }, niceclock.fonts.Font5x8, daily_min_temp, colors.min)
   :box({ x = if big then 45 else 50, y = 1 }, if big then 18 else 13, 30, false, colors.white)
