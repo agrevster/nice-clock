@@ -41,7 +41,7 @@ pub fn luauError(luau: *Luau, message: []const u8) noreturn {
     luau.raiseError();
 }
 
-const BaseError = error{
+const LuauError = error{
     OtherError,
     LuauError,
     FileNotFound,
@@ -52,14 +52,14 @@ const BaseError = error{
 pub const ClockModuleError = error{
     DebugModule,
     ModuleParsingError,
-} || BaseError;
+} || LuauError;
 
 ///All of the errors that could occur when loading clock config from Luau.
 pub const ClockConfigError = error{
     ConfigNotInitialized,
     ConfigParsingError,
     ConfigValidationError,
-} || BaseError;
+} || LuauError;
 
 ///Attempts to read the given luau module file and if it returns a Luau module builder converts the Luau table into a ClockModule.
 ///If the module does not return the Luau code will still be ran but this function will return a DebugModule error. This is useful for testing in Luau.
@@ -153,6 +153,9 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     return mod;
 }
 
+///Used to store clock configuration data
+///This struct is created in the main class and is used to run and parse config.luau returning the modules to load as well as the clock's brightness.
+///This allows for the design of intelligent configs allowing for users to control which modules are loaded based on luau code.
 pub const ClockConfig = struct {
     allocator: std.mem.Allocator,
     initialized: bool = false,
@@ -161,6 +164,8 @@ pub const ClockConfig = struct {
     modules: *std.ArrayList(*common.module.ClockModuleSource),
     config: *std.StringHashMap([]const u8),
 
+    ///**Requires `loadLuauConfigFile` to have been run before running this.**
+    ///Takes the config file luau bytecode created by `loadLuauConfigFile` and runs it, taking the returned `ClockConfig` luau table and updating values in this struct.
     pub fn updateClockConfig(self: *ClockConfig) ClockConfigError!void {
         if (!self.initialized) return error.ConfigNotInitialized;
         //TODO: Add support for better error handling by reverting to old config on error.
@@ -221,17 +226,36 @@ pub const ClockConfig = struct {
             return error.ConfigValidationError;
         }
 
-        //TODO: Handle config
-        // luau.pushNil();
-        // while (luau.next(-1)) {
-        //     const key_index = luau.getTop() - 1;
-        //     const val_index = luau.getTop();
-        //
-        //     const key_type = luau.typeOf(key_index);
-        // }
+        luau.pushNil();
+        while (luau.next(-2)) {
+            const key_index = luau.getTop() - 1;
+            const val_index = luau.getTop();
+
+            const key_type = luau.typeOf(key_index);
+            const val_type = luau.typeOf(val_index);
+
+            if (key_type != .string or (val_type != .string and val_type != .number)) {
+                logger.err("There was a parsing issue with the 'config' table in config.luau. Ensure keys are strings and values are either strings or ints!", .{});
+                return error.ConfigValidationError;
+            }
+
+            const key = luau.toString(key_index) catch |e| {
+                logger.err("There was an error fetching a key from the config table in config.luau: {t}", .{e});
+                return error.ConfigValidationError;
+            };
+
+            const val = luau.toString(val_index) catch |e| {
+                logger.err("There was an error fetching a value from the config table in config.luau: {t}", .{e});
+                return error.ConfigValidationError;
+            };
+
+            try self.config.put(key, val);
+            luau.pop(1);
+        }
     }
 
     ///Cleans out all **NON**-builtin modules from the list of module sources, freeing each item in the array.
+    ///Also clears the config map.
     pub fn freeModules(self: *ClockConfig) void {
         for (self.modules.items) |item| {
             switch (item.*) {
@@ -241,9 +265,12 @@ pub const ClockConfig = struct {
             self.allocator.destroy(item);
         }
         self.modules.clearRetainingCapacity();
+        self.config.clearRetainingCapacity();
     }
 
-    pub fn loadLuauConfigFile(self: *ClockConfig) BaseError!void {
+    ///Reads `{cwd}/config.luau` and compiles the Luau bytecode.
+    ///**This only needs to be called once.**
+    pub fn loadLuauConfigFile(self: *ClockConfig) LuauError!void {
         // Interpret the file
         const luau_file = common.connector_utils.readResource(self.allocator, "config.luau", .CWD) catch |e| switch (e) {
             error.FileNotFound => {
@@ -266,8 +293,6 @@ pub const ClockConfig = struct {
         common.luau.exports.time.load_export(luau);
         common.luau.exports.http.load_export(luau);
         common.luau.exports.json.load_export(luau);
-
-        //Load exports
 
         self.luau_bytecode = try zlua.compile(self.allocator, luau_file, .{});
         errdefer self.allocator.free(self.luau_bytecode);

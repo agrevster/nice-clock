@@ -5,7 +5,7 @@ const Clock = common.Clock;
 ///Starts the clock and handles errors
 pub fn startClock(clock: *Clock, logger: anytype, is_active: *std.atomic.Value(bool)) void {
     if (clock.*.startClock(is_active)) {} else |err| {
-        logger.err("There was an error starting the clock: {}", .{err});
+        logger.err("There was an error starting the clock: {t}", .{err});
         std.process.exit(1);
     }
 }
