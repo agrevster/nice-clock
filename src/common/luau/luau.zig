@@ -1,4 +1,4 @@
-pub const module_loader = @import("module-loader.zig");
+pub const loader = @import("loader.zig");
 pub const import_components = @import("import-components.zig");
 
 ///Luau modules created by Zig for use in the clock modules.

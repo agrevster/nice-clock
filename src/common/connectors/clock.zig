@@ -1,6 +1,6 @@
 const std = @import("std");
 const common = @import("../common.zig");
-const loadModuleFromLuau = common.luau.module_loader.loadModuleFromLuau;
+const loadModuleFromLuau = common.luau.loader.loadModuleFromLuau;
 
 pub const ClockConnectorError = error{ EventLoopAlreadyStarted, NoModules };
 
