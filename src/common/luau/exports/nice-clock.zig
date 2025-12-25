@@ -3,9 +3,9 @@ const zlua = @import("zlua");
 const common = @import("../../common.zig");
 const Luau = zlua.Lua;
 const wrap = zlua.wrap;
-const LuauTry = common.luau.loader.LuauTry;
+const LuauTry = common.luau.module_loader.LuauTry;
 const LuauArg = common.luau.import_components.LuauArg;
-const luauError = common.luau.loader.luauError;
+const luauError = common.luau.module_loader.luauError;
 const generateLuauComponentBuilderFunctions = common.luau.import_components.generateLuauComponentBuilderFunctions;
 const generateLuauFontFields = common.luau.import_components.generateLuauFontFields;
 

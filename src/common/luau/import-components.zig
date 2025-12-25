@@ -7,8 +7,8 @@ const componentFn = common.luau.exports.nice_clock.componentFn;
 const ClockComponentTable = common.luau.exports.nice_clock.ClockComponentTable;
 const CustomAnimationTable = common.luau.exports.nice_clock.CustomAnimationTable;
 const AnimationTable = common.luau.exports.nice_clock.AnimationTable;
-const luauError = common.luau.loader.luauError;
-const logger = common.luau.loader.logger;
+const luauError = common.luau.module_loader.luauError;
+const logger = common.luau.module_loader.logger;
 
 ///Each field of this enum represents a component from `common.components` that will be pushed to the luau module builder.
 ///The component struct must have the function _from_luau(args: []LuauArg, allocator: std.mem.Allocator) LuauComponentConstructorError!*AnyComponent_.

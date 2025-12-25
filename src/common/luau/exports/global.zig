@@ -3,9 +3,9 @@ const zlua = @import("zlua");
 const common = @import("../../common.zig");
 const Luau = zlua.Lua;
 const wrap = zlua.wrap;
-const LuauTry = common.luau.loader.LuauTry;
-const luauError = common.luau.loader.luauError;
-const logger = common.luau.loader.logger;
+const LuauTry = common.luau.module_loader.LuauTry;
+const luauError = common.luau.module_loader.luauError;
+const logger = common.luau.module_loader.logger;
 
 ///Sends the exported functions to luau.
 pub fn load_export(luau: *Luau) void {
