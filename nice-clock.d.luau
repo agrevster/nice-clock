@@ -153,6 +153,13 @@ export type DatetimeDelta = {
 	seconds: number?,
 }
 
+-- Clock config
+export type ClockConfig = {
+	brightness: number,
+	modules: {string},
+	config: {},
+}
+
 -- Declarations
 declare datetime: GlobalDatetime
 declare niceclock: GlobalNiceClock

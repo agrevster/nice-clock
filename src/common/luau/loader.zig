@@ -5,18 +5,17 @@ const Luau = zlua.Lua;
 
 pub const logger = std.log.scoped(.luau_interpreter);
 
-///Reads a luau file located in _(cwd)/modules/_.
-fn readModuleFile(file: []const u8, allocator: std.mem.Allocator) error{ OutOfMemory, FileNotFound, OtherError }![]const u8 {
-    const file_name = std.fmt.allocPrint(allocator, "./modules/{s}.luau", .{file}) catch return error.OutOfMemory;
-    defer allocator.free(file_name);
-    const file_contents = std.fs.cwd().readFileAlloc(allocator, file_name, 1000000) catch |e| switch (e) {
-        error.FileNotFound => return error.FileNotFound,
-        inline else => {
-            logger.err("Error loading text from module file: {s} -> {t}", .{ file_name, e });
-            return error.OtherError;
-        },
-    };
-    return file_contents;
+///Open Luau libraries for use in our sandbox.
+///*(we don't want to open coroutines)*
+inline fn openLuauStd(luau: *Luau) void {
+    luau.openBase();
+    luau.openMath();
+    luau.openTable();
+    luau.openString();
+    luau.openBit32();
+    luau.openUtf8();
+    luau.openOS();
+    luau.openDebug();
 }
 
 ///Used to help with error handling when working with Luau.
@@ -42,53 +41,60 @@ pub fn luauError(luau: *Luau, message: []const u8) noreturn {
     luau.raiseError();
 }
 
-///All of the possible errors that could occur when loading a clock module from Luau.
-pub const Error = error{
+const BaseError = error{
     OtherError,
     LuauError,
     FileNotFound,
+    OutOfMemory,
+};
+
+///All of the possible errors that could occur when loading a clock module from Luau.
+pub const ClockModuleError = error{
     DebugModule,
     ModuleParsingError,
-};
+} || BaseError;
+
+///All of the errors that could occur when loading clock config from Luau.
+pub const ClockConfigError = error{
+    ConfigNotInitialized,
+    ConfigParsingError,
+    ConfigValidationError,
+} || BaseError;
 
 ///Attempts to read the given luau module file and if it returns a Luau module builder converts the Luau table into a ClockModule.
 ///If the module does not return the Luau code will still be ran but this function will return a DebugModule error. This is useful for testing in Luau.
-pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Allocator) Error!*common.module.ClockModule {
+pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Allocator) ClockModuleError!*common.module.ClockModule {
     // Interpret the file
-    const luau_file = readModuleFile(module_file_name, allocator) catch |e| {
-        logger.err("{t}", .{e});
-        return Error.OtherError;
+    const full_module_file_name = std.fmt.allocPrint(allocator, "{s}.luau", .{module_file_name}) catch return error.OutOfMemory;
+    defer allocator.free(full_module_file_name);
+
+    const luau_file = common.connector_utils.readResource(allocator, full_module_file_name, .MODULE) catch |e| switch (e) {
+        error.FileNotFound => return error.FileNotFound,
+        inline else => {
+            logger.err("Error reading module file: {s} -> {t}", .{ module_file_name, e });
+            return error.OtherError;
+        },
     };
     defer allocator.free(luau_file);
 
-    var luau = zlua.Lua.init(allocator) catch return Error.OtherError;
+    var luau = zlua.Lua.init(allocator) catch return error.OtherError;
     defer luau.deinit();
 
-    //Open libraries (we don't want to open coroutines)
-    luau.openBase();
-    luau.openMath();
-    luau.openTable();
-    luau.openString();
-    luau.openBit32();
-    luau.openUtf8();
-    luau.openOS();
-    luau.openDebug();
+    openLuauStd(luau);
 
     //Load exports
     common.luau.exports.global.load_export(luau);
     common.luau.exports.time.load_export(luau);
-    common.luau.exports.nice_clock.load_export(luau);
     common.luau.exports.http.load_export(luau);
     common.luau.exports.json.load_export(luau);
+    common.luau.exports.nice_clock.load_export(luau);
 
-    const luau_bytecode = zlua.compile(allocator, luau_file, .{}) catch |e| switch (e) {
-        error.OutOfMemory => return Error.OtherError,
-    };
+    const luau_bytecode = try zlua.compile(allocator, luau_file, .{});
 
     luau.loadBytecode("...", luau_bytecode) catch {
         const error_str = luau.toString(-1) catch "ERR";
         logger.err("{s}", .{error_str});
-        return Error.LuauError;
+        return error.LuauError;
     };
     luau.protectedCall(.{ .results = 1 }) catch |e| {
         const error_str = luau.toString(-1) catch "ERR";
@@ -102,36 +108,25 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     const return_type = luau.typeOf(1);
     if (return_type != zlua.LuaType.table and return_type != zlua.LuaType.nil) {
         logger.err("Invalid module return type: {s}", .{luau.typeName(return_type)});
-        return Error.OtherError;
+        return error.OtherError;
     }
-    if (return_type == zlua.LuaType.nil) return Error.DebugModule;
+    if (return_type == zlua.LuaType.nil) return error.DebugModule;
 
     _ = luau.getField(1, "name");
-    const module_name_field = luau.toString(-1) catch return Error.ModuleParsingError;
-    const module_name = allocator.dupe(u8, module_name_field[0..module_name_field.len]) catch |e| {
-        logger.err("Memory error: {t}", .{e});
-        return Error.OtherError;
-    };
+    const module_name_field = luau.toString(-1) catch return error.ModuleParsingError;
+    const module_name = try allocator.dupe(u8, module_name_field[0..module_name_field.len]);
 
     _ = luau.getField(1, "timelimit");
-    const time_limit_field = luau.toInteger(-1) catch return Error.ModuleParsingError;
-    const time_limit = allocator.create(u64) catch |e| {
-        logger.err("Memory error: {t}", .{e});
-        return Error.OtherError;
-    };
+    const time_limit_field = luau.toInteger(-1) catch return error.ModuleParsingError;
+    const time_limit = try allocator.create(u64);
     time_limit.* = @intCast(time_limit_field);
 
     _ = luau.getField(1, "imagenames");
-    const image_names_field = luau.toAnyInternal([][]const u8, allocator, true, -1) catch return Error.ModuleParsingError;
-    var image_names = allocator.dupe([]const u8, image_names_field) catch |e| {
-        logger.err("Memory error: {t}", .{e});
-        return Error.OtherError;
-    };
+    const image_names_field = luau.toAnyInternal([][]const u8, allocator, true, -1) catch return error.ModuleParsingError;
+    var image_names = try allocator.dupe([]const u8, image_names_field);
+
     for (image_names_field, 0..) |image_name, i| {
-        const new_image_name = allocator.dupe(u8, image_name) catch |e| {
-            logger.err("Memory error: {t}", .{e});
-            return Error.OtherError;
-        };
+        const new_image_name = try allocator.dupe(u8, image_name);
         image_names[i] = new_image_name;
     }
 
@@ -157,3 +152,125 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     };
     return mod;
 }
+
+pub const ClockConfig = struct {
+    allocator: std.mem.Allocator,
+    initialized: bool = false,
+    luau_bytecode: []const u8 = undefined,
+    brightness: u8 = 100,
+    modules: *std.ArrayList(*common.module.ClockModuleSource),
+    config: *std.StringHashMap([]const u8),
+
+    pub fn updateClockConfig(self: *ClockConfig) ClockConfigError!void {
+        if (!self.initialized) return error.ConfigNotInitialized;
+        //TODO: Add support for better error handling by reverting to old config on error.
+        // self.config.clearRetainingCapacity();
+        // self.modules.clearRetainingCapacity();
+
+        var luau = zlua.Lua.init(self.allocator) catch return error.OtherError;
+        defer luau.deinit();
+
+        common.luau.exports.global.load_export(luau);
+        common.luau.exports.time.load_export(luau);
+        common.luau.exports.http.load_export(luau);
+        common.luau.exports.json.load_export(luau);
+
+        luau.loadBytecode("...", self.luau_bytecode) catch {
+            const error_str = luau.toString(-1) catch "ERR";
+            logger.err("{s}", .{error_str});
+            return error.LuauError;
+        };
+        luau.protectedCall(.{ .results = 1 }) catch |e| {
+            const error_str = luau.toString(-1) catch "ERR";
+            logger.err("{s}", .{error_str});
+            logger.err("{t}", .{e});
+        };
+
+        const return_type = luau.typeOf(1);
+        if (return_type != zlua.LuaType.table) {
+            logger.err("Invalid clock config return type: {s}", .{luau.typeName(return_type)});
+            return error.OtherError;
+        }
+
+        _ = luau.getField(1, "brightness");
+        const brightness_field = luau.toInteger(-1) catch return error.ConfigParsingError;
+
+        if (brightness_field > 100 or brightness_field < 0) {
+            logger.err("Clock brightness must be between 0 and 100 inclusive! Brightness set to: {d}.", .{brightness_field});
+            return error.ConfigValidationError;
+        }
+
+        self.brightness = @intCast(brightness_field);
+
+        _ = luau.getField(1, "modules");
+
+        const modules_field = luau.toAnyInternal([][]const u8, self.allocator, true, -1) catch return error.ConfigParsingError;
+        defer self.allocator.free(modules_field);
+
+        //We need to dupe this memory because once this function goes out of scope, all allocations made by Luau are deallocated.
+        for (modules_field) |module_name| {
+            const new_module_name = try self.allocator.dupe(u8, module_name);
+            const new_module_source = try self.allocator.create(common.module.ClockModuleSource);
+            new_module_source.* = .{ .custom = new_module_name };
+            try self.modules.append(self.allocator, new_module_source);
+        }
+
+        const config_type = luau.getField(1, "config");
+        if (config_type != .table) {
+            logger.err("The type of the config field must be a table!", .{});
+            return error.ConfigValidationError;
+        }
+
+        //TODO: Handle config
+        // luau.pushNil();
+        // while (luau.next(-1)) {
+        //     const key_index = luau.getTop() - 1;
+        //     const val_index = luau.getTop();
+        //
+        //     const key_type = luau.typeOf(key_index);
+        // }
+    }
+
+    ///Cleans out all **NON**-builtin modules from the list of module sources, freeing each item in the array.
+    pub fn freeModules(self: *ClockConfig) void {
+        for (self.modules.items) |item| {
+            switch (item.*) {
+                .custom => |c| self.allocator.free(c),
+                else => {},
+            }
+            self.allocator.destroy(item);
+        }
+        self.modules.clearRetainingCapacity();
+    }
+
+    pub fn loadLuauConfigFile(self: *ClockConfig) BaseError!void {
+        // Interpret the file
+        const luau_file = common.connector_utils.readResource(self.allocator, "config.luau", .CWD) catch |e| switch (e) {
+            error.FileNotFound => {
+                logger.err("Could not find file: '{{cwd}}/config.luau!'", .{});
+                return error.FileNotFound;
+            },
+            inline else => {
+                logger.err("Error reading clock config file ({{cwd}}/config.luau) -> {t}", .{e});
+                return error.OtherError;
+            },
+        };
+        defer self.allocator.free(luau_file);
+
+        var luau = zlua.Lua.init(self.allocator) catch return error.OtherError;
+        defer luau.deinit();
+
+        openLuauStd(luau);
+
+        common.luau.exports.global.load_export(luau);
+        common.luau.exports.time.load_export(luau);
+        common.luau.exports.http.load_export(luau);
+        common.luau.exports.json.load_export(luau);
+
+        //Load exports
+
+        self.luau_bytecode = try zlua.compile(self.allocator, luau_file, .{});
+        errdefer self.allocator.free(self.luau_bytecode);
+        self.initialized = true;
+    }
+};

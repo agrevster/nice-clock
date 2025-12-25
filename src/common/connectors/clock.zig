@@ -2,7 +2,7 @@ const std = @import("std");
 const common = @import("../common.zig");
 const loadModuleFromLuau = common.luau.loader.loadModuleFromLuau;
 
-pub const ClockConnectorError = error{ EventLoopAlreadyStarted, NoModules };
+pub const ClockConnectorError = error{ EventLoopAlreadyStarted, NoModules, ClockConfigError };
 
 const logger = std.log.scoped(.common_connector);
 
@@ -10,9 +10,9 @@ const logger = std.log.scoped(.common_connector);
 pub const CommonConnector = struct {
     interface: common.Connector.ConnectorInterface,
     has_event_loop_started: bool,
-    modules: []*common.module.ClockModuleSource,
     allocator: std.mem.Allocator,
     image_store: common.image.ImageStore = undefined,
+    config: *common.luau.loader.ClockConfig,
 
     inline fn load_images_for_module(self: *CommonConnector, module: *common.module.ClockModule) void {
         self.image_store.addImagesForModule(module) catch |e| {
@@ -20,12 +20,19 @@ pub const CommonConnector = struct {
         };
     }
 
+    inline fn loadModulesFromConfig(self: *CommonConnector) ClockConnectorError!void {
+        logger.info("Reloading clock config...", .{});
+        self.config.updateClockConfig() catch |e| {
+            logger.err("Error loading clock config: {t}", .{e});
+            return error.ClockConfigError;
+        };
+        if (self.config.modules.items.len == 0) return ClockConnectorError.NoModules;
+    }
+
     /// Used to start up the clock, should only be called once
     pub fn startClock(self: *CommonConnector, is_active: *std.atomic.Value(bool)) ClockConnectorError!void {
-        if (self.has_event_loop_started) return ClockConnectorError.EventLoopAlreadyStarted;
+        if (self.has_event_loop_started) return error.EventLoopAlreadyStarted;
         self.has_event_loop_started = true;
-
-        if (self.modules.len == 0) return ClockConnectorError.NoModules;
 
         self.image_store = common.image.ImageStore.init(self.allocator);
         defer self.image_store.deinit();
@@ -33,8 +40,11 @@ pub const CommonConnector = struct {
         var module_arena = std.heap.ArenaAllocator.init(self.allocator);
         defer module_arena.deinit();
 
-        var current_module = self.modules[0];
+        try self.loadModulesFromConfig();
 
+        var current_module = self.config.modules.items[0];
+
+        //Runs while the clock is running, and doesn't stop till the clock stops
         while (is_active.load(.acquire)) {
             switch (current_module.*) {
                 .builtin => |module| {
@@ -57,8 +67,9 @@ pub const CommonConnector = struct {
                     }
                 },
             }
+            const modules = self.config.modules.items;
             self.interface.clearScreen(self.interface.ctx);
-            current_module = self.modules[std.crypto.random.intRangeAtMost(usize, 0, self.modules.len - 1)];
+            current_module = modules[std.crypto.random.intRangeAtMost(usize, 0, modules.len - 1)];
         }
     }
 };
