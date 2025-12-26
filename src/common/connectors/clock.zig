@@ -21,7 +21,6 @@ pub const CommonConnector = struct {
     }
 
     inline fn loadModulesFromConfig(self: *CommonConnector) ClockConnectorError!void {
-        logger.info("Reloading clock config...", .{});
         self.config.updateClockConfig() catch |e| {
             logger.err("Error loading clock config: {t}", .{e});
             return error.ClockConfigError;
@@ -43,9 +42,16 @@ pub const CommonConnector = struct {
         try self.loadModulesFromConfig();
 
         var current_module = self.config.modules.items[0];
+        var modules_ran: u8 = 0;
 
         //Runs while the clock is running, and doesn't stop till the clock stops
         while (is_active.load(.acquire)) {
+            //Only reload the config after `modules_ran` modules have been ran.
+            //This improves performance by preventing the config from being reloaded every time.
+            if (modules_ran >= common.constants.config_reload_interval) {
+                try self.loadModulesFromConfig();
+                modules_ran = 0;
+            }
             switch (current_module.*) {
                 .builtin => |module| {
                     self.load_images_for_module(module);
@@ -54,7 +60,7 @@ pub const CommonConnector = struct {
                 },
                 .custom => |module_filename| {
                     if (!module_arena.reset(.free_all)) logger.err("There was an error freeing module: {s}'s memory!", .{module_filename});
-                    if (loadModuleFromLuau(module_filename, module_arena.allocator())) |module| {
+                    if (loadModuleFromLuau(module_filename, module_arena.allocator(), self.config.config)) |module| {
                         self.load_images_for_module(module);
                         module.render(self, is_active);
                         defer self.image_store.deinitAllImages();
@@ -70,6 +76,7 @@ pub const CommonConnector = struct {
             const modules = self.config.modules.items;
             self.interface.clearScreen(self.interface.ctx);
             current_module = modules[std.crypto.random.intRangeAtMost(usize, 0, modules.len - 1)];
+            modules_ran += 1;
         }
     }
 };

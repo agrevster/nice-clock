@@ -39,9 +39,13 @@ pub fn main() void {
     var config_map = std.StringHashMap([]const u8).init(allocator);
     defer config_map.deinit();
 
+    var config_item_allocator = std.heap.ArenaAllocator.init(allocator);
+    defer config_item_allocator.deinit();
+
     var config = common.luau.loader.ClockConfig{
         .allocator = allocator,
         .config = &config_map,
+        .config_map_allocator = &config_item_allocator,
         .modules = &modules,
     };
 

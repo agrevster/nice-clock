@@ -7,14 +7,19 @@ const LuauTry = common.luau.loader.LuauTry;
 const luauError = common.luau.loader.luauError;
 const logger = common.luau.loader.logger;
 
+var config_map_ptr: ?*std.StringHashMap([]const u8) = null;
+
 ///Sends the exported functions to luau.
-pub fn load_export(luau: *Luau) void {
+pub fn load_export(luau: *Luau, config_ptr: *std.StringHashMap([]const u8)) void {
     luau.pushFunction(wrap(print_fn));
     luau.setGlobal("print");
     luau.pushFunction(wrap(error_fn));
     luau.setGlobal("error");
     luau.pushFunction(wrap(getenv_fn));
     luau.setGlobal("getenv");
+    config_map_ptr = config_ptr;
+    luau.pushFunction(wrap(getcfg_fn));
+    luau.setGlobal("getcfg");
 }
 
 const print_logger = std.log.scoped(.luau_print);
@@ -107,7 +112,7 @@ fn error_fn(luau: *Luau) i32 {
 }
 
 ///(Luau)
-///Attempts to get a variable from the endowment, if there is none returns nil.
+///Attempts to get a variable from the program's environment variables, if there is none returns nil.
 fn getenv_fn(luau: *Luau) i32 {
     const key = luau.checkString(1)[0..];
 
@@ -127,6 +132,25 @@ fn getenv_fn(luau: *Luau) i32 {
     };
 
     _ = luau.pushString(value);
+
+    return 1;
+}
+
+///(Luau)
+///Attempts to get a variable from the clock's config key value store, if there is none returns nil.
+fn getcfg_fn(luau: *Luau) i32 {
+    const key = luau.checkString(1)[0..];
+
+    if (!std.unicode.utf8ValidateSlice(key)) luauError(luau, "Invalid path format: must be UTF-8");
+
+    if (config_map_ptr == null) luauError(luau, "Error loading clock config!");
+
+    if (config_map_ptr.?.get(key)) |value| {
+        _ = luau.pushString(value);
+    } else {
+        luau.pushNil();
+        return 1;
+    }
 
     return 1;
 }

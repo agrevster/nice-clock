@@ -1,7 +1,7 @@
 local config: ClockConfig = {
 	brightness = 80,
 	config = {},
-	modules = {"logo", "clock"},
+	modules = {"test"},
 }
 
 return config

@@ -63,7 +63,7 @@ pub const ClockConfigError = error{
 
 ///Attempts to read the given luau module file and if it returns a Luau module builder converts the Luau table into a ClockModule.
 ///If the module does not return the Luau code will still be ran but this function will return a DebugModule error. This is useful for testing in Luau.
-pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Allocator) ClockModuleError!*common.module.ClockModule {
+pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Allocator, config_ptr: *std.StringHashMap([]const u8)) ClockModuleError!*common.module.ClockModule {
     // Interpret the file
     const full_module_file_name = std.fmt.allocPrint(allocator, "{s}.luau", .{module_file_name}) catch return error.OutOfMemory;
     defer allocator.free(full_module_file_name);
@@ -83,7 +83,7 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     openLuauStd(luau);
 
     //Load exports
-    common.luau.exports.global.load_export(luau);
+    common.luau.exports.global.load_export(luau, config_ptr);
     common.luau.exports.time.load_export(luau);
     common.luau.exports.http.load_export(luau);
     common.luau.exports.json.load_export(luau);
@@ -158,6 +158,8 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
 ///This allows for the design of intelligent configs allowing for users to control which modules are loaded based on luau code.
 pub const ClockConfig = struct {
     allocator: std.mem.Allocator,
+    ///Owns key and value slices in `config`.
+    config_map_allocator: *std.heap.ArenaAllocator,
     initialized: bool = false,
     luau_bytecode: []const u8 = undefined,
     brightness: u8 = 100,
@@ -175,7 +177,7 @@ pub const ClockConfig = struct {
         var luau = zlua.Lua.init(self.allocator) catch return error.OtherError;
         defer luau.deinit();
 
-        common.luau.exports.global.load_export(luau);
+        common.luau.exports.global.load_export(luau, self.config);
         common.luau.exports.time.load_export(luau);
         common.luau.exports.http.load_export(luau);
         common.luau.exports.json.load_export(luau);
@@ -249,7 +251,10 @@ pub const ClockConfig = struct {
                 return error.ConfigValidationError;
             };
 
-            try self.config.put(key, val);
+            const new_key = try self.config_map_allocator.allocator().dupe(u8, key);
+            const new_val = try self.config_map_allocator.allocator().dupe(u8, val);
+
+            try self.config.put(new_key, new_val);
             luau.pop(1);
         }
     }
@@ -266,6 +271,7 @@ pub const ClockConfig = struct {
         }
         self.modules.clearRetainingCapacity();
         self.config.clearRetainingCapacity();
+        if (!self.config_map_allocator.reset(.free_all)) logger.err("There was an error freeing the config map's memory!", .{});
     }
 
     ///Reads `{cwd}/config.luau` and compiles the Luau bytecode.
@@ -289,7 +295,7 @@ pub const ClockConfig = struct {
 
         openLuauStd(luau);
 
-        common.luau.exports.global.load_export(luau);
+        common.luau.exports.global.load_export(luau, self.config);
         common.luau.exports.time.load_export(luau);
         common.luau.exports.http.load_export(luau);
         common.luau.exports.json.load_export(luau);
