@@ -31,4 +31,7 @@ pub const ConnectorInterface = struct {
     /// **You must also update the screen if you wish to display a blank screen!**
     /// *The* `ctx` *param should always be set to the `ctx field` of what ever interface you are using.*
     clearScreen: *const fn (ctx: *anyopaque) void,
+    ///Used to set the brightness of the clock's display. **Does not require updating.**
+    /// *The* `ctx` *param should always be set to the `ctx field` of what ever interface you are using.*
+    setBrightness: *const fn (ctx: *anyopaque, brightness: u8) void,
 };

@@ -26,6 +26,9 @@ pub const CommonConnector = struct {
             return error.ClockConfigError;
         };
         if (self.config.modules.items.len == 0) return ClockConnectorError.NoModules;
+
+        //Set brightness whenever config is loaded.
+        self.interface.setBrightness(self.interface.ctx, self.config.brightness);
     }
 
     /// Used to start up the clock, should only be called once

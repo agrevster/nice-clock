@@ -63,4 +63,11 @@ pub const HardwareConnector = struct {
         const self: *HardwareConnector = @ptrCast(@alignCast(ctx));
         self.tile_cache = driver.led_matrix_swap_on_vsync(self.matrix, self.tile_cache);
     }
+
+
+    pub fn setBrightness(ctx: *anyopaque, brightness: u8) void {
+        const self: *HardwareConnector = @ptrCast(@alignCast(ctx));
+        driver.led_matrix_set_brightness(self.matrix, self.brightness);
+    }
+
 };

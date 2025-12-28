@@ -14,6 +14,7 @@ pub const SimConnector = struct {
             .setTile = setTile,
             .clearScreen = clearScreen,
             .updateScreen = updateScreen,
+            .setBrightness = setBrightness,
             .ctx = self,
         };
     }
@@ -40,5 +41,11 @@ pub const SimConnector = struct {
 
         self.tile_pointer.* = self.tile_cache;
         self.tile_cache = undefined;
+    }
+
+    pub fn setBrightness(ctx: *anyopaque, brightness: u8) void {
+        //This is a no-op for the simulator.
+        _ = ctx;
+        _ = brightness;
     }
 };
