@@ -67,9 +67,9 @@ return niceclock
 - Example modules can be found within the [./modules/](./modules/) directory.
 
 ## Config
-In order to tell the Clock program which [modules](#module) to display you must modify the clock config file: `(CWD)/config.luau`. This file is used to determine which modules the clock should use, a key value store used by modules and the brightness of the hardware display. Every `5` module runs the clock rereads the config by running the `get_config` function in `config.luau`. The Luau state in the file is preserved across calls, meaning that you can utilize global variables in your config. All [custom luau libraries](./luau-docs.md) _(besides `niceclock`)_ are loaded in this file, meaning that making http requests is fair game!
+In order to tell the Clock program which [modules](#modules) to display you must modify the clock config file: `(CWD)/config.luau`. This file is used to determine which modules the clock should use, a key value store used by modules and the brightness of the hardware display. Every `5` module runs the clock rereads the config by running the `get_config` function in `config.luau`. The Luau state in the file is preserved across calls, meaning that you can utilize global variables in your config. All [custom luau libraries](./luau-docs.md) _(besides `niceclock`)_ are loaded in this file, meaning that making http requests is fair game!
 
-Every `config.luau` file must contain a function named `get_config` that takes no parameters and returns a [`ClockConfig` table]().
+Every `config.luau` file must contain a function named `get_config` that takes no parameters and returns a [`ClockConfig` table](./luau-docs.md#config-file).
 
 ##### Example Config
 ```lua
