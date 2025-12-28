@@ -43,7 +43,8 @@ pub fn luauError(luau: *Luau, message: []const u8) noreturn {
 
 const LuauError = error{
     OtherError,
-    LuauError,
+    LuauSyntax,
+    LuauRuntimeError,
     FileNotFound,
     OutOfMemory,
 };
@@ -93,12 +94,13 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     luau.loadBytecode("...", luau_bytecode) catch {
         const error_str = luau.toString(-1) catch "ERR";
         logger.err("{s}", .{error_str});
-        return error.LuauError;
+        return error.LuauSyntax;
     };
     luau.protectedCall(.{ .results = 1 }) catch |e| {
         const error_str = luau.toString(-1) catch "ERR";
         logger.err("{s}", .{error_str});
         logger.err("{t}", .{e});
+        return error.LuauRuntimeError;
     };
 
     // Load module
@@ -187,7 +189,7 @@ pub const ClockConfig = struct {
             const error_str = luau.toString(-1) catch "ERR";
             logger.err("{s}", .{error_str});
             logger.err("{t}", .{e});
-            return error.LuauError;
+            return error.LuauRuntimeError;
         };
 
         const return_type = luau.typeOf(1);
@@ -312,7 +314,7 @@ pub const ClockConfig = struct {
         luau.loadBytecode("...", luau_bytecode) catch {
             const error_str = luau.toString(-1) catch "ERR";
             logger.err("{s}", .{error_str});
-            return error.LuauError;
+            return error.LuauSyntax;
         };
 
         //Run the entire file first to initialize all variables.
@@ -320,7 +322,7 @@ pub const ClockConfig = struct {
             const error_str = luau.toString(-1) catch "ERR";
             logger.err("{s}", .{error_str});
             logger.err("{t}", .{e});
-            return error.LuauError;
+            return error.LuauRuntimeError;
         };
 
         self.initialized = true;

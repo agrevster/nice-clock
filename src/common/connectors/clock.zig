@@ -64,6 +64,10 @@ pub const CommonConnector = struct {
                                 logger.warn("Attempted to run a non-module. (This likely means you are debugging)", .{});
                                 std.process.exit(1);
                             },
+                            error.LuauSyntax => {
+                                logger.err("There was a syntax error in file: {s}.luau", .{module_filename});
+                                std.process.exit(1);
+                            },
                             else => {
                                 logger.err("Error loading file: {s}.luau from Luau: {t}", .{ module_filename, e });
                             },
