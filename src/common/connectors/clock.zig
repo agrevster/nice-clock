@@ -46,12 +46,6 @@ pub const CommonConnector = struct {
 
         //Runs while the clock is running, and doesn't stop till the clock stops
         while (is_active.load(.acquire)) {
-            //Only reload the config after `modules_ran` modules have been ran.
-            //This improves performance by preventing the config from being reloaded every time.
-            if (modules_ran >= common.constants.config_reload_interval) {
-                try self.loadModulesFromConfig();
-                modules_ran = 0;
-            }
             switch (current_module.*) {
                 .builtin => |module| {
                     self.load_images_for_module(module);
@@ -65,18 +59,31 @@ pub const CommonConnector = struct {
                         module.render(self, is_active);
                         defer self.image_store.deinitAllImages();
                     } else |e| {
-                        if (e == error.DebugModule) {
-                            logger.warn("Attempted to run a non-module. (This likely means you are debugging)", .{});
-                            std.process.exit(1);
+                        switch (e) {
+                            error.DebugModule => {
+                                logger.warn("Attempted to run a non-module. (This likely means you are debugging)", .{});
+                                std.process.exit(1);
+                            },
+                            else => {
+                                logger.err("Error loading file: {s}.luau from Luau: {t}", .{ module_filename, e });
+                            },
                         }
-                        logger.err("Error loading file: {s}.luau from Luau: {t}", .{ module_filename, e });
                     }
                 },
+            }
+
+            //Only reload the config after `modules_ran` modules have been ran.
+            //This improves performance by preventing the config from being reloaded every time.
+            if (modules_ran >= common.constants.config_reload_interval) {
+                self.config.freeModules();
+                try self.loadModulesFromConfig();
+                modules_ran = 0;
+            } else {
+                modules_ran += 1;
             }
             const modules = self.config.modules.items;
             self.interface.clearScreen(self.interface.ctx);
             current_module = modules[std.crypto.random.intRangeAtMost(usize, 0, modules.len - 1)];
-            modules_ran += 1;
         }
     }
 };

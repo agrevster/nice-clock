@@ -54,7 +54,7 @@ pub fn main() void {
         std.process.exit(1);
     };
 
-    defer allocator.free(config.luau_bytecode);
+    defer config.luau.deinit();
     defer config.freeModules();
 
     var clock = Clock{

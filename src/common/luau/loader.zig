@@ -78,7 +78,6 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
     defer allocator.free(luau_file);
 
     var luau = zlua.Lua.init(allocator) catch return error.OtherError;
-    defer luau.deinit();
 
     openLuauStd(luau);
 
@@ -160,47 +159,48 @@ pub const ClockConfig = struct {
     allocator: std.mem.Allocator,
     ///Owns key and value slices in `config`.
     config_map_allocator: *std.heap.ArenaAllocator,
-    initialized: bool = false,
-    luau_bytecode: []const u8 = undefined,
-    brightness: u8 = 100,
     modules: *std.ArrayList(*common.module.ClockModuleSource),
     config: *std.StringHashMap([]const u8),
 
+    initialized: bool = false,
+    luau: *Luau = undefined,
+    brightness: u8 = 100,
+
     ///**Requires `loadLuauConfigFile` to have been run before running this.**
-    ///Takes the config file luau bytecode created by `loadLuauConfigFile` and runs it, taking the returned `ClockConfig` luau table and updating values in this struct.
+    ///Takes the Luau instance created by loadLuauConfigFile and runs the `get_config` function and turns the returned `ClockConfig` table into values in the `ClockConfig` struct.
     pub fn updateClockConfig(self: *ClockConfig) ClockConfigError!void {
         if (!self.initialized) return error.ConfigNotInitialized;
-        //TODO: Add support for better error handling by reverting to old config on error.
-        // self.config.clearRetainingCapacity();
-        // self.modules.clearRetainingCapacity();
 
-        var luau = zlua.Lua.init(self.allocator) catch return error.OtherError;
-        defer luau.deinit();
+        const luau = self.luau;
 
-        common.luau.exports.global.load_export(luau, self.config);
-        common.luau.exports.time.load_export(luau);
-        common.luau.exports.http.load_export(luau);
-        common.luau.exports.json.load_export(luau);
-
-        luau.loadBytecode("...", self.luau_bytecode) catch {
-            const error_str = luau.toString(-1) catch "ERR";
-            logger.err("{s}", .{error_str});
-            return error.LuauError;
+        const config_fn_type = luau.getGlobal("get_config") catch |e| {
+            logger.err("There was an error getting the function 'get_config' from config.luau: {t}", .{e});
+            return error.ConfigParsingError;
         };
+
+        if (config_fn_type != .function) {
+            logger.err("'get_config' in config.luau must be a function!", .{});
+            return error.ConfigParsingError;
+        }
+
         luau.protectedCall(.{ .results = 1 }) catch |e| {
             const error_str = luau.toString(-1) catch "ERR";
             logger.err("{s}", .{error_str});
             logger.err("{t}", .{e});
+            return error.LuauError;
         };
 
         const return_type = luau.typeOf(1);
         if (return_type != zlua.LuaType.table) {
-            logger.err("Invalid clock config return type: {s}", .{luau.typeName(return_type)});
-            return error.OtherError;
+            logger.err("'get_config' must return a table, found: {s}", .{luau.typeName(return_type)});
+            return error.ConfigParsingError;
         }
 
         _ = luau.getField(1, "brightness");
-        const brightness_field = luau.toInteger(-1) catch return error.ConfigParsingError;
+        const brightness_field = luau.toInteger(-1) catch {
+            logger.err("`brightness` field not found in `get_config` return table!", .{});
+            return error.ConfigParsingError;
+        };
 
         if (brightness_field > 100 or brightness_field < 0) {
             logger.err("Clock brightness must be between 0 and 100 inclusive! Brightness set to: {d}.", .{brightness_field});
@@ -211,7 +211,11 @@ pub const ClockConfig = struct {
 
         _ = luau.getField(1, "modules");
 
-        const modules_field = luau.toAnyInternal([][]const u8, self.allocator, true, -1) catch return error.ConfigParsingError;
+        const modules_field = luau.toAnyInternal([][]const u8, self.allocator, true, -1) catch {
+            logger.err("`modules` field not found in `get_config` return table!", .{});
+            return error.ConfigParsingError;
+        };
+
         defer self.allocator.free(modules_field);
 
         //We need to dupe this memory because once this function goes out of scope, all allocations made by Luau are deallocated.
@@ -221,11 +225,12 @@ pub const ClockConfig = struct {
             new_module_source.* = .{ .custom = new_module_name };
             try self.modules.append(self.allocator, new_module_source);
         }
+        luau.pop(1);
 
         const config_type = luau.getField(1, "config");
         if (config_type != .table) {
-            logger.err("The type of the config field must be a table!", .{});
-            return error.ConfigValidationError;
+            logger.err("`config` field returned by `get_config` must be a table!", .{});
+            return error.ConfigParsingError;
         }
 
         luau.pushNil();
@@ -238,17 +243,16 @@ pub const ClockConfig = struct {
 
             if (key_type != .string or (val_type != .string and val_type != .number)) {
                 logger.err("There was a parsing issue with the 'config' table in config.luau. Ensure keys are strings and values are either strings or ints!", .{});
-                return error.ConfigValidationError;
+                return error.ConfigParsingError;
             }
-
             const key = luau.toString(key_index) catch |e| {
                 logger.err("There was an error fetching a key from the config table in config.luau: {t}", .{e});
-                return error.ConfigValidationError;
+                return error.ConfigParsingError;
             };
 
             const val = luau.toString(val_index) catch |e| {
                 logger.err("There was an error fetching a value from the config table in config.luau: {t}", .{e});
-                return error.ConfigValidationError;
+                return error.ConfigParsingError;
             };
 
             const new_key = try self.config_map_allocator.allocator().dupe(u8, key);
@@ -257,6 +261,8 @@ pub const ClockConfig = struct {
             try self.config.put(new_key, new_val);
             luau.pop(1);
         }
+
+        luau.pop(3);
     }
 
     ///Cleans out all **NON**-builtin modules from the list of module sources, freeing each item in the array.
@@ -271,10 +277,11 @@ pub const ClockConfig = struct {
         }
         self.modules.clearRetainingCapacity();
         self.config.clearRetainingCapacity();
+        self.luau.gcCollect();
         if (!self.config_map_allocator.reset(.free_all)) logger.err("There was an error freeing the config map's memory!", .{});
     }
 
-    ///Reads `{cwd}/config.luau` and compiles the Luau bytecode.
+    ///Reads `{cwd}/config.luau` and compiles the Luau bytecode creates the `Luau` field in `ClockConfig`..
     ///**This only needs to be called once.**
     pub fn loadLuauConfigFile(self: *ClockConfig) LuauError!void {
         // Interpret the file
@@ -291,17 +298,31 @@ pub const ClockConfig = struct {
         defer self.allocator.free(luau_file);
 
         var luau = zlua.Lua.init(self.allocator) catch return error.OtherError;
-        defer luau.deinit();
+        self.luau = luau;
 
         openLuauStd(luau);
-
         common.luau.exports.global.load_export(luau, self.config);
         common.luau.exports.time.load_export(luau);
         common.luau.exports.http.load_export(luau);
         common.luau.exports.json.load_export(luau);
 
-        self.luau_bytecode = try zlua.compile(self.allocator, luau_file, .{});
-        errdefer self.allocator.free(self.luau_bytecode);
+        const luau_bytecode = try zlua.compile(self.allocator, luau_file, .{});
+        defer self.allocator.free(luau_bytecode);
+
+        luau.loadBytecode("...", luau_bytecode) catch {
+            const error_str = luau.toString(-1) catch "ERR";
+            logger.err("{s}", .{error_str});
+            return error.LuauError;
+        };
+
+        //Run the entire file first to initialize all variables.
+        luau.protectedCall(.{}) catch |e| {
+            const error_str = luau.toString(-1) catch "ERR";
+            logger.err("{s}", .{error_str});
+            logger.err("{t}", .{e});
+            return error.LuauError;
+        };
+
         self.initialized = true;
     }
 };
