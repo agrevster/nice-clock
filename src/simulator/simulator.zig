@@ -13,7 +13,6 @@ pub fn main() void {
 
     const logger = std.log.scoped(.Simulator);
 
-    //Allow for passing module file name via command line arguments
     var tiles: [32][64]common.Color = undefined;
 
     inline for (0..32) |y| {

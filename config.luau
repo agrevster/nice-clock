@@ -2,7 +2,7 @@ function get_config(): ClockConfig
   local config: ClockConfig = {
     brightness = 80,
     config = {},
-    modules = { "test" },
+    modules = { "logo", "clock", "flag-game" },
   }
   return config
 end

@@ -11,23 +11,6 @@ pub fn main() void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    //Allow for passing module file name via command line arguments
-    var args_arena = std.heap.ArenaAllocator.init(allocator);
-    const args_allocator = args_arena.allocator();
-    defer args_arena.deinit();
-    const args = std.process.argsAlloc(args_allocator) catch |e| {
-        logger.err("Error allocating arguments for simulator: {t}", .{e});
-        std.process.exit(1);
-    };
-
-    var filenames: []const u8 = undefined;
-
-    if (args.len > 1) {
-        filenames = args[1][0..];
-    } else {
-        filenames = "test";
-    }
-
     if (common.font.FontStore.init(allocator)) {} else |err| {
         logger.err("Error loading fonts: {t}", .{err});
         std.process.exit(1);
@@ -42,19 +25,35 @@ pub fn main() void {
     }
     defer connector.deinit();
 
-    //Create list of module sources from filenames variable
-
     var modules = std.ArrayList(*common.module.ClockModuleSource).empty;
     defer modules.deinit(allocator);
 
-    utils.loadModuleFiles(allocator, filenames, logger, &modules);
-    defer utils.unloadModuleFiles(allocator, &modules);
+    var config_map = std.StringHashMap([]const u8).init(allocator);
+    defer config_map.deinit();
+
+    var config_item_allocator = std.heap.ArenaAllocator.init(allocator);
+    defer config_item_allocator.deinit();
+
+    var config = common.luau.loader.ClockConfig{
+        .allocator = allocator,
+        .config = &config_map,
+        .config_map_allocator = &config_item_allocator,
+        .modules = &modules,
+    };
+
+    config.loadLuauConfigFile() catch |e| {
+        logger.err("There was an error loading the clock's config file: {t}", .{e});
+        std.process.exit(1);
+    };
+
+    defer config.luau.deinit();
+    defer config.freeModules();
 
     var clock = Clock{
         .interface = connector.connectorInterface(),
         .has_event_loop_started = false,
-        .modules = modules.items,
         .allocator = allocator,
+        .config = &config,
     };
 
     var is_active = std.atomic.Value(bool).init(true);
