@@ -12,26 +12,25 @@
 ## Installation and usage
 *For this guide I am using [Alpine Linux (RaspberryPi version)](https://wiki.alpinelinux.org/wiki/Raspberry_Pi) rather than Raspbian, this is because Alpine is more lightweight therefore you don't have to worry as much about optimization and removing unnecessary services.*
 1. Setup RaspberryPi and ensure that it is connected to the internet.
-2. Install dependencies `apk add git curl sdl2-dev python3`
-3. You also need to install [Zig](https://ziglang.org/download/) for your PI. This project is built with Zig `0.15.2` so be sure to install that and **not the master version.** 
-4. Clone this repo (be sure to use this command so that sub modules are cloned too) `git clone --recurse-submodules https://github.com/agrevster/nice-clock.git`
+2. Install dependencies `apk add git curl sdl2-dev python3 zig`
+3. Clone this repo (be sure to use this command so that sub modules are cloned too) `git clone --recurse-submodules https://github.com/agrevster/nice-clock.git`
     - I suggest cloning to `/opt/nice-clock`
-5. Edit `/boot/cmdline.txt` to allow for the clock driver to access the GPIO.
+4. Edit `/boot/cmdline.txt` to allow for the clock driver to access the GPIO.
     - Add the following to the end of `/boot/cmdline.txt`. This allows the clock driver to interact with system memory so it can work with the GPIO.
     - >iomem=relaxed 
-6. Connect the led matrix to the PI's GPIO. 
+5. Connect the led matrix to the PI's GPIO. 
     - I used [this](https://github.com/hzeller/rpi-rgb-led-matrix/blob/master/wiring.md) guide for wiring. 
     - You don't need to worry about chaining.
     - This project uses [hzeller's RGB led matrix API](https://github.com/hzeller/rpi-rgb-led-matrix/tree/master) to control the led matrix for the clock, check out their repository for wiring and connection instructions.
-7. Secure your PI
-8. Build the source code `zig build -Drelease=true -Dclock-target=hardware`
-9. Test the clock by running `./zig-out/bin/nice-clock-hardware ip`
+6. Secure your PI
+7. Build the source code `zig build -Drelease=true -Dclock-target=hardware`
+8. Test the clock by running `./zig-out/bin/nice-clock-hardware ip`
     - This should display the IP address of the Pi on the led matrix. 
     - If this step fails check logs and your hardware connection.
-10. Make some [modules](#modules)
-11. Test the modules with the [simulator](#simulator)
-12. You can run the clock on the PI with the `nice-clock-hardware` executable using a list of module file names separated by commas as the first positional argument.
-13. Some of the modules I made require access to custom APIs found in `./scripts/`. If you use them, be sure to start their servers.
+9. Make some [modules](#modules)
+10. Test the modules with the [simulator](#simulator)
+11. You can run the clock on the PI with the `nice-clock-hardware` executable using a list of module file names separated by commas as the first positional argument.
+12. Some of the modules I made require access to custom APIs found in `./scripts/`. If you use them, be sure to start their servers.
 
 ## Modules
 The content the clock displays is called a `module`. While most of the clock's code is written in Zig, modules are created with [Luau](https://luau.org/). Luau is a sandboxed version of [Lua](https://www.lua.org/) used primary by Roblox. Luau allows for the easy creation of custom modules without the hassle that is manually managing memory. Each module is made up of a series of `components` examples of `components` include text, boxes and even images. The clock will look for modules in `(CWD)/modules/*`, it is recommended to check out the existing modules for examples. Modules will check for assets in `(CWD)/assets`. The current assets are `fonts` and `images`, more asset types will be added at a later date. 
