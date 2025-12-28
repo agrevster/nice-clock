@@ -74,7 +74,7 @@ Every `config.luau` file must contain a function named `get_config` that takes n
 ##### Example Config
 ```lua
 -- Global variables are A-OK!
--- The whole file is ovulated once when the clock starts.
+-- The whole file is evaluated once when the clock starts.
 count = 0
 -- Required function (This is called when the config is reloaded)
 function get_config(): ClockConfig
