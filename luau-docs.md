@@ -1,9 +1,9 @@
 # Nice Clock Luau
-> UPDATED: 2025-11-13
+> UPDATED: 2025-12-27
 
 
 ##### Contents
-[http](#http-library) - [json](#json-library) - [datetime](#datetime-library) - [global](#datetime) - [nice-clock (**Used to make modules**)](#niceclock-library)
+[http](#http-library) - [json](#json-library) - [datetime](#datetime-library) - [global](#global-additions) - [nice-clock (**Used to make modules**)](#niceclock-library) - [config](#config-file)
 
 ## `http` library
 - `http.fetch`
@@ -151,6 +151,11 @@
     function getenv(key: str): str?
     ```
     - Gets an environment variable with the given `key`. If it does not exist returns `nil`.
+- `getcfg`
+    ```lua
+    function getcfg(key: str): str?
+    ```
+    - Gets a value from the [clock config](./README.md#config) where the key is the given `key`. If it does not exist returns `nil`.
 
 ## `niceclock` library
 - **This is the main library used to create modules**
@@ -319,3 +324,17 @@
     ```
     - Represents all of the fonts loaded in the clock.
 
+
+## `Config` file
+- `ClockConfig`
+  ```lua
+    ClockConfig = {
+        brightness: number,
+        modules: {string},
+        config: {},
+    }
+    ```
+    - Used to store information passed to the clock via the [clock config file](./README.md#config). 
+    - `brightness` is used to determine the brightness of the clock display, and must be a whole number between `0` and `100`. (*Does not display on the simulator*)
+    - `modules` is a list of clock modules for the clock to load.
+    - `config` is a key to value store used by modules Luau files.

@@ -24,6 +24,7 @@ export type GlobalJson = {
 
 declare function error(message: string): nil
 declare function getenv(key: string): string | nil
+declare function getcfg(key: string): string | nil
 
 -- HTTP
 export type HTTPResponse = {
@@ -151,6 +152,13 @@ export type DatetimeDelta = {
 	years: number?,
 	days: number?,
 	seconds: number?,
+}
+
+-- Clock config
+export type ClockConfig = {
+	brightness: number,
+	modules: {string},
+	config: {},
 }
 
 -- Declarations

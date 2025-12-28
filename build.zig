@@ -66,11 +66,6 @@ pub fn build(b: *std.Build) !void {
         const sim_run_cmd = b.addRunArtifact(sim_exe);
 
         sim_run_cmd.step.dependOn(b.getInstallStep());
-
-        if (b.args) |args| {
-            sim_run_cmd.addArgs(args);
-        }
-
         const sim_run_step = b.step("run", "Run the clock sim");
         sim_run_step.dependOn(&sim_run_cmd.step);
         const check = b.step("check", "Check if code compiles");
