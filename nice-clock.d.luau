@@ -108,6 +108,7 @@ export type Animation = {
 
 
 export type Fonts = {
+	Font5x5: string,
 	Font5x8: string,
 	Font5x8_2: string,
 	Font6x12: string,

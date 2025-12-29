@@ -391,7 +391,7 @@ fn draw_char(clock: *Clock, y_pos: u8, x_pos: u8, font: common.font.BDF, char: u
     const glyph = font.glyphs.get(char) orelse font.glyphs.get(font.default_char).?;
     const bytes_per_row = (font.width + 7) / 8;
 
-    for (0..font.height) |row| {
+    for (0..@min(glyph.len, font.height)) |row| {
         const row_start = row * bytes_per_row;
         const row_end = row_start + bytes_per_row;
         const row_bytes = glyph[row_start..row_end];
@@ -709,7 +709,7 @@ pub const HorizontalScrollingTextComponent = struct {
         const glyph = font.glyphs.get(char) orelse font.glyphs.get(font.default_char).?;
         const bytes_per_row = (font.width + 7) / 8;
 
-        for (0..font.height) |row| {
+        for (0..@min(glyph.len, font.height)) |row| {
             const row_start = row * bytes_per_row;
             const row_bytes = glyph[row_start .. row_start + bytes_per_row];
 
@@ -871,7 +871,7 @@ pub const VerticalScrollingTextComponent = struct {
         const glyph = font.glyphs.get(char) orelse font.glyphs.get(font.default_char).?;
         const bytes_per_row = (font.width + 7) / 8;
 
-        for (0..font.height) |row| {
+        for (0..@min(glyph.len, font.height)) |row| {
             const row_start = row * bytes_per_row;
             const row_end = row_start + bytes_per_row;
             const row_bytes = glyph[row_start..row_end];

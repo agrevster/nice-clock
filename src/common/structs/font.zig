@@ -90,6 +90,7 @@ pub const BDF = struct {
 ///To add a new font simply add a new enum field with the name of the new font you want added.
 ///`init` loads all the fonts *(this is expensive)* and when you're done with them run `deinit`.
 pub const FontStore = enum {
+    Font5x5,
     Font5x8,
     Font5x8_2,
     Font6x12,
@@ -227,7 +228,7 @@ test {
 
     const bytes_per_row = (font.width + 7) / 8;
 
-    for (0..font.height) |row| {
+    for (0..font.glyph.len) |row| {
         const row_start = row * bytes_per_row;
         const row_end = row_start + bytes_per_row;
         const row_bytes = glyph[row_start..row_end];
@@ -354,7 +355,7 @@ test "big font" {
 
     const bytes_per_row = (font.width + 7) / 8;
 
-    for (0..font.height) |row| {
+    for (0..font.glyph.len) |row| {
         const row_start = row * bytes_per_row;
         const row_end = row_start + bytes_per_row;
         const row_bytes = glyph[row_start..row_end];
