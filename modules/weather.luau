@@ -1,7 +1,7 @@
 --- Config
 
-local lat = getenv("NICE_CLOCK_WEATHER_LAT")
-local lon = getenv("NICE_CLOCK_WEATHER_LON")
+local lat = getcfg("weather_lat")
+local lon = getcfg("weather_lon")
 
 local colors = {
   white = { r = 255, g = 255, b = 255 },
