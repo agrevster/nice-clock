@@ -173,13 +173,17 @@ pub const RootComponent = struct {
             }
         }.less_than);
 
-        var timer = try std.time.Timer.start();
+        //Used to track how long the module has been running for
+        var module_active_timer = try std.time.Timer.start();
+        //Used to track how long it took to process the module, so we can subtract it from the time required to achieve N FPS.
+        var processing_timer = try std.time.Timer.start();
         var frame: u32 = 0;
 
-        timer.reset();
+        module_active_timer.reset();
 
         while (is_active.load(.seq_cst)) {
-            if ((timer.read() / time.ns_per_s) > time_limit_s) break;
+            processing_timer.reset();
+            if ((module_active_timer.read() / time.ns_per_s) > time_limit_s) break;
             clock.interface.clearScreen(clock.interface.ctx);
 
             //Before we draw hardcoded animated components we need to do the custom ones so they can move the normal ones around.
@@ -224,7 +228,10 @@ pub const RootComponent = struct {
 
             frame += 1;
             clock.interface.updateScreen(clock.interface.ctx);
-            std.Thread.sleep(sleep_time_ns);
+            const runtime = processing_timer.read();
+            if (runtime < sleep_time_ns) {
+                std.Thread.sleep(sleep_time_ns - runtime);
+            }
         }
     }
 };
