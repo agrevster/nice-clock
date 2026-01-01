@@ -8,7 +8,7 @@ local yellow: Color = { r = 255, g = 183, b = 3 }
 
 local module = niceclock.modulebuilder("countdown", 20, { "fireworks" }, {}):image({ x = 0, y = 0 }, "fireworks")
 
-if delta.days < 0 then
+if delta.seconds <= 0 then
   module = module:text({ x = 29, y = 0 }, niceclock.fonts.Font7x13, "Happy", red)
   module = module:text({ x = 30, y = 10 }, niceclock.fonts.Font7x13, "New", blue)
   module = module:text({ x = 29, y = 21 }, niceclock.fonts.Font7x13, "Year", yellow)
