@@ -56,6 +56,7 @@ fn createTimeTableFromZig(current: Time, luau: *Luau) void {
     luau.setField(-2, "twelve_hour");
 
     const padded_minute_buffer = luau.allocator().alloc(u8, 2) catch luauError(luau, "Failed to allocate space for padded mintue buffer!");
+    defer luau.allocator().free(padded_minute_buffer);
 
     _ = tryBufPrint.unwrap(luau, std.fmt.bufPrint(padded_minute_buffer, "{d:0>2}", .{current.minute}));
     _ = luau.pushString(padded_minute_buffer);
