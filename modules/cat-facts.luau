@@ -3,7 +3,6 @@ local white: Color = { r = 255, g = 255, b = 255 }
 local fact = json.load(http.fetch("https://catfact.ninja/fact", http.methods.GET, nil, nil, nil).body).fact
 
 local module_time = #fact // 4
-print(module_time)
 
 return niceclock
   .modulebuilder("cat-fact", module_time, { "cat" }, {})
