@@ -33,11 +33,15 @@ local team_data = json.load(j)["team"]
 
 local next_event = team_data["nextEvent"][1]
 local game_time = datetime.fromiso(next_event["date"]:gsub("Z", ":00Z")):shiftzone("America/Chicago")
+local broadcast_location = next_event["competitions"][1]["broadcasts"][1]["media"]["shortName"]
 
 local abbreviation = team_data["abbreviation"]
 local record = team_data["record"]["items"][1]["summary"]
 local vs_msg = create_vs_or_at_mesasge(next_event, team)
-local game_time_formatted = `{game_time.date.month_name:sub(0, 3)} {game_time.date.day}`
+local game_time_formatted =
+  `{game_time.date.month_name:sub(0, 3)} {game_time.date.day} {game_time.time.twelve_hour}:{game_time.time.padded_minute}`
+
+local broadcast_location_formatted = if broadcast_location ~= nil then `Watch on {broadcast_location}` else ""
 
 return niceclock
   .modulebuilder("College Basketball", 30, { `sports/{team}`, "sports/basketball" }, {})
@@ -46,11 +50,11 @@ return niceclock
   :horizontalscrollingtext(
     { x = 63, y = 23 },
     niceclock.fonts.Font5x8,
-    `{game_time_formatted} {vs_msg}`,
+    `{game_time_formatted} {vs_msg} {broadcast_location_formatted}`,
     white,
     0,
     -30,
-    { loop = true, speed = 6, duration = 0 }
+    { loop = true, speed = 5, duration = 0 }
   )
   :image({ x = 27, y = 0 }, `sports/{team}`)
   :image({ x = 52, y = 0 }, `sports/basketball`)
