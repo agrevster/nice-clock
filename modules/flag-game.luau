@@ -111,9 +111,9 @@ local animations: { CustomAnimation } = {
     animation = {
       loop = false,
       speed = 12,
-      duration = 45,
+      duration = 110,
     },
-    states = { { timestamp = 0 }, { timestamp = 20, text = flag_image_name }, { timestamp = 45, text = "empty" } },
+    states = { { timestamp = 0 }, { timestamp = 20, text = flag_image_name }, { timestamp = 109, text = "empty" } },
   },
   --Make answer appear
   {
@@ -121,9 +121,9 @@ local animations: { CustomAnimation } = {
     animation = {
       loop = false,
       speed = 12,
-      duration = 48,
+      duration = 111,
     },
-    states = { { timestamp = 0 }, { timestamp = 48, color = colors.text } },
+    states = { { timestamp = 0 }, { timestamp = 110, color = colors.text } },
   },
 }
 
