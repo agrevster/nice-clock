@@ -137,22 +137,10 @@ pub const RootComponent = struct {
     custom_animations: []common.components.CustomAnimation,
 
     ///Returns the speed of the fastest child's animation updates or `null` if there are no animated components. *or animated components with 0 as speed*
-    fn getFastestAnimationSpeed(self: *RootComponent) ?i16 {
-        var max: i16 = 0;
-        for (self.components) |any_component| {
-            if (any_component == AnyComponent.animated) {
-                const animation = any_component.animated;
-                if (animation.speed > max) max = animation.speed;
-            }
-        }
-        return if (max == 0) null else max;
-    }
-
     ///This function draws each component in order. It redraws each component `fps` time per second and stop drawing after `time_limit_s` seconds.
     pub fn render(self: *RootComponent, clock: *Clock, fps: u8, time_limit_s: u64, is_active: *std.atomic.Value(bool)) ComponentError!void {
         const u64_fps: u64 = @intCast(fps);
         const sleep_time_ns = time.ns_per_s / u64_fps;
-        const fastest_animation: ?i16 = self.getFastestAnimationSpeed();
 
         // Preprocess animated components
         var timed_animations = clock.allocator.alloc(TimedAnimation, self.components.len) catch return ComponentError.AllocationError;
@@ -212,18 +200,17 @@ pub const RootComponent = struct {
                 }
             }
 
-            // Update + draw hardcoded animated components
-            for (timed_animations[0..timed_count]) |*timed| {
-                timed.update_animation(clock, frame);
-                if (fastest_animation != null and fastest_animation == timed.base.speed) clock.interface.clearScreen(clock.interface.ctx);
-                try timed.base.component.draw(timed.base.component.ctx, clock);
-            }
-
             // Draw normal components
             for (self.components) |comp| {
                 if (comp == AnyComponent.normal) {
                     try comp.normal.draw(comp.normal.ctx, clock);
                 }
+            }
+
+            // Update + draw hardcoded animated components
+            for (timed_animations[0..timed_count]) |*timed| {
+                timed.update_animation(clock, frame);
+                try timed.base.component.draw(timed.base.component.ctx, clock);
             }
 
             frame += 1;
