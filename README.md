@@ -8,7 +8,6 @@
 ![Clock Startup Logo gif](./.github/assets/logo.gif) 
 *Image rendered in clock simulator*
 
-
 ## Installation and usage
 *For this guide I am using [Alpine Linux (RaspberryPi version)](https://wiki.alpinelinux.org/wiki/Raspberry_Pi) rather than Raspbian, this is because Alpine is more lightweight therefore you don't have to worry as much about optimization and removing unnecessary services.*
 1. Setup RaspberryPi and ensure that it is connected to the internet.
@@ -24,6 +23,10 @@
     - This project uses [hzeller's RGB led matrix API](https://github.com/hzeller/rpi-rgb-led-matrix/tree/master) to control the led matrix for the clock, check out their repository for wiring and connection instructions.
 6. Secure your PI
 7. Build the source code `zig build -Drelease=true -Dclock-target=hardware`
+    > [!NOTE]
+    > If you don't like waiting, you can compile on your workstation and use a tool like `scp` to copy the binary to the Pi.
+    > Just make sure that you set the -Dtarget flag to the target field returned by `zig env` on your Pi.
+    > **Example:** `zig build -Dtarget=aarch64-linux.6.12.62...6.12.62-musl -Drelease=true -Dclock-target=hardware`
 8. Test the clock by running `./zig-out/bin/nice-clock-hardware`
     - This should display a demo module containing each component.
     - If this step fails check logs and your hardware connection.
