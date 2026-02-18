@@ -9,6 +9,23 @@ for i in leaders do
   table.insert(rankings, { name = leader.name, total = leader.medalStandings.totalMedals })
 end
 
+function abbreviate(name: string): string
+  -- We abbreviate names with more than 12 chars
+  if #name > 12 then
+    local result = ""
+    for _, item in ipairs(name:split(" ")) do
+      local first_char = item:sub(1, 1)
+      local ord = first_char:byte()
+      if ord >= 65 and ord <= 90 then
+        result = `{result}{item:sub(1, 1)}.`
+      end
+    end
+    return result
+  else
+    return name
+  end
+end
+
 local colors = {
   { r = 254, g = 225, b = 1 }, -- Gold
   { r = 215, g = 215, b = 215 }, -- Silver
@@ -25,7 +42,7 @@ for i in rankings do
   local item = rankings[i]
   module = module
     :text({ x = 0, y = i * 8 }, niceclock.fonts.Font5x8, `{i}:`, colors[i])
-    :text({ x = 13, y = i * 8 }, niceclock.fonts.Font5x8, `{item.name} {item.total}`, colors.white)
+    :text({ x = 13, y = i * 8 }, niceclock.fonts.Font5x8, `{abbreviate(item.name)} {item.total}`, colors.white)
 end
 
 return module
