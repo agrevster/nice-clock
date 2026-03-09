@@ -13,7 +13,7 @@
             .hash = "zlua-0.1.0-hGRpC444BQDrHc6QhcEeGh1eWMwFbl-c21vlGPWjKBfQ",
         },
         .datetime = .{
-            .url = "git+https://github.com/agrevster/zig-datetime.git#ceabd7e8962853c9f092750f373d9e8a1a47c605",
+            .url = "git+https://github.com/frmdstryr/zig-datetime#f0533643245419b5b967679365ab8d56a472c40e",
             .hash = "datetime-0.8.0-cJNXzPbbAQCHDBI-QqciRLaUQ12kd3y_oCXiTbjyqDhT",
         },
     },
