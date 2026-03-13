@@ -222,6 +222,15 @@ fn new(luau: *Luau) i32 {
     return 1;
 }
 
+///Attempts to get the slice str[start_index..end_index] if start_index or end_index are not valid throws Luau error.
+fn stringSliceOrLuauError(luau: *Luau, str: [:0]const u8, start_index: usize, end_index: usize) []const u8 {
+    if (start_index >= 0 and end_index >= start_index and str.len > start_index and end_index < str.len) {
+        return str[start_index..end_index];
+    }
+    _ = luau.pushString("Attempted to get invalid index from string slice.");
+    luau.raiseError();
+}
+
 ///(Luau)
 ///Creates a datetime object from ISO format.
 fn fromISO(luau: *Luau) u32 {
@@ -232,12 +241,12 @@ fn fromISO(luau: *Luau) u32 {
     const tryParseIntu8 = LuauTry(u8, "Error getting int from timestamp.").unwrap;
     const tryParseInti9 = LuauTry(i9, "Error getting int from timestamp.").unwrap;
 
-    const year: u16 = LuauTry(u16, "Error getting int from timestamp.").unwrap(luau, parseInt(u16, timestamp[0..4], 10));
-    const month: u4 = LuauTry(u4, "Error getting int from timestamp.").unwrap(luau, parseInt(u4, timestamp[5..7], 10));
-    const day: u8 = tryParseIntu8(luau, parseInt(u8, timestamp[8..10], 10));
-    const hour: u8 = tryParseIntu8(luau, parseInt(u8, timestamp[11..13], 10));
-    const minute: u8 = tryParseIntu8(luau, parseInt(u8, timestamp[14..16], 10));
-    const second: u8 = tryParseIntu8(luau, parseInt(u8, timestamp[17..19], 10));
+    const year: u16 = LuauTry(u16, "Error getting int from timestamp.").unwrap(luau, parseInt(u16, stringSliceOrLuauError(luau, timestamp, 0, 4), 10));
+    const month: u4 = LuauTry(u4, "Error getting int from timestamp.").unwrap(luau, parseInt(u4, stringSliceOrLuauError(luau, timestamp, 5, 7), 10));
+    const day: u8 = tryParseIntu8(luau, parseInt(u8, stringSliceOrLuauError(luau, timestamp, 8, 10), 10));
+    const hour: u8 = tryParseIntu8(luau, parseInt(u8, stringSliceOrLuauError(luau, timestamp, 11, 13), 10));
+    const minute: u8 = tryParseIntu8(luau, parseInt(u8, stringSliceOrLuauError(luau, timestamp, 14, 16), 10));
+    const second: u8 = tryParseIntu8(luau, parseInt(u8, stringSliceOrLuauError(luau, timestamp, 17, 19), 10));
 
     var zone: datetime.Timezone = datetime.timezones.UTC;
     _ = &zone;
@@ -245,13 +254,13 @@ fn fromISO(luau: *Luau) u32 {
     switch (timestamp[19]) {
         'Z' => {},
         '+' => {
-            const hours = tryParseInti9(luau, parseInt(i9, timestamp[20..22], 10));
-            const minutes = tryParseInti9(luau, parseInt(i9, timestamp[23..25], 10));
+            const hours = tryParseInti9(luau, parseInt(i9, stringSliceOrLuauError(luau, timestamp, 20, 22), 10));
+            const minutes = tryParseInti9(luau, parseInt(i9, stringSliceOrLuauError(luau, timestamp, 23, 25), 10));
             zone = datetime.Timezone.create("Custom ISO", (hours * 60) + minutes, .no_dst);
         },
         '-' => {
-            const hours = tryParseInti9(luau, parseInt(i9, timestamp[20..22], 10));
-            const minutes = tryParseInti9(luau, parseInt(i9, timestamp[23..25], 10));
+            const hours = tryParseInti9(luau, parseInt(i9, stringSliceOrLuauError(luau, timestamp, 20, 22), 10));
+            const minutes = tryParseInti9(luau, parseInt(i9, stringSliceOrLuauError(luau, timestamp, 23, 25), 10));
             zone = datetime.Timezone.create("Custom ISO", -((hours * 60) + minutes), .no_dst);
         },
         else => {
