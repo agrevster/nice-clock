@@ -228,7 +228,7 @@ test {
 
     const bytes_per_row = (font.width + 7) / 8;
 
-    for (0..font.glyph.len) |row| {
+    for (0..@min(glyph.len, font.height)) |row| {
         const row_start = row * bytes_per_row;
         const row_end = row_start + bytes_per_row;
         const row_bytes = glyph[row_start..row_end];
@@ -355,7 +355,7 @@ test "big font" {
 
     const bytes_per_row = (font.width + 7) / 8;
 
-    for (0..font.glyph.len) |row| {
+    for (0..@min(glyph.len, font.height)) |row| {
         const row_start = row * bytes_per_row;
         const row_end = row_start + bytes_per_row;
         const row_bytes = glyph[row_start..row_end];
