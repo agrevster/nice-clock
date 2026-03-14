@@ -1,21 +1,28 @@
 local dt = datetime.now("America/Chicago")
+local module_time = 30
 
-local time = dt.time
-local date = dt.date
+function time_text(datetime: Datetime): string
+  local time = datetime.time
+  return if time.twelve_hour > 9
+    then `{time.twelve_hour}:{time.padded_minute}`
+    else ` {time.twelve_hour}:{time.padded_minute}`
+end
 
-local time_text = if time.twelve_hour > 9
-  then `{time.twelve_hour}:{time.padded_minute}`
-  else ` {time.twelve_hour}:{time.padded_minute}`
+function date_text(datetime: Datetime): string
+  local date = datetime.date
+  return `{date.day_name:sub(0, 3)} {date.month_name:sub(0, 3)} {date.day}`
+end
 
-local date_text = `{date.day_name:sub(0, 3)} {date.month_name:sub(0, 3)} {date.day}`
-
-local blink_animation: CustomAnimation = {
+local second_advance_animation: CustomAnimation = {
   component_indexes = { 0 },
-  animation = { loop = true, speed = 20, duration = 3 },
-  states = { { timestamp = 0, text = time_text }, { timestamp = 1, text = time_text:gsub(":", " ") } },
+  animation = { loop = false, speed = 61, duration = 60 - dt.time.second },
+  states = {
+    { timestamp = 0, text = time_text(dt) },
+    { timestamp = 60 - dt.time.second, text = time_text(dt:shift({ seconds = 60 })) },
+  },
 }
 
 return niceclock
-  .modulebuilder("Basic Clock", 30, {}, { blink_animation })
-  :text({ y = 0, x = 0 }, niceclock.fonts.Font12x24, time_text, { r = 255, g = 0, b = 0 })
-  :text({ y = 24, x = 8 }, niceclock.fonts.Font5x8, date_text, { r = 255, g = 0, b = 0 })
+  .modulebuilder("Basic Clock", module_time, {}, { second_advance_animation })
+  :text({ y = 0, x = 0 }, niceclock.fonts.Font12x24, time_text(dt), { r = 255, g = 0, b = 0 })
+  :text({ y = 24, x = 8 }, niceclock.fonts.Font5x8, date_text(dt), { r = 255, g = 0, b = 0 })
