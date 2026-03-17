@@ -87,6 +87,7 @@ function get_config(): ClockConfig
     brightness = 80,
     -- A key value store, which can be accessed by clock modules.
     config = {
+        zone = "America/Chicago", -- The clock's time zone
         text = "Hello",
         num = count,
     },
