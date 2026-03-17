@@ -1,4 +1,4 @@
-local dt = datetime.now("America/Chicago")
+local dt = datetime.now(getcfg("zone") or "UTC")
 local module_time = 30
 
 function time_text(datetime: Datetime): string

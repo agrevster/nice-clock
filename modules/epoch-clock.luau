@@ -1,4 +1,4 @@
-local now = datetime.now("America/Chicago")
+local now = datetime.now(getcfg("zone") or "UTC")
 local epoch = math.floor(datetime.utcnow().epoch)
 local module_time = 10
 

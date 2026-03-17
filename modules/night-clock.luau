@@ -92,7 +92,7 @@ end
 module = draw_star5(module, { x = math.random(23, 60), y = math.random(4, 7) }, random_color())
 
 --- Clock
-local time = datetime.now("America/Chicago").time
+local time = datetime.now(getcfg("zone") or "UTC").time
 module = module:text(
   { x = 1, y = 1 },
   niceclock.fonts.Font5x8,
@@ -101,4 +101,3 @@ module = module:text(
 )
 
 return module
-

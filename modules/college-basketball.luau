@@ -32,7 +32,7 @@ local j = http.fetch(
 local team_data = json.load(j)["team"]
 
 local next_event = team_data["nextEvent"][1]
-local game_time = datetime.fromiso(next_event["date"]:gsub("Z", ":00Z")):shiftzone("America/Chicago")
+local game_time = datetime.fromiso(next_event["date"]:gsub("Z", ":00Z")):shiftzone(getcfg("zone") or "UTC")
 local broadcast_location = next_event["competitions"][1]["broadcasts"][1]["media"]["shortName"]
 
 local abbreviation = team_data["abbreviation"]

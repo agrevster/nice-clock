@@ -2,6 +2,8 @@
 
 local lat = getcfg("weather_lat")
 local lon = getcfg("weather_lon")
+local zone = getcfg("zone") or "UTC"
+zone = zone:gsub("/", "%%2f") -- Luau captures start with % %% escapes them
 
 local colors = {
   white = { r = 255, g = 255, b = 255 },
@@ -12,7 +14,7 @@ local colors = {
 --- Code
 
 local url =
-  `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=uv_index_clear_sky_max,temperature_2m_min,temperature_2m_max&current=weather_code,is_day,temperature_2m&timezone=America%2FChicago&forecast_days=1&timeformat=unixtime&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch`
+  `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=uv_index_clear_sky_max,temperature_2m_min,temperature_2m_max&current=weather_code,is_day,temperature_2m&timezone={zone}&forecast_days=1&timeformat=unixtime&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch`
 
 local res = http.fetch(url, http.methods.GET, nil, nil, nil)
 
