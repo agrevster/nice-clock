@@ -156,6 +156,11 @@
     function getcfg(key: string): string?
     ```
     - Gets a value from the [clock config](./README.md#config) where the key is the given `key`. If it does not exist returns `nil`.
+- `sanitizetoascii`
+    ```lua
+    function sanitizetoascii(str: string): string
+    ```
+    - Replaces accented characters, UTF8 quotes and dashes with their ASCII equivalents.
 
 ## `niceclock` library
 - **This is the main library used to create modules**

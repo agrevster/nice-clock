@@ -19,4 +19,5 @@ test "Nice Clock Units Tests" {
     testing.refAllDecls(components);
     testing.refAllDecls(image);
     testing.refAllDecls(luau);
+    testing.refAllDecls(luau.exports.global);
 }

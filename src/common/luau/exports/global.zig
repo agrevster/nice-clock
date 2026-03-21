@@ -20,6 +20,8 @@ pub fn load_export(luau: *Luau, config_ptr: *std.StringHashMap([]const u8)) void
     config_map_ptr = config_ptr;
     luau.pushFunction(wrap(getcfg_fn));
     luau.setGlobal("getcfg");
+    luau.pushFunction(wrap(sanitizetoascii_fn));
+    luau.setGlobal("sanitizetoascii");
 }
 
 const print_logger = std.log.scoped(.luau_print);
@@ -79,6 +81,114 @@ fn printAtIndex(luau: *Luau, i: i32, print_list: *std.ArrayList(u8), allocator: 
             appendu8SliceOrLog(allocator, print_list, std.fmt.allocPrint(allocator, "<{s}> ", .{luau.typeNameIndex(i)}) catch "Error");
         },
     }
+}
+
+fn sanitizeSlice(
+    allocator: std.mem.Allocator,
+    str: []const u8,
+) ![]const u8 {
+    const view = try std.unicode.Utf8View.init(str);
+    var itr = view.iterator();
+
+    var cleaned_string = std.ArrayList(u8).empty;
+    defer cleaned_string.deinit(allocator);
+    try cleaned_string.ensureTotalCapacity(allocator, str.len);
+
+    while (itr.nextCodepoint()) |codepoint| {
+        const replace_char = switch (codepoint) {
+            //Degrees
+            '°' => '*',
+            //Upside down explanation point
+            '¡' => '!',
+            //Quotes
+            '“' => '"',
+            '”' => '"',
+            '„' => '"',
+            '‟' => '"',
+            '‘' => '\'',
+            '’' => '\'',
+            '‚' => '\'',
+            '‛' => '\'',
+            //Dashes
+            '‐' => '-',
+            '-' => '-',
+            '‒' => '-',
+            '–' => '-',
+            '—' => '-',
+            '―' => '-',
+            '−' => '-',
+            //A
+            'À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Ā', 'Ă', 'Ą' => 'A',
+            'à', 'á', 'â', 'ã', 'ä', 'å', 'ā', 'ă', 'ą' => 'a',
+            //AE
+            'Æ' => 'A',
+            'æ' => 'a',
+            //C
+            'Ç', 'Ć', 'Ĉ', 'Ċ', 'Č' => 'C',
+            'ç', 'ć', 'ĉ', 'ċ', 'č' => 'c',
+            //D
+            'Ð', 'Ď', 'Đ' => 'D',
+            'ð', 'ď', 'đ' => 'd',
+            //E
+            'È', 'É', 'Ê', 'Ë', 'Ē', 'Ĕ', 'Ė', 'Ę', 'Ě' => 'E',
+            'è', 'é', 'ê', 'ë', 'ē', 'ĕ', 'ė', 'ę', 'ě' => 'e',
+            //G
+            'Ĝ', 'Ğ', 'Ġ', 'Ģ' => 'G',
+            'ĝ', 'ğ', 'ġ', 'ģ' => 'g',
+            //H
+            'Ĥ', 'Ħ' => 'H',
+            'ĥ', 'ħ' => 'h',
+            //I
+            'Ì', 'Í', 'Î', 'Ï', 'Ĩ', 'Ī', 'Ĭ', 'Į', 'İ' => 'I',
+            'ì', 'í', 'î', 'ï', 'ĩ', 'ī', 'ĭ', 'į', 'ı' => 'i',
+            //J
+            'Ĵ' => 'J',
+            'ĵ' => 'j',
+            //K
+            'Ķ' => 'K',
+            'ķ' => 'k',
+            //L
+            'Ĺ', 'Ļ', 'Ľ', 'Ŀ', 'Ł' => 'L',
+            'ĺ', 'ļ', 'ľ', 'ŀ', 'ł' => 'l',
+            //N
+            'Ñ', 'Ń', 'Ņ', 'Ň' => 'N',
+            'ñ', 'ń', 'ņ', 'ň', 'ŉ' => 'n',
+            //O
+            'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ō', 'Ŏ', 'Ő' => 'O',
+            'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ō', 'ŏ', 'ő' => 'o',
+            //OE
+            'Œ' => 'O',
+            'œ' => 'o',
+            //R
+            'Ŕ', 'Ŗ', 'Ř' => 'R',
+            'ŕ', 'ŗ', 'ř' => 'r',
+            //S
+            'Ś', 'Ŝ', 'Ş', 'Š' => 'S',
+            'ś', 'ŝ', 'ş', 'š', 'ß' => 's',
+            //T
+            'Ţ', 'Ť', 'Ŧ' => 'T',
+            'ţ', 'ť', 'ŧ' => 't',
+            //U
+            'Ù', 'Ú', 'Û', 'Ü', 'Ũ', 'Ū', 'Ŭ', 'Ů', 'Ű', 'Ų' => 'U',
+            'ù', 'ú', 'û', 'ü', 'ũ', 'ū', 'ŭ', 'ů', 'ű', 'ų' => 'u',
+            //W
+            'Ŵ' => 'W',
+            'ŵ' => 'w',
+            //Y
+            'Ý', 'Ŷ', 'Ÿ' => 'Y',
+            'ý', 'ÿ', 'ŷ' => 'y',
+            //Z
+            'Ź', 'Ż', 'Ž' => 'Z',
+            'ź', 'ż', 'ž' => 'z',
+
+            else => codepoint,
+        };
+
+        var buffer: [7]u8 = undefined;
+        const char_len = try std.unicode.utf8Encode(replace_char, &buffer);
+        try cleaned_string.appendSlice(allocator, buffer[0..char_len]);
+    }
+    return try cleaned_string.toOwnedSlice(allocator);
 }
 
 ///(Luau)
@@ -153,4 +263,40 @@ fn getcfg_fn(luau: *Luau) i32 {
     }
 
     return 1;
+}
+
+///(Luau)
+///Replaces UTF8 characters to their ASCII equivalents for the given string.
+fn sanitizetoascii_fn(luau: *Luau) i32 {
+    const str = luau.checkString(1)[0..];
+    const cleaned_string = sanitizeSlice(luau.allocator(), str) catch |e| {
+        luauError(luau, "Error sanitizing to ASCII characters!");
+        logger.err("{t}", .{e});
+    };
+
+    _ = luau.pushString(cleaned_string);
+    defer luau.allocator().free(cleaned_string);
+    return 1;
+}
+
+test "sanitizeSlice with accents" {
+    // Thanks AI for the example
+    const text = "“C’était déjà l’été — a naïve fiancé whispered: ‘¡Qué día tan fantástico!’ — while coöperating with his über-cool collègue – who noted: ‘Smörgåsbord ‒ voilà!’ — and added, “façade, rôle, piñata, crème brûlée — all-in-one test.””";
+    const sanitized = try sanitizeSlice(std.testing.allocator, text);
+    defer std.testing.allocator.free(sanitized);
+    try std.testing.expectEqualStrings("\"C'etait deja l'ete - a naive fiance whispered: '!Que dia tan fantastico!' - while cooperating with his uber-cool collegue - who noted: 'Smorgasbord - voila!' - and added, \"facade, role, pinata, creme brulee - all-in-one test.\"\"", sanitized);
+}
+
+test "sanitizeSlice without accents" {
+    const text = "the quick brown fox jumps over the lazy dog";
+    const sanitized = try sanitizeSlice(std.testing.allocator, text);
+    defer std.testing.allocator.free(sanitized);
+    try std.testing.expectEqualStrings(text, sanitized);
+}
+
+test "sanitizeSlice empty slice" {
+    const text = "";
+    const sanitized = try sanitizeSlice(std.testing.allocator, text);
+    defer std.testing.allocator.free(sanitized);
+    try std.testing.expectEqualStrings(text, sanitized);
 }

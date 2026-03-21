@@ -25,6 +25,7 @@ export type GlobalJson = {
 declare function error(message: string): nil
 declare function getenv(key: string): string | nil
 declare function getcfg(key: string): string | nil
+declare function sanitizetoascii(str: string): string
 
 -- HTTP
 export type HTTPResponse = {
