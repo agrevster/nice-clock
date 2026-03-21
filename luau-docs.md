@@ -1,5 +1,5 @@
 # Nice Clock Luau
-> UPDATED: 2025-12-27
+> UPDATED: 2026-03-21
 
 
 ##### Contents
@@ -43,7 +43,7 @@
   ```lua
     function json.load(str: string): any
     ```
-    - Converts a giving JSON `str` into a Luau table. If the given `str` is not valid JSON an error will be thrown. 
+    - Converts a given JSON `str` into a Luau table. If the given `str` is not valid JSON an error will be thrown. 
 - `json.dump`
   ```lua
     function json.dump(obj: any): string
@@ -148,12 +148,12 @@
     - Throws a luau error halting executing of the current module.
 - `getenv`
     ```lua
-    function getenv(key: str): str?
+    function getenv(key: string): string?
     ```
     - Gets an environment variable with the given `key`. If it does not exist returns `nil`.
 - `getcfg`
     ```lua
-    function getcfg(key: str): str?
+    function getcfg(key: string): string?
     ```
     - Gets a value from the [clock config](./README.md#config) where the key is the given `key`. If it does not exist returns `nil`.
 
