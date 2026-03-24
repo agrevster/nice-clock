@@ -2,7 +2,8 @@
 
 -- Before adding college teams of your own, be sure to put the team's icon (created from scripts/pull_team_logo.py) into assets/images/sports/${TEAM ID}
 -- For more instructions on getting a team's logo and ID see scripts/README.md
-local teams: { string } = { "26" }
+local cfg_teams = getcfg("college_basketball_team_ids") or "26"
+local teams: { string } = cfg_teams:split(",")
 
 -- code
 
