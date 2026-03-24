@@ -1,28 +1,27 @@
 -- config
-local tickers = {
-  "^GSPC", -- SNP500
-  "TSLA", -- Tesla
-  "AAPL", -- Apple
-  "MSFT", -- Microsoft
-  "NVDA", -- Nvidia
-  "^DJI", -- Dow
-  "PLTR", -- Palantir
-  "DX-Y.NYB", -- US $
-}
+-- inside config.luau:
+--     stock_tickers = "AAPL,TSLA,^DJI,^GSPC", # Comma separated list of tickers
+--     stock_custom_names = "^DJI:DOW,^GSPC:SNP", # Comma separated list of ticker names mapped to custom names by :
+--
+local tickers_cfg = getcfg("stock_tickers") or ""
+local tickers = tickers_cfg:split(",")
 
--- Define a custom name for the given ticker
-local custon_names = {
-  ["DX-Y.NYB"] = "USD",
-  ["^DJI"] = "DOW",
-  ["^GSPC"] = "SNP",
-}
+local custom_names_cfg = getcfg("stock_custom_names") or ""
+local custom_name_data: { string } = custom_names_cfg:split(",")
+
+local custom_names = {}
+
+for _, data in ipairs(custom_name_data) do
+  local data = data:split(":")
+  custom_names[data[1]] = data[2]
+end
 
 -- code
 
 local ticker = tickers[math.random(1, #tickers)]
 local random_vartime = math.random(1, 3)
 local vartime = { "1mo", "6mo", "1y" }
-local ticker_name = custon_names[ticker] or ticker
+local ticker_name = custom_names[ticker] or ticker
 
 local stock_data = http.fetch(`http://127.0.0.1:9820/api/stocks/{ticker}`, http.methods.GET, nil, nil, nil)
 
