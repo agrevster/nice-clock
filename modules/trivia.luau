@@ -62,7 +62,7 @@ local answer_interval = 25
 
 function urldecode(str)
   return string.gsub(str, "%%(%x%x)", function(hex)
-    return string.char(tonumber(hex, 16) or 0)
+    return sanitizetoascii(string.char(tonumber(hex, 16) or 0))
   end)
 end
 

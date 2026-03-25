@@ -9,7 +9,7 @@ local url = `https://halfstaff.org/wp-json/halfstaff/v1/widget?state={state}`
 local data = json.load(http.fetch(url, http.methods.GET, nil, nil, nil).body)
 local flag_height = if data.type == "none" then 0 else 8
 
-local reason = data.title
+local reason = sanitizetoascii(data.title)
 
 local module = niceclock
   .modulebuilder("half staff", 20, { "flags/us_small" }, {})

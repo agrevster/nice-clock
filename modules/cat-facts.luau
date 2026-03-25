@@ -12,7 +12,7 @@ return niceclock
   :horizontalscrollingtext(
     { x = 64, y = 15 },
     niceclock.fonts.Font7x14,
-    fact,
+    sanitizetoascii(fact),
     white,
     0,
     -60,
