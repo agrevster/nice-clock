@@ -1,7 +1,8 @@
 # Nice Clock
 > Turn your RaspberryPi into a modular smart clock.
 
-**Note: this is designed for 32x64 pixel Led Matrices**
+> [!NOTE]
+> **This project is designed for 32x64 pixel Led Matrices**
 
 [installation](#installation-and-usage) - [modules](#modules) - [config](#config) - [simulator](#simulator) 
 
@@ -23,19 +24,20 @@
     - This project uses [hzeller's RGB led matrix API](https://github.com/hzeller/rpi-rgb-led-matrix/tree/master) to control the led matrix for the clock, check out their repository for wiring and connection instructions.
 6. Secure your PI
 7. Build the source code `zig build -Drelease=true -Dclock-target=hardware`
-    > [!NOTE]
-    > If you don't like waiting, you can compile on your workstation and use a tool like `scp` to copy the binary to the Pi.
-    > Just make sure that you set the -Dtarget flag to the target field returned by `zig env` on your Pi.
-    > **Example:** `zig build -Dtarget=aarch64-linux.6.12.62...6.12.62-musl -Drelease=true -Dclock-target=hardware`
-8. Test the clock by running `./zig-out/bin/nice-clock-hardware`
+> [!NOTE]
+> If you don't like waiting, you can compile on your workstation and use a tool like `scp` to copy the binary to the Pi.
+> Just make sure that you set the -Dtarget flag to the target field returned by `zig env` on your Pi.
+> **Example:** `zig build -Dtarget=aarch64-linux.6.12.62...6.12.62-musl -Drelease=true -Dclock-target=hardware`
+
+9. Test the clock by running `./zig-out/bin/nice-clock-hardware`
     - This should display a demo module containing each component.
     - If this step fails check logs and your hardware connection.
     - I have had issues with the hardware mapping of some displays. If you don't want to worry about wiring, Adafruit has a [hat](https://www.adafruit.com/product/3211) that can be used. It also powers the PI which is cool.
-9. Make some [modules](#modules)
-10. [Configure your clock](#config)
-11. Test the modules with the [simulator](#simulator)
-12. You can run the clock on the PI with the `nice-clock-hardware` executable.
-13. Some of the modules I made require access to custom APIs found in `./scripts/`. If you use them, be sure to start their servers.
+10. Make some [modules](#modules)
+11. [Configure your clock](#config)
+12. Test the modules with the [simulator](#simulator)
+13. You can run the clock on the PI with the `nice-clock-hardware` executable.
+14. Some of the modules I made require access to custom APIs found in `./scripts/`. If you use them, be sure to start their servers.
 
 ## Modules
 The content the clock displays is called a `module`. While most of the clock's code is written in Zig, modules are created with [Luau](https://luau.org/). Luau is a sandboxed version of [Lua](https://www.lua.org/) used primarily by Roblox. Luau allows for the easy creation of custom modules without the hassle that is manually managing memory. Each module is made up of a series of `components` examples of `components` include text, boxes and even images. The clock will look for modules in `(CWD)/modules/*`, it is recommended to check out the existing modules for examples. Modules will check for assets in `(CWD)/assets`. The current assets are `fonts` and `images`, more asset types will be added at a later date. 
