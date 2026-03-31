@@ -3,7 +3,6 @@ const renderer = @import("renderer.zig");
 const common = @import("common");
 const Connector = @import("./simConnector.zig").SimConnector;
 const Clock = common.Clock;
-const loadModuleFromLuau = common.luau.loader.loadModuleFromLuau;
 const utils = common.connector_utils;
 
 pub fn main() void {
