@@ -9,8 +9,8 @@
             .hash = "SDL-0.0.0-rR2QyPpjAADa4DV1xnj5za9s2_gJ24AxA-2HgMxhfC72",
         },
         .zlua = .{
-            .url = "git+https://github.com/natecraddock/ziglua#bf9fc6e6d9c24d5ba53b20acdab657f2fe6cb762",
-            .hash = "zlua-0.1.0-hGRpC444BQDrHc6QhcEeGh1eWMwFbl-c21vlGPWjKBfQ",
+            .url = "git+https://github.com/natecraddock/ziglua#b6e895f73e55d793e61844a8bab17a036631f6be",
+            .hash = "zlua-0.1.0-hGRpCxFDBQBTLH7HYIvzCfvr_8xFE6kqLzLFxkcgdWNl",
         },
         .datetime = .{
             .url = "git+https://github.com/frmdstryr/zig-datetime#f0533643245419b5b967679365ab8d56a472c40e",
