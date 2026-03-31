@@ -67,7 +67,8 @@ const tryToString = LuauTry([:0]const u8, "Failed to parse string from Luau!");
 ///(Luau)
 ///Sends an HTTP request and returns the response and the status code in a Luau table.
 fn fetch_fn(luau: *Luau) i32 {
-    const allocator = std.heap.page_allocator;
+    var allocator = std.heap.ArenaAllocator.init(luau.allocator());
+    defer allocator.deinit();
 
     luau.checkType(1, .string);
     luau.checkType(2, .string);
@@ -84,8 +85,6 @@ fn fetch_fn(luau: *Luau) i32 {
     var authorization: ?[:0]const u8 = null;
     var body: ?[:0]const u8 = null;
 
-    var headers_allocator = std.heap.ArenaAllocator.init(allocator);
-    defer headers_allocator.deinit();
     var headers = std.ArrayList(http.Header).empty;
 
     if (luau.isTable(6)) {
@@ -98,7 +97,7 @@ fn fetch_fn(luau: *Luau) i32 {
             if (luau.typeOf(val_index) != .string) luauError(luau, "headers table must have a value of type string.");
             const header_key = luau.toString(-2) catch luauError(luau, "failed to get string from header key");
             const header_value = luau.toString(-1) catch luauError(luau, "failed to get string from header value");
-            headers.append(allocator, http.Header{ .name = header_key[0..], .value = header_value[0..] }) catch luauError(luau, "memory error appending http header to list.");
+            headers.append(allocator.allocator(), http.Header{ .name = header_key[0..], .value = header_value[0..] }) catch luauError(luau, "memory error appending http header to list.");
             luau.pop(1);
         }
     }
@@ -107,10 +106,10 @@ fn fetch_fn(luau: *Luau) i32 {
     if (luau.isString(4)) content_type = tryToString.unwrap(luau, luau.toString(4));
     if (luau.isString(5)) authorization = tryToString.unwrap(luau, luau.toString(5));
 
-    var response_writer = std.io.Writer.Allocating.init(allocator);
+    var response_writer = std.io.Writer.Allocating.init(allocator.allocator());
     defer response_writer.deinit();
 
-    if (fetch(allocator, url[0..], method.?, &response_writer.writer, body, content_type, authorization, headers.toOwnedSlice(headers_allocator.allocator()) catch luauError(luau, "Memory error converting ArrayList of headers to slice"))) |response_status| {
+    if (fetch(allocator.allocator(), url[0..], method.?, &response_writer.writer, body, content_type, authorization, headers.toOwnedSlice(allocator.allocator()) catch luauError(luau, "Memory error converting ArrayList of headers to slice"))) |response_status| {
         const table = HTTPResponseTable{ .status = @intFromEnum(response_status), .body = response_writer.written() };
         luau.pushAny(table) catch |e| {
             logger.err("Error pushing HTTPResponseTable from zig: {t}", .{e});
