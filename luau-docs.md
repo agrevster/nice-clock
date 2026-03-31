@@ -1,5 +1,5 @@
 # Nice Clock Luau
-> UPDATED: 2026-03-21
+> UPDATED: 2026-03-30
 
 
 ##### Contents
@@ -8,9 +8,9 @@
 ## `http` library
 - `http.fetch`
   ```lua
-    function http.fetch(url: string, method: http.Methods, body: string?, content_type: string?, authorization: string?): http.Response
+    function http.fetch(url: string, method: http.Methods, body: string?, content_type: string?, authorization: string?, headers: table?): http.Response
     ```
-    - Makes an HTTP request to the given `url` with the given `method`. Optionally a `body`, can be supplied as well as the `content_type` of the body and an `authorization` header. This function returns an `http.Response` table. *In some cases including but not limited to a lack of connection, an error will be thrown by this method.* 
+    - Makes an HTTP request to the given `url` with the given `method`. Optionally a `body`, can be supplied as well as the `content_type` of the body and an `authorization` header. Additional headers can be specified by passing a table with string keys and string values to the `headers` field. This function returns an `http.Response` table. *In some cases including but not limited to a lack of connection, an error will be thrown by this method.* 
 - `http.Methods`
     ```lua
     http.Methods = {

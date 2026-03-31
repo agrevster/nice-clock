@@ -13,7 +13,7 @@ export type GlobalNiceClock = {
 }
 
 export type GlobalHTTP = {
-	fetch: (url: string, method: string, body: string | nil, content_type: string | nil, authorization: string | nil) -> HTTPResponse,
+	fetch: (url: string, method: string, body: string | nil, content_type: string | nil, authorization: string | nil, headers: {} | nil) -> HTTPResponse,
 	methods: Methods
 }
 

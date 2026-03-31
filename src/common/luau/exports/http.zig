@@ -38,6 +38,7 @@ fn fetch(
     body: ?[]const u8,
     content_type: ?[]const u8,
     authorization: ?[]const u8,
+    headers: []const http.Header,
 ) anyerror!http.Status {
     var http_client = http.Client{ .allocator = allocator };
     defer http_client.deinit();
@@ -49,18 +50,11 @@ fn fetch(
     var authorization_value: http.Client.Request.Headers.Value = .omit;
     if (authorization) |non_null| authorization_value = .{ .override = non_null };
 
-    const response = try http_client.fetch(.{
-        .method = method,
-        .location = .{ .url = url },
-        .keep_alive = false,
-        .response_writer = response_writer,
-        .payload = body,
-        .headers = .{
-            .user_agent = .{ .override = "Nice-Clock" },
-            .content_type = content_type_value,
-            .authorization = authorization_value,
-        },
-    });
+    const response = try http_client.fetch(.{ .method = method, .location = .{ .url = url }, .keep_alive = false, .response_writer = response_writer, .payload = body, .headers = .{
+        .user_agent = .{ .override = "Nice-Clock" },
+        .content_type = content_type_value,
+        .authorization = authorization_value,
+    }, .extra_headers = headers });
     return response.status;
 }
 
@@ -80,6 +74,7 @@ fn fetch_fn(luau: *Luau) i32 {
     if (!luau.isNil(3) and !luau.isString(3)) luauError(luau, "body must be either type string or nil.");
     if (!luau.isNil(4) and !luau.isString(4)) luauError(luau, "content_type must be either type string or nil.");
     if (!luau.isNil(5) and !luau.isString(5)) luauError(luau, "authorization must be either type string or nil.");
+    if (!luau.isNil(6) and !luau.isTable(6)) luauError(luau, "headers must be either type table or nil.");
 
     const method = std.meta.stringToEnum(http.Method, tryToString.unwrap(luau, luau.toString(2)));
     if (method == null) luauError(luau, "Invalid HTTP method.");
@@ -89,6 +84,25 @@ fn fetch_fn(luau: *Luau) i32 {
     var authorization: ?[:0]const u8 = null;
     var body: ?[:0]const u8 = null;
 
+    var headers_allocator = std.heap.ArenaAllocator.init(allocator);
+    defer headers_allocator.deinit();
+    var headers = std.ArrayList(http.Header).empty;
+
+    if (luau.isTable(6)) {
+        luau.pushNil();
+        while (luau.next(-2)) {
+            const key_index = luau.getTop() - 1;
+            const val_index = luau.getTop();
+
+            if (luau.typeOf(key_index) != .string) luauError(luau, "headers table must have a key of type string.");
+            if (luau.typeOf(val_index) != .string) luauError(luau, "headers table must have a value of type string.");
+            const header_key = luau.toString(-2) catch luauError(luau, "failed to get string from header key");
+            const header_value = luau.toString(-1) catch luauError(luau, "failed to get string from header value");
+            headers.append(allocator, http.Header{ .name = header_key[0..], .value = header_value[0..] }) catch luauError(luau, "memory error appending http header to list.");
+            luau.pop(1);
+        }
+    }
+
     if (luau.isString(3)) body = tryToString.unwrap(luau, luau.toString(3));
     if (luau.isString(4)) content_type = tryToString.unwrap(luau, luau.toString(4));
     if (luau.isString(5)) authorization = tryToString.unwrap(luau, luau.toString(5));
@@ -96,7 +110,7 @@ fn fetch_fn(luau: *Luau) i32 {
     var response_writer = std.io.Writer.Allocating.init(allocator);
     defer response_writer.deinit();
 
-    if (fetch(allocator, url[0..], method.?, &response_writer.writer, body, content_type, authorization)) |response_status| {
+    if (fetch(allocator, url[0..], method.?, &response_writer.writer, body, content_type, authorization, headers.toOwnedSlice(headers_allocator.allocator()) catch luauError(luau, "Memory error converting ArrayList of headers to slice"))) |response_status| {
         const table = HTTPResponseTable{ .status = @intFromEnum(response_status), .body = response_writer.written() };
         luau.pushAny(table) catch |e| {
             logger.err("Error pushing HTTPResponseTable from zig: {t}", .{e});
