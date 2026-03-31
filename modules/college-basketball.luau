@@ -28,6 +28,7 @@ local j = http.fetch(
   http.methods.GET,
   nil,
   nil,
+  nil,
   nil
 ).body
 local team_data = json.load(j)["team"]

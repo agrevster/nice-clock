@@ -23,7 +23,7 @@ local random_vartime = math.random(1, 3)
 local vartime = { "1mo", "6mo", "1y" }
 local ticker_name = custom_names[ticker] or ticker
 
-local stock_data = http.fetch(`http://127.0.0.1:9820/api/stocks/{ticker}`, http.methods.GET, nil, nil, nil)
+local stock_data = http.fetch(`http://127.0.0.1:9820/api/stocks/{ticker}`, http.methods.GET, nil, nil, nil, nil)
 
 if stock_data.status ~= 200 then
   error(`Invalid stock ticker: {ticker}`)

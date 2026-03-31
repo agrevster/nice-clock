@@ -31,6 +31,7 @@ local trivia = json.load(
     http.methods.GET,
     nil,
     nil,
+    nil,
     nil
   ).body
 ).results[1]

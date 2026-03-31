@@ -16,7 +16,7 @@ local colors = {
 local url =
   `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=uv_index_clear_sky_max,temperature_2m_min,temperature_2m_max&current=weather_code,is_day,temperature_2m&timezone={zone}&forecast_days=1&timeformat=unixtime&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch`
 
-local res = http.fetch(url, http.methods.GET, nil, nil, nil)
+local res = http.fetch(url, http.methods.GET, nil, nil, nil, nil)
 
 if res.status >= 300 then
   error(`Error fetching wether data: {res.body}`)

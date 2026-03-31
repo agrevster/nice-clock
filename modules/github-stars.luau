@@ -2,8 +2,9 @@
 local repo = "agrevster/pocketbase-kotlin"
 
 -- code
-local star_count =
-  json.load(http.fetch(`https://api.github.com/repos/{repo}`, http.methods.GET, nil, nil, nil).body).stargazers_count
+local star_count = json.load(
+  http.fetch(`https://api.github.com/repos/{repo}`, http.methods.GET, nil, nil, nil, nil).body
+).stargazers_count
 
 local module = niceclock
   .modulebuilder("github-stars", 20, { "github", "star" }, {})

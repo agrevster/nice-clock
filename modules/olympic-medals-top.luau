@@ -1,5 +1,5 @@
 local url = "https://site.web.api.espn.com/apis/site/v2/olympics/winter/2026/medals"
-local data = json.load(http.fetch(url, http.methods.GET, nil, nil, nil).body)
+local data = json.load(http.fetch(url, http.methods.GET, nil, nil, nil, nil).body)
 
 local leaders = data.leaders.total
 local rankings: { { name: string, total: number } } = {}

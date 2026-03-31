@@ -1,5 +1,5 @@
 local url = "http://sports.core.api.espn.com/v2/olympics/winter/2026/countries/79"
-local data = json.load(http.fetch(url, http.methods.GET, nil, nil, nil).body)
+local data = json.load(http.fetch(url, http.methods.GET, nil, nil, nil, nil).body)
 
 local medals: { number } = {
   data.medalStandings.goldMedalCount,
