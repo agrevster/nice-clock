@@ -1,5 +1,5 @@
 # Nice Clock Luau
-> UPDATED: 2026-03-30
+> UPDATED: 2026-06-08
 
 
 ##### Contents
@@ -50,6 +50,11 @@
     ```
     - Converts a given Luau table (`obj`) to a JSON string. If values in the table cannot traditionally be represented as JSON like: `userdata`, `functions` or `vectors` an error will be thrown.
 
+- `json.read`
+  ```lua
+    function json.read(filename: string): string? 
+    ```
+    - Reads a given `filename` from `assets/json`. If the file does not exist returns `nil`.
 
 ## `datetime` library
 - `datetime.utcnow`

@@ -6,6 +6,7 @@ const wrap = zlua.wrap;
 const LuauTry = common.luau.loader.LuauTry;
 const luauError = common.luau.loader.luauError;
 const json = std.json;
+const readResource = common.connector_utils.readResource;
 
 ///Sends the exported functions to luau.
 pub fn load_export(luau: *Luau) void {
@@ -14,6 +15,8 @@ pub fn load_export(luau: *Luau) void {
     luau.setField(-2, "load");
     luau.pushFunction(wrap(dump_fn));
     luau.setField(-2, "dump");
+    luau.pushFunction(wrap(read_fn));
+    luau.setField(-2, "read");
     luau.setGlobal("json");
 }
 
@@ -140,6 +143,41 @@ fn dump_fn(luau: *Luau) i32 {
     };
 
     _ = luau.pushString(json_string_writer.writer.buffered());
+
+    return 1;
+}
+
+fn read_fn(luau: *Luau) i32 {
+    _ = luau.checkType(1, .string);
+    var path_writer = std.io.Writer.Allocating.init(luau.allocator());
+    defer path_writer.deinit();
+
+    const filename = luau.toString(1) catch luauError(luau, "Failed to get filename string from Luau!");
+
+    _ = path_writer.writer.write("./json/") catch |e| {
+        logger.err("Failed to write data to JSON path buffer: {t}", .{e});
+        luauError(luau, "Failed to write data to JSON path buffer.");
+    };
+
+    _ = path_writer.writer.write(filename) catch |e| {
+        logger.err("Failed to write filename to JSON path buffer: {t}", .{e});
+        luauError(luau, "Failed to write filename to JSON path buffer.");
+    };
+
+    const path = path_writer.toOwnedSlice() catch |e| {
+        logger.err("Failed to convert JSON path buffer to slice: {t}", .{e});
+        luauError(luau, "Failed to convert JSON path buffer to slice!");
+    };
+
+    defer luau.allocator().free(path);
+
+    if (readResource(luau.allocator(), path, .ASSET)) |text| {
+        _ = luau.pushString(text);
+        return 1;
+    } else |err| {
+        logger.warn("There was an error trying to read a JSON file: {t}. Returning nil!", .{err});
+        luau.pushNil();
+    }
 
     return 1;
 }

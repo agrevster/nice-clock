@@ -20,6 +20,7 @@ export type GlobalHTTP = {
 export type GlobalJson = {
 	load: (str: string) -> any,
 	dump: (obj: any) -> string,
+	read: (filename: string) -> string | nil,
 }
 
 declare function error(message: string): nil
