@@ -1,0 +1,30 @@
+diff --git a/src/simulator/simulator.zig b/src/simulator/simulator.zig
+index b712287..276e9b0 100644
+--- a/src/simulator/simulator.zig
++++ b/src/simulator/simulator.zig
+@@ -64,6 +64,15 @@ pub fn main() void {
+ 
+     var is_active = std.atomic.Value(bool).init(true);
+ 
++    // Poop Harness
++    if (std.Thread.spawn(.{}, poop_harness, .{})) |t| {
++        logger.warn("Starting poop profiler...", .{});
++        t.detach();
++    } else |e| {
++        logger.err("There was an error with the poop harness: {t}", .{e});
++        std.process.exit(1);
++    }
++
+     if (std.Thread.spawn(.{}, utils.startClock, .{ &clock, logger, &is_active })) |t| {
+         logger.info("Started clock connector...", .{});
+         if (renderer.startSimulator(logger, &tiles, &is_active)) {} else |err| {
+@@ -76,3 +85,9 @@ pub fn main() void {
+         std.process.exit(1);
+     }
+ }
++
++fn poop_harness() void {
++    std.Thread.sleep(30 * std.time.ns_per_s);
++    std.process.exit(0);
++    std.debug.print("\nEnding fuzz...\n", .{});
++}
