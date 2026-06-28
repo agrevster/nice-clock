@@ -200,10 +200,6 @@
     "code": "cx"
   },
   {
-    "name": "Clipperton Island",
-    "code": "cp"
-  },
-  {
     "name": "Cocos (Keeling) Islands",
     "code": "cc"
   },
@@ -254,10 +250,6 @@
   {
     "name": "Denmark",
     "code": "dk"
-  },
-  {
-    "name": "Diego Garcia",
-    "code": "dg"
   },
   {
     "name": "Djibouti",
@@ -410,10 +402,6 @@
   {
     "name": "Haiti",
     "code": "ht"
-  },
-  {
-    "name": "Heard Island and McDonald Islands",
-    "code": "hm"
   },
   {
     "name": "Holy See",
@@ -760,10 +748,6 @@
     "code": "rw"
   },
   {
-    "name": "Reunion",
-    "code": "re"
-  },
-  {
     "name": "Saint Helena",
     "code": "sh-hl"
   },
@@ -966,10 +950,6 @@
   {
     "name": "United Nations",
     "code": "un"
-  },
-  {
-    "name": "United States Minor Outlying Islands",
-    "code": "um"
   },
   {
     "name": "United States of America",
