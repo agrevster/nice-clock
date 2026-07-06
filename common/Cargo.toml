@@ -1,0 +1,8 @@
+[package]
+name = "common"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+chrono = { version = "0.4.45", default-features = false, features = ["alloc", "clock", "now", "std"] }
+log = { version = "0.4.33", features = ["std"] }
