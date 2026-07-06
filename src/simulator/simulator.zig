@@ -5,10 +5,9 @@ const Connector = @import("./simConnector.zig").SimConnector;
 const Clock = common.Clock;
 const utils = common.connector_utils;
 
-pub fn main() void {
-    var gpa = std.heap.DebugAllocator(.{ .thread_safe = false }).init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+pub fn main(init: std.process.Init) void {
+    const allocator = init.arena.allocator();
+    const io = init.io;
 
     const logger = std.log.scoped(.Simulator);
 
@@ -20,7 +19,7 @@ pub fn main() void {
         }
     }
 
-    if (common.font.FontStore.init(allocator)) {} else |err| {
+    if (common.font.FontStore.init(allocator, io)) {} else |err| {
         logger.err("Error loading fonts: {t}", .{err});
         std.process.exit(1);
     }
@@ -42,6 +41,7 @@ pub fn main() void {
 
     var config = common.luau.loader.ClockConfig{
         .allocator = allocator,
+        .io = io,
         .config = &config_map,
         .config_map_allocator = &config_item_allocator,
         .modules = &modules,
@@ -60,6 +60,7 @@ pub fn main() void {
         .has_event_loop_started = false,
         .allocator = allocator,
         .config = &config,
+        .io = io,
     };
 
     var is_active = std.atomic.Value(bool).init(true);

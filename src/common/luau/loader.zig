@@ -12,7 +12,6 @@ inline fn openLuauStd(luau: *Luau) void {
     luau.openMath();
     luau.openTable();
     luau.openString();
-    luau.openBit32();
     luau.openUtf8();
     luau.openOS();
     luau.openDebug();
@@ -64,12 +63,12 @@ pub const ClockConfigError = error{
 
 ///Attempts to read the given luau module file and if it returns a Luau module builder converts the Luau table into a ClockModule.
 ///If the module does not return the Luau code will still be ran but this function will return a DebugModule error. This is useful for testing in Luau.
-pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Allocator, config_ptr: *std.StringHashMap([]const u8)) ClockModuleError!*common.module.ClockModule {
+pub fn loadModuleFromLuau(allocator: std.mem.Allocator, io: std.Io, module_file_name: []const u8, config_ptr: *std.StringHashMap([]const u8)) ClockModuleError!*common.module.ClockModule {
     // Interpret the file
     const full_module_file_name = std.fmt.allocPrint(allocator, "{s}.luau", .{module_file_name}) catch return error.OutOfMemory;
     defer allocator.free(full_module_file_name);
 
-    const luau_file = common.connector_utils.readResource(allocator, full_module_file_name, .MODULE) catch |e| switch (e) {
+    const luau_file = common.connector_utils.readResource(allocator, io, full_module_file_name, .MODULE) catch |e| switch (e) {
         error.FileNotFound => return error.FileNotFound,
         inline else => {
             logger.err("Error reading module file: {s} -> {t}", .{ module_file_name, e });
@@ -159,6 +158,7 @@ pub fn loadModuleFromLuau(module_file_name: []const u8, allocator: std.mem.Alloc
 ///This allows for the design of intelligent configs allowing for users to control which modules are loaded based on luau code.
 pub const ClockConfig = struct {
     allocator: std.mem.Allocator,
+    io: std.Io,
     ///Owns key and value slices in `config`.
     config_map_allocator: *std.heap.ArenaAllocator,
     modules: *std.ArrayList(*common.module.ClockModuleSource),
@@ -175,10 +175,7 @@ pub const ClockConfig = struct {
 
         const luau = self.luau;
 
-        const config_fn_type = luau.getGlobal("get_config") catch |e| {
-            logger.err("There was an error getting the function 'get_config' from config.luau: {t}", .{e});
-            return error.ConfigParsingError;
-        };
+        const config_fn_type = luau.getGlobal("get_config");
 
         if (config_fn_type != .function) {
             logger.err("'get_config' in config.luau must be a function!", .{});
@@ -287,7 +284,7 @@ pub const ClockConfig = struct {
     ///**This only needs to be called once.**
     pub fn loadLuauConfigFile(self: *ClockConfig) LuauError!void {
         // Interpret the file
-        const luau_file = common.connector_utils.readResource(self.allocator, "config.luau", .CWD) catch |e| switch (e) {
+        const luau_file = common.connector_utils.readResource(self.allocator, self.io, "config.luau", .CWD) catch |e| switch (e) {
             error.FileNotFound => {
                 logger.err("Could not find file: '{{cwd}}/config.luau!'", .{});
                 return error.FileNotFound;

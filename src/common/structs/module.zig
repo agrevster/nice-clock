@@ -27,7 +27,15 @@ pub const ClockModule = struct {
     ///Displays the module on the clock's screen.
     pub fn render(self: *ClockModule, clock: *common.Clock, is_active: *std.atomic.Value(bool)) void {
         self.root_component.render(clock, common.constants.fps, self.time_limit_s, is_active) catch |err| {
-            logger.err("[{s}]: {t}", .{ self.name, err });
+            switch (err) {
+                error.Canceled => {
+                    logger.err("[{s}]: IO Canceled!", .{self.name});
+                    std.process.exit(1);
+                },
+                else => {
+                    logger.err("[{s}]: {t}", .{ self.name, err });
+                },
+            }
         };
     }
 };

@@ -111,12 +111,12 @@ pub const FontStore = enum {
     }
 
     ///Loads the font files, and parses them, allowing you to call the `font` function on a enum field and get a BDF in return.
-    pub fn init(allocator: std.mem.Allocator) !void {
+    pub fn init(allocator: std.mem.Allocator, io: std.Io) !void {
         if (fonts_initalized) return FontStoreError.FontStoreAlreadyInitialized;
         const font_file_names = @typeInfo(FontStore).@"enum".fields;
 
         inline for (font_file_names, 0..) |font_file_name, i| {
-            const ff = try loadFontFromFile(allocator, font_file_name.name[4..]);
+            const ff = try loadFontFromFile(allocator, io, font_file_name.name[4..]);
             errdefer ff.deinit(allocator);
             fonts[i] = ff;
         }
@@ -132,11 +132,11 @@ pub const FontStore = enum {
     }
 
     ///Attempts to read the contents of a .bdf file located at `./assets/fonts/` and parse a BDF from the text in the file.
-    fn loadFontFromFile(allocator: std.mem.Allocator, font_name: []const u8) !BDF {
+    fn loadFontFromFile(allocator: std.mem.Allocator, io: std.Io, font_name: []const u8) !BDF {
         const file_name = try std.fmt.allocPrint(allocator, "./fonts/{s}.bdf", .{font_name});
         defer allocator.free(file_name);
 
-        const font_file = try common.connector_utils.readResource(allocator, file_name, .ASSET);
+        const font_file = try common.connector_utils.readResource(allocator, io, file_name, .ASSET);
         defer allocator.free(font_file);
         return try BDF.parseBDF(allocator, font_file);
     }

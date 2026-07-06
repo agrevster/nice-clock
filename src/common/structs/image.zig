@@ -80,16 +80,18 @@ pub const PPM = struct {
 pub const ImageStore = struct {
     image_map: std.StringHashMap(PPM),
     allocator: std.mem.Allocator,
+    io: std.Io,
 
     pub const Error = error{ InvalidFile, ImageLoadingError, ImageNotInStore, OutOfMemory };
 
     const logger = std.log.scoped(.image_store);
 
     ///Creates an image store
-    pub fn init(allocator: std.mem.Allocator) ImageStore {
+    pub fn init(allocator: std.mem.Allocator, io: std.Io) ImageStore {
         return ImageStore{
             .image_map = std.StringHashMap(PPM).init(allocator),
             .allocator = allocator,
+            .io = io,
         };
     }
 
@@ -101,7 +103,7 @@ pub const ImageStore = struct {
 
     ///Adds an image to the store, this parses `assets/{IMAGE_NAME}.ppm`.
     pub fn addImage(self: *ImageStore, image_filename: []const u8) Error!void {
-        const image_file = try loadImageFromFile(self.allocator, image_filename);
+        const image_file = try loadImageFromFile(self.allocator, self.io, image_filename);
         try self.image_map.put(image_filename, image_file);
     }
 
@@ -111,11 +113,11 @@ pub const ImageStore = struct {
         return self.image_map.get(image_filename).?;
     }
 
-    fn loadImageFromFile(allocator: std.mem.Allocator, image_name: []const u8) Error!PPM {
+    fn loadImageFromFile(allocator: std.mem.Allocator, io: std.Io, image_name: []const u8) Error!PPM {
         const file_name = std.fmt.allocPrint(allocator, "./images/{s}.ppm", .{image_name}) catch return Error.OutOfMemory;
         defer allocator.free(file_name);
 
-        const image_file = common.connector_utils.readResource(allocator, file_name, .ASSET) catch |e| switch (e) {
+        const image_file = common.connector_utils.readResource(allocator, io, file_name, .ASSET) catch |e| switch (e) {
             error.FileNotFound => return Error.InvalidFile,
             inline else => {
                 logger.err("Error loading image from file: {s} -> {t}", .{ file_name, e });

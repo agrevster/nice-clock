@@ -100,7 +100,7 @@ fn createModuleBuilderLuauTable(luau: *Luau, module_name: [:0]const u8, module_t
     for (image_names, 1..) |image_name, index| {
         const i: i32 = @intCast(index);
         _ = luau.pushString(image_name);
-        luau.rawSetIndex(-2, i);
+        _ = luau.getIndexRaw(-2, i);
     }
     luau.setField(-2, "imagenames");
 
@@ -130,7 +130,7 @@ fn toAnimationTablesOrError(luau: *Luau, index: i32) []CustomAnimationTable {
     //Loop through the array of tables
     for (1..animation_table_len + 1) |i| {
         //Get table len
-        const array_item = luau.rawGetIndex(index, @intCast(i));
+        const array_item = luau.getIndexRaw(index, @intCast(i));
         if (array_item != zlua.LuaType.table) luauError(luau, "Expected list of type: table.");
 
         //Parse component_indexes
@@ -191,7 +191,7 @@ fn moduleBuilder(luau: *Luau) i32 {
 
     for (1..string_list_len + 1) |i| {
         const index: i32 = @intCast(i);
-        const t = luau.rawGetIndex(3, index);
+        const t = luau.getIndexRaw(3, index);
         if (t != zlua.LuaType.string) luauError(luau, "Expected list of type string.");
         image_names[i - 1] = get_string_from_list.unwrap(luau, luau.toString(-1));
 

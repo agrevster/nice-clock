@@ -12,7 +12,7 @@ const logger = std.log.scoped(.components);
 
 const OverflowError = error{Overflow};
 
-pub const ComponentError = error{ TileOutOfBounds, TimerUnsupported, InvalidArgument, AllocationError } || common.font.FontStore.FontStoreError || common.image.ImageStore.Error;
+pub const ComponentError = error{ TileOutOfBounds, SystemClockUnsupported, InvalidArgument, AllocationError, Canceled } || common.font.FontStore.FontStoreError || common.image.ImageStore.Error;
 
 /// Used to specify the position of a component on the clock's screen.
 pub const ComponentPos = struct {
@@ -161,17 +161,26 @@ pub const RootComponent = struct {
             }
         }.less_than);
 
+        var os_clock = std.Io.Clock.boot;
+        // Checks to make sure the system clock is supported.
+        const resolution = os_clock.resolution(clock.io) catch |e| {
+            logger.err("Error accessing system clock: {t}", .{e});
+            return ComponentError.SystemClockUnsupported;
+        };
+
+        if (resolution.nanoseconds == 0) return ComponentError.SystemClockUnsupported;
+
         //Used to track how long the module has been running for
-        var module_active_timer = try std.time.Timer.start();
+        var module_active_timer = std.Io.Timestamp.now(clock.io, os_clock);
         //Used to track how long it took to process the module, so we can subtract it from the time required to achieve N FPS.
-        var processing_timer = try std.time.Timer.start();
+        var processing_timer = std.Io.Timestamp.now(clock.io, os_clock);
         var frame: u32 = 0;
 
-        module_active_timer.reset();
+        module_active_timer = std.Io.Timestamp.now(clock.io, os_clock);
 
         while (is_active.load(.seq_cst)) {
-            processing_timer.reset();
-            if ((module_active_timer.read() / time.ns_per_s) > time_limit_s) break;
+            processing_timer = std.Io.Timestamp.now(clock.io, os_clock);
+            if (module_active_timer.toSeconds() > time_limit_s) break;
             clock.interface.clearScreen(clock.interface.ctx);
 
             //Before we draw hardcoded animated components we need to do the custom ones so they can move the normal ones around.
@@ -215,9 +224,9 @@ pub const RootComponent = struct {
 
             frame += 1;
             clock.interface.updateScreen(clock.interface.ctx);
-            const runtime = processing_timer.read();
+            const runtime = processing_timer.nanoseconds;
             if (runtime < sleep_time_ns) {
-                std.Thread.sleep(sleep_time_ns - runtime);
+                try std.Io.sleep(clock.io, std.Io.Duration.fromNanoseconds(sleep_time_ns - runtime), os_clock);
             }
         }
     }

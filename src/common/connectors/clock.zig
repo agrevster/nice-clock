@@ -11,6 +11,7 @@ pub const CommonConnector = struct {
     interface: common.Connector.ConnectorInterface,
     has_event_loop_started: bool,
     allocator: std.mem.Allocator,
+    io: std.Io,
     image_store: common.image.ImageStore = undefined,
     config: *common.luau.loader.ClockConfig,
 
@@ -36,7 +37,7 @@ pub const CommonConnector = struct {
         if (self.has_event_loop_started) return error.EventLoopAlreadyStarted;
         self.has_event_loop_started = true;
 
-        self.image_store = common.image.ImageStore.init(self.allocator);
+        self.image_store = common.image.ImageStore.init(self.allocator, self.io);
         defer self.image_store.deinit();
 
         var module_arena = std.heap.ArenaAllocator.init(self.allocator);
@@ -57,7 +58,7 @@ pub const CommonConnector = struct {
                 },
                 .custom => |module_filename| {
                     if (!module_arena.reset(.free_all)) logger.err("There was an error freeing module: {s}'s memory!", .{module_filename});
-                    if (loadModuleFromLuau(module_filename, module_arena.allocator(), self.config.config)) |module| {
+                    if (loadModuleFromLuau(module_arena.allocator(), self.io, module_filename, self.config.config)) |module| {
                         self.load_images_for_module(module);
                         module.render(self, is_active);
                         defer self.image_store.deinitAllImages();
@@ -90,7 +91,8 @@ pub const CommonConnector = struct {
             }
             const modules = self.config.modules.items;
             self.interface.clearScreen(self.interface.ctx);
-            current_module = modules[std.crypto.random.intRangeAtMost(usize, 0, modules.len - 1)];
+            var random = std.Random.IoSource{ .io = self.io };
+            current_module = modules[random.interface().intRangeAtMost(usize, 0, modules.len - 1)];
         }
     }
 };

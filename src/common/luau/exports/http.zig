@@ -32,15 +32,16 @@ const logger = std.log.scoped(.luau_HTTP);
 ///Response buffer is required to read the response of the request.
 fn fetch(
     allocator: std.mem.Allocator,
+    io: std.Io,
     url: []const u8,
     method: http.Method,
-    response_writer: *std.io.Writer,
+    response_writer: *std.Io.Writer,
     body: ?[]const u8,
     content_type: ?[]const u8,
     authorization: ?[]const u8,
     headers: []const http.Header,
 ) anyerror!http.Status {
-    var http_client = http.Client{ .allocator = allocator };
+    var http_client = http.Client{ .allocator = allocator, .io = io };
     defer http_client.deinit();
 
     //If a header is defined set it otherwise no header
@@ -106,10 +107,12 @@ fn fetch_fn(luau: *Luau) i32 {
     if (luau.isString(4)) content_type = tryToString.unwrap(luau, luau.toString(4));
     if (luau.isString(5)) authorization = tryToString.unwrap(luau, luau.toString(5));
 
-    var response_writer = std.io.Writer.Allocating.init(allocator.allocator());
+    var response_writer = std.Io.Writer.Allocating.init(allocator.allocator());
     defer response_writer.deinit();
 
-    if (fetch(allocator.allocator(), url[0..], method.?, &response_writer.writer, body, content_type, authorization, headers.toOwnedSlice(allocator.allocator()) catch luauError(luau, "Memory error converting ArrayList of headers to slice"))) |response_status| {
+    var thread_io = std.Io.Threaded.init_single_threaded;
+
+    if (fetch(allocator.allocator(), thread_io.io(), url[0..], method.?, &response_writer.writer, body, content_type, authorization, headers.toOwnedSlice(allocator.allocator()) catch luauError(luau, "Memory error converting ArrayList of headers to slice"))) |response_status| {
         const table = HTTPResponseTable{ .status = @intFromEnum(response_status), .body = response_writer.written() };
         luau.pushAny(table) catch |e| {
             logger.err("Error pushing HTTPResponseTable from zig: {t}", .{e});

@@ -1,20 +1,20 @@
 .{
     .name = .nice_clock,
     .version = "1.0.0",
-    .minimum_zig_version = "0.15.1",
+    .minimum_zig_version = "0.16.0",
     .fingerprint = 0xde0f5cfd6f999b08,
     .dependencies = .{
-        .SDL = .{
-            .url = "https://github.com/agrevster/ZIG-SDL/archive/refs/tags/1.2.tar.gz",
-            .hash = "SDL-0.0.0-rR2QyPpjAADa4DV1xnj5za9s2_gJ24AxA-2HgMxhfC72",
-        },
         .zlua = .{
-            .url = "git+https://github.com/natecraddock/ziglua#b6e895f73e55d793e61844a8bab17a036631f6be",
-            .hash = "zlua-0.1.0-hGRpCxFDBQBTLH7HYIvzCfvr_8xFE6kqLzLFxkcgdWNl",
+            .url = "git+https://github.com/natecraddock/ziglua#9a520d0bbaac378d2e926c76edb584da104941dc",
+            .hash = "zlua-0.1.0-hGRpCwGVBQCZRZ2QEHLENoYjRj-nNjD500_BmMsXeqT4",
         },
         .datetime = .{
-            .url = "git+https://github.com/frmdstryr/zig-datetime#f0533643245419b5b967679365ab8d56a472c40e",
-            .hash = "datetime-0.8.0-cJNXzPbbAQCHDBI-QqciRLaUQ12kd3y_oCXiTbjyqDhT",
+            .url = "git+https://github.com/agrevster/zig-datetime.git#e6fb01c6f0c98ca0372e77900343cb56af0b7092",
+            .hash = "datetime-0.9.0-cJNXzEPfAQCQVdsZDuXU-15VpXNY5F8ydx5I0gw6RshI",
+        },
+        .sdl3 = .{
+            .url = "git+https://codeberg.org/7Games/zig-sdl3?ref=v0.2.2#83c694024f23cbacfa36fcd8fca1c57d4957203e",
+            .hash = "sdl3-0.2.2-NmT1Q-2jKQBa4uSXUwuVwdmXpXe-eYwim7Wkyx531v6O",
         },
     },
     .paths = .{

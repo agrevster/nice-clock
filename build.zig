@@ -46,20 +46,12 @@ pub fn build(b: *std.Build) !void {
                 .optimize = std.builtin.OptimizeMode.Debug,
             }),
         });
+        const sdl3 = b.dependency("sdl3", .{
+            .target = target,
+            .optimize = optimize,
+        });
 
-        if (target.result.os.tag == .linux) {
-            // The SDL package doesn't work for Linux yet, so we rely on system
-            // packages for now.
-            sim_exe.linkSystemLibrary("SDL2");
-            sim_exe.linkLibC();
-        } else {
-            const sdl_dep = b.dependency("SDL", .{
-                .optimize = .ReleaseFast,
-                .target = target,
-            });
-            sim_exe.linkLibrary(sdl_dep.artifact("SDL2"));
-        }
-
+        sim_exe.root_module.addImport("sdl", sdl3.module("sdl3"));
         sim_exe.root_module.addImport("common", common_lib);
         b.installArtifact(sim_exe);
 
@@ -81,24 +73,32 @@ pub fn build(b: *std.Build) !void {
             }),
         });
 
-        hardware_exe.root_module.addImport("common", common_lib);
-        hardware_exe.addIncludePath(b.path("include/rpi-rgb-led-matrix/include"));
+        const rpi_led_c = b.addTranslateC(.{
+            .optimize = optimize,
+            .target = target,
+            .link_libc = true,
+            .root_source_file = b.path("src/hardware/rpi_led.h"),
+        });
+        rpi_led_c.addIncludePath(b.path("include/rpi-rgb-led-matrix/include"));
+        hardware_exe.root_module.addImport("rpi_led_c", rpi_led_c.createModule());
 
-        hardware_exe.addCSourceFiles(.{ .root = b.path("include/rpi-rgb-led-matrix/lib"), .files = &[_][]const u8{
-            "led-matrix-c.cc",
-            "gpio.cc",
-            "content-streamer.cc",
-            "framebuffer.cc",
-            "hardware-mapping.c",
-            "options-initialize.cc",
-            "pixel-mapper.cc",
-            "thread.cc",
-            "led-matrix.cc",
-            "bdf-font.cc",
-            "graphics.cc",
-            "multiplex-mappers.cc",
-        } });
-        hardware_exe.linkLibC();
+        hardware_exe.root_module.addImport("common", common_lib);
+
+        // hardware_exe.addCSourceFiles(.{ .root = b.path("include/rpi-rgb-led-matrix/lib"), .files = &[_][]const u8{
+        //     "led-matrix-c.cc",
+        //     "gpio.cc",
+        //     "content-streamer.cc",
+        //     "framebuffer.cc",
+        //     "hardware-mapping.c",
+        //     "options-initialize.cc",
+        //     "pixel-mapper.cc",
+        //     "thread.cc",
+        //     "led-matrix.cc",
+        //     "bdf-font.cc",
+        //     "graphics.cc",
+        //     "multiplex-mappers.cc",
+        // } });
+        // hardware_exe.linkLibC();
 
         b.installArtifact(hardware_exe);
 

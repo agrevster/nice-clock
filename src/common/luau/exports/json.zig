@@ -50,7 +50,7 @@ fn parseToLuau(luau: *Luau, value: json.Value) void {
             luau.newTable();
             for (v.items, 1..) |item, i| {
                 parseToLuau(luau, item);
-                luau.rawSetIndex(-2, @intCast(i));
+                _ = luau.getIndexRaw(-2, @intCast(i));
             }
         },
     }
@@ -69,14 +69,14 @@ fn valueFromLuau(luau: *Luau, index: i32) error{ InvalidType, NumberParsingError
             if (@floor(number) == number) return json.Value{ .integer = @intFromFloat(number) } else return json.Value{ .float = number };
         },
         .table => {
-            const is_array = luau.rawGetIndex(index, 1) != zlua.LuaType.nil;
+            const is_array = luau.getIndexRaw(index, 1) != zlua.LuaType.nil;
             luau.pop(1);
             if (is_array) {
                 var array = std.array_list.Managed(json.Value).init(luau.allocator());
                 const array_len: usize = @intCast(@max(0, luau.objectLen(index)));
 
                 for (1..array_len + 1) |array_index| {
-                    _ = luau.rawGetIndex(index, @intCast(array_index));
+                    _ = luau.getIndexRaw(index, @intCast(array_index));
                     const value = try valueFromLuau(luau, luau.getTop());
                     array.append(value) catch return error.MemoryError;
                     luau.pop(1);
@@ -84,13 +84,13 @@ fn valueFromLuau(luau: *Luau, index: i32) error{ InvalidType, NumberParsingError
                 return json.Value{ .array = array };
             } else {
                 //Table is not array
-                var map = std.StringArrayHashMap(json.Value).init(luau.allocator());
+                var map = std.array_hash_map.Custom([]const u8, json.Value, std.array_hash_map.StringContext, true).empty;
 
                 luau.pushNil();
                 while (luau.next(index)) {
                     const key = luau.toString(luau.getTop() - 1) catch return error.TableParsingError;
                     const value = try valueFromLuau(luau, luau.getTop());
-                    map.put(key[0..], value) catch return error.MemoryError;
+                    map.put(luau.allocator(), key[0..], value) catch return error.MemoryError;
                     luau.pop(1);
                 }
                 return json.Value{ .object = map };
@@ -135,7 +135,7 @@ fn dump_fn(luau: *Luau) i32 {
 
     const json_formatter = json.fmt(value, .{});
 
-    var json_string_writer = std.io.Writer.Allocating.init(luau.allocator());
+    var json_string_writer = std.Io.Writer.Allocating.init(luau.allocator());
 
     json_formatter.format(&json_string_writer.writer) catch |e| {
         logger.err("Error turning json to string: {t}", .{e});
@@ -149,7 +149,7 @@ fn dump_fn(luau: *Luau) i32 {
 
 fn read_fn(luau: *Luau) i32 {
     _ = luau.checkType(1, .string);
-    var path_writer = std.io.Writer.Allocating.init(luau.allocator());
+    var path_writer = std.Io.Writer.Allocating.init(luau.allocator());
     defer path_writer.deinit();
 
     const filename = luau.toString(1) catch luauError(luau, "Failed to get filename string from Luau!");
@@ -170,8 +170,9 @@ fn read_fn(luau: *Luau) i32 {
     };
 
     defer luau.allocator().free(path);
+    var io = std.Io.Threaded.init_single_threaded;
 
-    if (readResource(luau.allocator(), path, .ASSET)) |text| {
+    if (readResource(luau.allocator(), io.io(), path, .ASSET)) |text| {
         _ = luau.pushString(text);
         return 1;
     } else |err| {

@@ -151,11 +151,6 @@
     function error(message: string)
     ```
     - Throws a luau error halting executing of the current module.
-- `getenv`
-    ```lua
-    function getenv(key: string): string?
-    ```
-    - Gets an environment variable with the given `key`. If it does not exist returns `nil`.
 - `getcfg`
     ```lua
     function getcfg(key: string): string?

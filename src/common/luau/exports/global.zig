@@ -15,8 +15,6 @@ pub fn load_export(luau: *Luau, config_ptr: *std.StringHashMap([]const u8)) void
     luau.setGlobal("print");
     luau.pushFunction(wrap(error_fn));
     luau.setGlobal("error");
-    luau.pushFunction(wrap(getenv_fn));
-    luau.setGlobal("getenv");
     config_map_ptr = config_ptr;
     luau.pushFunction(wrap(getcfg_fn));
     luau.setGlobal("getcfg");
@@ -219,31 +217,6 @@ fn error_fn(luau: *Luau) i32 {
     luauError(luau, message);
 
     return 0;
-}
-
-///(Luau)
-///Attempts to get a variable from the program's environment variables, if there is none returns nil.
-fn getenv_fn(luau: *Luau) i32 {
-    const key = luau.checkString(1)[0..];
-
-    if (!std.unicode.utf8ValidateSlice(key)) luauError(luau, "Invalid path format: must be UTF-8");
-    const allocator = std.heap.page_allocator;
-
-    const has_var = std.process.hasEnvVar(allocator, key) catch luauError(luau, "Memory error or formatting error with hasEnvVar.");
-
-    if (!has_var) {
-        luau.pushNil();
-        return 1;
-    }
-
-    const value = std.process.getEnvVarOwned(allocator, key) catch |e| {
-        logger.err("Error attempting to get environment variable: {t}", .{e});
-        luauError(luau, "Error attempting to get environment variable.");
-    };
-
-    _ = luau.pushString(value);
-
-    return 1;
 }
 
 ///(Luau)

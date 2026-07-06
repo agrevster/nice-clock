@@ -167,7 +167,12 @@ fn createDeltaTableFromZig(luau: *Luau, delta: Datetime.Delta) void {
 ///(Luau)
 ///Returns the current time in UTC.
 fn utcNow(luau: *Luau) i32 {
-    createDatetimeTableFromZig(Datetime.now(), luau);
+    var io = std.Io.Threaded.init_single_threaded;
+    const now = Datetime.now(io.io()) catch {
+        logger.err("System clock error!", .{});
+        luauError(luau, "There was an error accessing the system clock!");
+    };
+    createDatetimeTableFromZig(now, luau);
     return 1;
 }
 
@@ -177,7 +182,13 @@ fn zonedNow(luau: *Luau) i32 {
     luau.checkType(1, zlua.LuaType.string);
     if (luau.toString(1)) |time_zone_str| {
         if (datetime.timezones.getByName(time_zone_str)) |time_zone| {
-            createDatetimeTableFromZig(Datetime.now().shiftTimezone(time_zone), luau);
+            var io = std.Io.Threaded.init_single_threaded;
+            const now = Datetime.now(io.io()) catch {
+                logger.err("System clock error!", .{});
+                luauError(luau, "There was an error accessing the system clock!");
+            };
+
+            createDatetimeTableFromZig(now.shiftTimezone(time_zone), luau);
         } else |_| {
             _ = luau.pushString("Invalid time zone!");
             luau.raiseError();

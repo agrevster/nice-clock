@@ -4,7 +4,7 @@ function get_config(): ClockConfig
     config = {
       zone = "America/Chicago", -- The clock's time zone
     },
-    modules = { "demo" },
+    modules = { "test" },
   }
   return config
 end
