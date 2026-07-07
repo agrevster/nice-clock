@@ -1,5 +1,7 @@
 use chrono::Duration;
 
+use crate::structs::components::RootComponent;
+
 #[derive(Debug)]
 pub struct ClockModule {
     ///The name of the module, used in logging
@@ -8,4 +10,6 @@ pub struct ClockModule {
     time_limt: Duration,
     ///A vec of image names the module should load when it loads.
     images_names: Vec<String>,
+    ///The module's `component`s
+    root_compoent: RootComponent,
 }
