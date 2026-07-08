@@ -5,11 +5,11 @@ use crate::structs::components::RootComponent;
 #[derive(Debug)]
 pub struct ClockModule {
     ///The name of the module, used in logging
-    name: String,
+    pub name: String,
     ///How long the module should display on the clock
-    time_limt: Duration,
+    pub time_limt: Duration,
     ///A vec of image names the module should load when it loads.
-    images_names: Vec<String>,
+    pub images_names: Vec<String>,
     ///The module's `component`s
-    root_compoent: RootComponent,
+    pub root_compoent: RootComponent,
 }
