@@ -3,6 +3,8 @@ pub type VoidClockResult = Result<(), structs::errors::ClockError>;
 
 ///Stores structures defined for use in nice-clock
 pub mod structs;
+///Utilities
+pub mod utils;
 
 ///The width of the clock's screen.
 pub const WIDTH: u8 = 64;

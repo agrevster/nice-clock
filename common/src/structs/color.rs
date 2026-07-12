@@ -1,5 +1,5 @@
 ///Used to represent RGB colors.
-#[derive(PartialEq, Eq, Default)]
+#[derive(PartialEq, Eq, Default, Clone, Copy)]
 pub struct Color {
     pub r: u8,
     pub g: u8,

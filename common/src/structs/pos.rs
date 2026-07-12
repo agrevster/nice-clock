@@ -1,8 +1,28 @@
+use crate::{
+    HEIGHT, WIDTH,
+    structs::errors::{
+        ClockError,
+        ConnectorError::{self},
+    },
+};
+
 ///Used to represent the `x` and `y` position of a tile on the clock.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Pos {
     pub x: u8,
     pub y: u8,
+}
+
+impl Pos {
+    ///Validates the given `Pos` to ensure the `x` and `y` are within the bounds of the clock.
+    ///If they are not returns a `TileOutOfBounds` error.
+    pub fn validate(self: &Self) -> Result<&Pos, ClockError> {
+        if self.x > WIDTH || self.y > HEIGHT {
+            Err(ConnectorError::tile_out_of_bounds(self.clone()))
+        } else {
+            Ok(self)
+        }
+    }
 }
 
 impl From<(u8, u8)> for Pos {
