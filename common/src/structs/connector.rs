@@ -1,14 +1,6 @@
-use chrono::Duration;
-
 use crate::{
     VoidClockResult,
-    structs::{
-        color::Color,
-        components::{RootComponent, TileComponent},
-        errors::ClockError,
-        module::ClockModule,
-        pos::Pos,
-    },
+    structs::{color::Color, errors::ClockError, pos::Pos},
 };
 
 ///Required to create a nice-clock connector.
@@ -28,11 +20,24 @@ pub trait ClockConnector {
 
 ///Used to load modules from various sources.
 //TODO: Add Luau implementation and more static modules
-pub struct ModuleLoader<'a> {
-    connector: &'a mut dyn ClockConnector,
-}
+pub mod module_loader {
+    use chrono::Duration;
 
-impl<'a> ModuleLoader<'a> {
+    use crate::{
+        VoidClockResult,
+        structs::{
+            color::Color,
+            components::{RootComponent, TileComponent},
+            connector::ClockConnector,
+            module::ClockModule,
+            pos::Pos,
+        },
+    };
+
+    pub fn load_module(clock: &mut impl ClockConnector, module: ClockModule) -> VoidClockResult {
+        module.root_compoent.render(clock, module.time_limt)
+    }
+
     pub fn test_module() -> ClockModule {
         ClockModule {
             name: "test".to_string(),

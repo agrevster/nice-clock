@@ -25,7 +25,7 @@ impl Display for ClockError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ClockError::ConnectorError(connector_error) => match connector_error {
-                ConnectorError::TileOutOfBounds(pos) => f.write_str("Tile out of bounds: {pos}"),
+                ConnectorError::TileOutOfBounds(pos) => write!(f, "Tile out of bounds: {pos:?}"),
             },
         }
     }

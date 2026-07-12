@@ -1,19 +1,23 @@
 use std::{
     ops::Div,
-    sync::{
-        atomic::AtomicU8,
-        mpsc::{Receiver, Sender, channel},
-    },
+    sync::mpsc::{Receiver, Sender, channel},
     thread,
     time::Duration,
 };
 
 use common::{
     FPS,
-    structs::{color::Color, connector::ClockConnector, pos::Pos},
+    structs::{
+        color::Color,
+        connector::{
+            ClockConnector,
+            module_loader::{load_module, test_module},
+        },
+        pos::Pos,
+    },
     utils::LogUnwrap,
 };
-use log::info;
+use log::{info, warn};
 use sdl2::{
     event::Event, keyboard::Keycode, pixels::Color as SdlColor, rect::Rect, render::WindowCanvas,
 };
@@ -23,7 +27,6 @@ static BG_COLOR: SdlColor = SdlColor::RGB(27, 31, 25);
 
 struct SimulatorConnector {
     scratch: [[Color; 64]; 32],
-    brightness: AtomicU8,
     transmitter: Sender<[[Color; 64]; 32]>,
 }
 
@@ -46,13 +49,16 @@ impl ClockConnector for SimulatorConnector {
     }
 
     fn set_brightness(self: &mut Self, brightness: u8) -> common::VoidClockResult {
-        todo!()
+        _ = brightness;
+        warn!("set_brightness is not implemented on the simulator!");
+        unimplemented!()
     }
 
     fn fetch_module_names(
         self: &mut Self,
     ) -> Result<Vec<String>, common::structs::errors::ClockError> {
-        todo!()
+        warn!("fetch_module_names is not implemented on the simulator!");
+        unimplemented!()
     }
 }
 
@@ -145,7 +151,6 @@ fn main() {
     let (tx, rx) = channel::<[[Color; 64]; 32]>();
 
     let mut clock = SimulatorConnector {
-        brightness: AtomicU8::new(100),
         scratch: [[Color::black(); 64]; 32],
         transmitter: tx,
     };
@@ -155,6 +160,8 @@ fn main() {
             info!("Starting clock simulator...");
             start_simulator(rx);
         });
+
+        load_module(&mut clock, test_module()).unwrap_and_log("Error loading module!");
 
         sim_window
             .join()
