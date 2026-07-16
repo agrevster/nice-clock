@@ -1,3 +1,4 @@
 ./include/*
 # Added by cargo
 /target
+dump.hex

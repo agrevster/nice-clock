@@ -27,7 +27,7 @@ pub mod module_loader {
         VoidClockResult,
         structs::{
             color::Color,
-            components::{RootComponent, TileComponent},
+            components::{BoxComponent, RootComponent},
             connector::ClockConnector,
             module::ClockModule,
             pos::Pos,
@@ -43,9 +43,12 @@ pub mod module_loader {
             name: "test".to_string(),
             time_limt: Duration::seconds(5),
             images_names: vec![],
-            root_compoent: RootComponent::new(vec![Box::new(TileComponent {
+            root_compoent: RootComponent::new(vec![Box::new(BoxComponent {
                 pos: Pos::from((0, 0)),
                 color: Color::red(),
+                width: 5,
+                height: 5,
+                fill_inside: false,
             })]),
         }
     }

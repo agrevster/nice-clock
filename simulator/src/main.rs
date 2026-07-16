@@ -1,4 +1,6 @@
+use std::io::Write;
 use std::{
+    fs::File,
     ops::Div,
     sync::mpsc::{Receiver, Sender, channel},
     thread,
@@ -22,12 +24,16 @@ use sdl2::{
     event::Event, keyboard::Keycode, pixels::Color as SdlColor, rect::Rect, render::WindowCanvas,
 };
 use simplelog::{ConfigBuilder, TermLogger, format_description};
+use simulator::test_utils::{hex_from_file, tiles_from_hex, tiles_to_hex};
 
 static BG_COLOR: SdlColor = SdlColor::RGB(27, 31, 25);
 
+#[cfg(test)]
+mod test_utils;
+
 struct SimulatorConnector {
     scratch: [[Color; 64]; 32],
-    transmitter: Sender<[[Color; 64]; 32]>,
+    pub transmitter: Sender<[[Color; 64]; 32]>,
 }
 
 impl ClockConnector for SimulatorConnector {
@@ -62,7 +68,7 @@ impl ClockConnector for SimulatorConnector {
     }
 }
 
-fn draw_tiles(tiles: [[Color; 64]; 32], canvas: &mut WindowCanvas) {
+fn draw_tiles(tiles: &[[Color; 64]; 32], canvas: &mut WindowCanvas) {
     canvas.set_draw_color(BG_COLOR);
     canvas.clear();
     tiles.iter().enumerate().for_each(|(x, col)| {
@@ -101,7 +107,9 @@ fn start_simulator(rx: Receiver<[[Color; 64]; 32]>) {
         .build()
         .unwrap_and_log("Failed to create SDL canvas!");
 
-    draw_tiles([[Color::black(); 64]; 32], &mut canvas);
+    draw_tiles(&[[Color::black(); 64]; 32], &mut canvas);
+
+    let mut tile_cache = [[Color::black(); 64]; 32];
 
     let mut event_pump = sdl
         .event_pump()
@@ -118,12 +126,26 @@ fn start_simulator(rx: Receiver<[[Color; 64]; 32]>) {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'run,
+                Event::KeyDown {
+                    keycode: Some(Keycode::S),
+                    ..
+                } => {
+                    let tile_dump = tiles_to_hex(tile_cache);
+
+                    let mut dump_file =
+                        File::create("./dump.hex").unwrap_and_log("Failed to create dump file!");
+                    write!(dump_file, "{}", tile_dump)
+                        .unwrap_and_log("Failed to write to dump file!");
+
+                    info!("Tile dump created!");
+                }
                 _ => {}
             }
         }
 
         if let Ok(tiles) = rx.try_recv() {
-            draw_tiles(tiles, &mut canvas);
+            draw_tiles(&tiles, &mut canvas);
+            tile_cache = tiles;
         }
 
         std::thread::sleep(sleep_time);
@@ -150,6 +172,11 @@ fn main() {
 
     let (tx, rx) = channel::<[[Color; 64]; 32]>();
 
+    let args = std::env::args().collect::<Vec<String>>();
+
+    let hexdump_view = args.len() > 1;
+    let hexdump_file = args.last();
+
     let mut clock = SimulatorConnector {
         scratch: [[Color::black(); 64]; 32],
         transmitter: tx,
@@ -161,7 +188,22 @@ fn main() {
             start_simulator(rx);
         });
 
-        load_module(&mut clock, test_module()).unwrap_and_log("Error loading module!");
+        if !hexdump_view {
+            load_module(&mut clock, test_module()).unwrap_and_log("Error loading module!");
+        } else {
+            let mut filepath = std::env::current_dir().expect("Error getting the CWD!");
+            filepath.push(
+                hexdump_file
+                    .expect("Failed to get hexdump file from args. Might be a parsing issue..."),
+            );
+            clock
+                .transmitter
+                .send(
+                    tiles_from_hex(hex_from_file(filepath)).expect("Error parsing tiles from hex!"),
+                )
+                .expect("Failed to send tiles to simulator window!");
+            info!("Rendering hexdump...");
+        }
 
         sim_window
             .join()
