@@ -122,7 +122,7 @@ impl Component for BoxComponent {
         if self.fill_inside {
             for y in y0..y_end {
                 for x in x0..x_end {
-                    clock.set_tile(&Pos::from((x, y)), &self.color)?;
+                    clock.set_tile(&Pos::from((y, x)), &self.color)?;
                 }
             }
             return Ok(());
@@ -131,13 +131,13 @@ impl Component for BoxComponent {
         // Outline only: draw the four edges
         // Top row always valid because y0 < HEIGHT
         for x in x0..x_end {
-            clock.set_tile(&(x, y0).into(), &self.color)?;
+            clock.set_tile(&(y0, x).into(), &self.color)?;
         }
 
         // Bottom row if it's distinct from the top row and still on-grid.
         if last_row != y0 && last_row < HEIGHT {
             for x in x0..x_end {
-                clock.set_tile(&(x, last_row).into(), &self.color)?;
+                clock.set_tile(&(last_row, x).into(), &self.color)?;
             }
         }
 
@@ -148,9 +148,9 @@ impl Component for BoxComponent {
 
         if inner_start <= inner_end {
             for y in inner_start..=inner_end {
-                clock.set_tile(&(x0, y).into(), &self.color)?;
+                clock.set_tile(&(y, x0).into(), &self.color)?;
                 if last_col != x0 && last_col < WIDTH {
-                    clock.set_tile(&(last_col, y).into(), &self.color)?;
+                    clock.set_tile(&(y, last_col).into(), &self.color)?;
                 }
             }
         }
