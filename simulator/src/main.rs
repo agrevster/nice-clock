@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::ops::Sub;
 use std::{
     fs::File,
     ops::Div,
@@ -20,6 +21,7 @@ use common::{
     utils::LogUnwrap,
 };
 use log::{info, warn};
+use sdl2::mouse::MouseButton;
 use sdl2::{
     event::Event, keyboard::Keycode, pixels::Color as SdlColor, rect::Rect, render::WindowCanvas,
 };
@@ -87,6 +89,14 @@ fn draw_tiles(tiles: &[[Color; 64]; 32], canvas: &mut WindowCanvas) {
     canvas.present();
 }
 
+fn tile_pos_for_click_pos(click: (i32, i32)) -> Pos {
+    let (y, x) = click;
+    Pos {
+        x: (x.checked_sub_unsigned(10).unwrap().checked_div(15).unwrap()) as u8,
+        y: (y.checked_sub_unsigned(10).unwrap().checked_div(15).unwrap()) as u8,
+    }
+}
+
 fn start_simulator(rx: Receiver<[[Color; 64]; 32]>) {
     let sleep_time = Duration::from_millis(((1 as f32).div(FPS as f32) * 1000.0) as u64);
     let sdl = sdl2::init().unwrap_and_log("Failed to create SDL session for simulator!");
@@ -138,6 +148,15 @@ fn start_simulator(rx: Receiver<[[Color; 64]; 32]>) {
                         .unwrap_and_log("Failed to write to dump file!");
 
                     info!("Tile dump created!");
+                }
+                Event::MouseButtonDown {
+                    mouse_btn: MouseButton::Left,
+                    x,
+                    y,
+                    ..
+                } => {
+                    let pos = tile_pos_for_click_pos((y, x));
+                    info!("click: ({},{})", pos.y, pos.x);
                 }
                 _ => {}
             }
