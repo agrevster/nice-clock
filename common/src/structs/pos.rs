@@ -17,7 +17,7 @@ impl Pos {
     ///Validates the given `Pos` to ensure the `x` and `y` are within the bounds of the clock.
     ///If they are not returns a `TileOutOfBounds` error.
     pub fn validate(self: &Self) -> Result<&Pos, ClockError> {
-        if self.x > WIDTH || self.y > HEIGHT {
+        if self.x >= WIDTH || self.y >= HEIGHT {
             Err(ConnectorError::tile_out_of_bounds(self.clone()))
         } else {
             Ok(self)
@@ -31,5 +31,11 @@ impl From<(u8, u8)> for Pos {
             y: value.0,
             x: value.1,
         }
+    }
+}
+
+impl From<Pos> for (u8, u8) {
+    fn from(value: Pos) -> (u8, u8) {
+        (value.y, value.x)
     }
 }
