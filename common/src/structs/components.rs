@@ -5,11 +5,15 @@ use std::{
 };
 
 use chrono::TimeDelta;
-use log::info;
 
 use crate::{
     HEIGHT, VoidClockResult, WIDTH,
-    structs::{color::Color, connector::ClockConnector, pos::Pos},
+    structs::{
+        color::Color,
+        connector::ClockConnector,
+        errors::{ClockError, ComponentError},
+        pos::Pos,
+    },
 };
 
 ///Trait used for all clock components. Each component must implement this
@@ -178,6 +182,16 @@ impl Component for CircleComponent {
         //No radius or thickness no circle
         if self.radius == 0 || self.outline_thickness == 0 {
             return Ok(());
+        }
+
+        if self.outline_thickness > self.radius {
+            return Err(ClockError::ComponentError(
+                ComponentError::InvalidArgumentValue(
+                    "outline_thickness".to_string(),
+                    self.outline_thickness.to_string(),
+                    "Outline thickness of a circle component must be less than or equal to the radius!".to_string(),
+                ),
+            ));
         }
 
         let center_y = self.pos.y as f32;
