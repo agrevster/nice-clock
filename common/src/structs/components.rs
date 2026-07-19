@@ -5,6 +5,7 @@ use std::{
 };
 
 use chrono::TimeDelta;
+use log::info;
 
 use crate::{
     HEIGHT, VoidClockResult, WIDTH,
@@ -88,7 +89,7 @@ impl Component for TileComponent {
     }
 }
 
-///Used to draw a box on the screen starting at the given
+///Used to draw a box on the screen starting at the given `Pos`
 pub struct BoxComponent {
     pub color: Color,
     pub pos: Pos,
@@ -154,6 +155,48 @@ impl Component for BoxComponent {
                 }
             }
         }
+        Ok(())
+    }
+}
+
+///Used to draw a circle on the screen starting at the given `Pos`
+pub struct CircleComponent {
+    pub color: Color,
+    pub pos: Pos,
+    pub radius: u8,
+    pub outline_thickness: u8,
+}
+
+impl Component for CircleComponent {
+    #[inline]
+    fn name(&self) -> String {
+        "circle".to_string()
+    }
+    fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
+        self.pos.validate()?;
+
+        //No radius or thickness no circle
+        if self.radius == 0 || self.outline_thickness == 0 {
+            return Ok(());
+        }
+
+        let center_y = self.pos.y as f32;
+        let center_x = self.pos.x as f32;
+
+        for x in 0..64 {
+            for y in 0..32 {
+                let y = y as f32;
+                let x = x as f32;
+
+                let distance = ((y - center_y).powi(2) as f32 + (x - center_x).powi(2) as f32)
+                    .sqrt()
+                    .trunc() as u8;
+                if distance >= (self.radius - self.outline_thickness) && distance < self.radius {
+                    clock.set_tile(&(y as u8, x as u8).into(), &self.color)?;
+                }
+            }
+        }
+
         Ok(())
     }
 }
