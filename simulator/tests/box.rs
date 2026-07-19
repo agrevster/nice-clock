@@ -82,3 +82,23 @@ fn check_line_box_vert() {
         "Component does not match known good hexdump!"
     );
 }
+
+#[test]
+fn check_filled_inside_box() {
+    let mut clock = TestingConnector::new();
+    let actual = render_to_hex(
+        &mut clock,
+        single_component_test_module(Box::new(components::BoxComponent {
+            pos: (19, 10).into(),
+            color: Color::red(),
+            width: 10,
+            height: 9,
+            fill_inside: true,
+        })),
+    );
+    assert_eq!(
+        hex_from_file(get_dump("box_filled.hex")).trim(),
+        actual,
+        "Component does not match known good hexdump!"
+    );
+}
