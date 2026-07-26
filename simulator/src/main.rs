@@ -1,5 +1,4 @@
 use std::io::Write;
-use std::ops::Sub;
 use std::{
     fs::File,
     ops::Div,

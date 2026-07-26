@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{env::current_dir, fmt::Display, path::PathBuf};
 
 use log::{error, warn};
 
@@ -43,5 +43,18 @@ impl<T> LogUnwrap<T> for Option<T> {
             warn!("{}", msg);
             default
         }
+    }
+}
+
+///Returns the path to the assets dir. Located in `$CWD/assets`.
+pub fn assets_dir() -> PathBuf {
+    if cfg!(test) {
+        let mut path = current_dir().unwrap_and_log("Failed to get CWD");
+        path.pop();
+        path.join("assets")
+    } else {
+        current_dir()
+            .unwrap_and_log("Failed to get CWD")
+            .join("assets")
     }
 }

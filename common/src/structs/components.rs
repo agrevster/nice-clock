@@ -8,12 +8,7 @@ use chrono::TimeDelta;
 
 use crate::{
     HEIGHT, VoidClockResult, WIDTH,
-    structs::{
-        color::Color,
-        connector::ClockConnector,
-        errors::{ClockError, ComponentError},
-        pos::Pos,
-    },
+    structs::{color::Color, connector::ClockConnector, errors::ClockError, pos::Pos},
 };
 
 ///Trait used for all clock components. Each component must implement this
@@ -185,12 +180,11 @@ impl Component for CircleComponent {
         }
 
         if self.outline_thickness > self.radius {
-            return Err(ClockError::ComponentError(
-                ComponentError::InvalidArgumentValue(
-                    "outline_thickness".to_string(),
-                    self.outline_thickness.to_string(),
-                    "Outline thickness of a circle component must be less than or equal to the radius!".to_string(),
-                ),
+            return Err(ClockError::component_invalid_argument(
+                "outline_thickness".to_string(),
+                self.outline_thickness.to_string(),
+                "Outline thickness of a circle component must be less than or equal to the radius!"
+                    .to_string(),
             ));
         }
 
