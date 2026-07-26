@@ -13,7 +13,7 @@ return niceclock
     { r = 255, g = 0, b = 0 },
     0,
     -64,
-    { loop = true, speed = 3, duration = 10 }
+    { loop = true, speed = 8, duration = 10 }
   )
   :verticalscrollingtext(
     { y = 0, x = 40 },

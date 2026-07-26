@@ -1,20 +1,25 @@
 --- Config
 
-local lat = getenv("NICE_CLOCK_WEATHER_LAT")
-local lon = getenv("NICE_CLOCK_WEATHER_LON")
+local lat = getcfg("weather_lat")
+local lon = getcfg("weather_lon")
+local zone = getcfg("zone") or "UTC"
+local show_uv = (getcfg("weather_uv") or "false") == "true"
+
+zone = zone:gsub("/", "%%2f") -- Luau captures start with % %% escapes them
 
 local colors = {
   white = { r = 255, g = 255, b = 255 },
   min = { r = 4, g = 165, b = 229 },
   max = { r = 221, g = 120, b = 120 },
+  uv = { r = 229, g = 200, b = 144 },
 }
 
 --- Code
 
 local url =
-  `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=uv_index_clear_sky_max,temperature_2m_min,temperature_2m_max&current=weather_code,is_day,temperature_2m&timezone=America%2FChicago&forecast_days=1&timeformat=unixtime&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch`
+  `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=uv_index_clear_sky_max,temperature_2m_min,temperature_2m_max&current=weather_code,is_day,temperature_2m&timezone={zone}&forecast_days=1&timeformat=unixtime&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch`
 
-local res = http.fetch(url, http.methods.GET, nil, nil, nil)
+local res = http.fetch(url, http.methods.GET, nil, nil, nil, nil)
 
 if res.status >= 300 then
   error(`Error fetching wether data: {res.body}`)
@@ -25,6 +30,7 @@ local current_temp = tostring(math.round(data["current"]["temperature_2m"]))
 local current_code = data["current"]["weather_code"]
 local daily_max_temp = tostring(math.round(data["daily"]["temperature_2m_max"][1]))
 local daily_min_temp = tostring(math.round(data["daily"]["temperature_2m_min"][1]))
+local daily_max_uv = tostring(math.round(data["daily"]["uv_index_clear_sky_max"][1]))
 local big = #current_temp > 2 or #daily_max_temp > 2 or #daily_min_temp > 2
 local is_day = data["current"]["is_day"] == 1
 
@@ -57,10 +63,17 @@ function get_temp_pos(temp: string): number
   return if #temp > 2 then 47 else 52
 end
 
-return niceclock
+local module = niceclock
   .modulebuilder("Weather", 20, { `weather/{image_for_code}` }, {})
   :text({ x = get_temp_pos(daily_max_temp), y = 4 }, niceclock.fonts.Font5x8, daily_max_temp, colors.max)
   :text({ x = get_temp_pos(current_temp), y = 12 }, niceclock.fonts.Font5x8, current_temp, colors.white)
   :text({ x = get_temp_pos(daily_min_temp), y = 20 }, niceclock.fonts.Font5x8, daily_min_temp, colors.min)
   :box({ x = if big then 45 else 50, y = 1 }, if big then 18 else 13, 30, false, colors.white)
   :image({ x = 0, y = 0 }, `weather/{image_for_code}`)
+
+if show_uv then
+  module = module:text({ x = 15, y = 24 }, niceclock.fonts.Font5x8, `UV:`, colors.white)
+  module = module:text({ x = 31, y = 24 }, niceclock.fonts.Font5x8, daily_max_uv, colors.uv)
+end
+
+return module

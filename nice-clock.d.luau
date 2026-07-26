@@ -13,17 +13,20 @@ export type GlobalNiceClock = {
 }
 
 export type GlobalHTTP = {
-	fetch: (url: string, method: string, body: string | nil, content_type: string | nil, authorization: string | nil) -> HTTPResponse,
+	fetch: (url: string, method: string, body: string | nil, content_type: string | nil, authorization: string | nil, headers: {} | nil) -> HTTPResponse,
 	methods: Methods
 }
 
 export type GlobalJson = {
 	load: (str: string) -> any,
 	dump: (obj: any) -> string,
+	read: (filename: string) -> string | nil,
 }
 
 declare function error(message: string): nil
 declare function getenv(key: string): string | nil
+declare function getcfg(key: string): string | nil
+declare function sanitizetoascii(str: string): string
 
 -- HTTP
 export type HTTPResponse = {
@@ -107,6 +110,7 @@ export type Animation = {
 
 
 export type Fonts = {
+	Font5x5: string,
 	Font5x8: string,
 	Font5x8_2: string,
 	Font6x12: string,
@@ -151,6 +155,13 @@ export type DatetimeDelta = {
 	years: number?,
 	days: number?,
 	seconds: number?,
+}
+
+-- Clock config
+export type ClockConfig = {
+	brightness: number,
+	modules: {string},
+	config: {},
 }
 
 -- Declarations

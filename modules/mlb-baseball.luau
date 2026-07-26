@@ -1,8 +1,8 @@
 -- config
 
--- Before adding college teams of your own, be sure to put the team's icon (created from scripts/pull_team_logo.py) into assets/images/sports/${TEAM ID}
+-- Before adding MLB teams of your own, be sure to put the team's icon (created from scripts/pull_team_logo.py) into assets/images/sports/${TEAM ID}
 -- For more instructions on getting a team's logo and ID see scripts/README.md
-local cfg_teams = getcfg("college_basketball_team_ids") or "26"
+local cfg_teams = getcfg("mlb_team_ids") or "lad"
 local teams: { string } = cfg_teams:split(",")
 
 -- code
@@ -22,9 +22,8 @@ function create_vs_or_at_mesasge(next_event_data: any, team_id: string): string
 end
 
 local white: Color = { r = 255, g = 255, b = 255 }
-
 local j = http.fetch(
-  `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/{team}`,
+  `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams/{team}`,
   http.methods.GET,
   nil,
   nil,
@@ -46,11 +45,11 @@ local game_time_formatted =
 local broadcast_location_formatted = if broadcast_location ~= nil then `Watch on {broadcast_location}` else ""
 
 return niceclock
-  .modulebuilder("College Basketball", 30, { `sports/{team}`, "sports/basketball" }, {})
+  .modulebuilder("MLB Baseball", 30, { `sports/{team}`, "sports/baseball" }, {})
   :text({ x = 0, y = 0 }, niceclock.fonts.Font7x14, abbreviation, white)
   :text({ x = 1, y = 14 }, niceclock.fonts.Font5x8, record, white)
   :horizontalscrollingtext(
-    { x = 63, y = 23 },
+    { x = 63, y = 25 },
     niceclock.fonts.Font5x8,
     `{game_time_formatted} {vs_msg} {broadcast_location_formatted}`,
     white,
@@ -59,4 +58,4 @@ return niceclock
     { loop = true, speed = 5, duration = 0 }
   )
   :image({ x = 27, y = 0 }, `sports/{team}`)
-  :image({ x = 52, y = 0 }, `sports/basketball`)
+  :image({ x = 50, y = 0 }, `sports/baseball`)

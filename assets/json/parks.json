@@ -1,0 +1,632 @@
+[
+ {
+  "name": "Acadia",
+  "full_name": "Acadia National Park",
+  "id": "6DA17C86-088E-4B4D-B862-7C1BD5CF236B",
+  "designation": "National Park",
+  "description": "Acadia National Park protects the natural beauty of the highest rocky headlands along the Atlantic coastline of the United States, an abundance of habitats, and a rich cultural heritage. At 4 million visits a year, it's one of the top 10 most-visited national parks in the United States. Visitors enjoy 27 miles of historic motor roads, 158 miles of hiking trails, and 45 miles of carriage roads.",
+  "parkCode": "acad",
+  "states": "ME",
+  "image": "acadia"
+ },
+ {
+  "name": "Arches",
+  "full_name": "Arches National Park",
+  "id": "36240051-018E-4915-B6EA-3F1A7F24FBE4",
+  "designation": "National Park",
+  "description": "Discover a landscape of contrasting colors, land forms, and textures unlike any other. The park has over 2,000 natural stone arches, hundreds of soaring pinnacles, massive rock fins, and giant balanced rocks. This red-rock wonderland will amaze you with its formations, refresh you with its trails, and inspire you with its sunsets.",
+  "parkCode": "arch",
+  "states": "UT",
+  "image": "arches"
+ },
+ {
+  "name": "Badlands",
+  "full_name": "Badlands National Park",
+  "id": "B170CCF7-7AB9-48FF-950E-31815FD4DBB2",
+  "designation": "National Park",
+  "description": "The rugged beauty of the Badlands draws visitors from around the world. These striking geologic deposits contain one of the world\u2019s richest fossil beds. Ancient horses and rhinos once roamed here. The park\u2019s 244,000 acres protect an expanse of mixed-grass prairie where bison, bighorn sheep, prairie dogs, and black-footed ferrets live today.",
+  "parkCode": "badl",
+  "states": "SD",
+  "image": "badlands"
+ },
+ {
+  "name": "Big Bend",
+  "full_name": "Big Bend National Park",
+  "id": "C9056F71-7162-4208-8AE9-2D0AEFA594FD",
+  "designation": "National Park",
+  "description": "There is a place in Far West Texas where night skies are dark as coal and rivers carve temple-like canyons in ancient limestone. Here, at the end of the road, hundreds of bird species take refuge in a solitary mountain range surrounded by weather-beaten desert. Tenacious cactus bloom in sublime southwestern sun, and species diversity is the best in the country. This magical place is Big Bend...",
+  "parkCode": "bibe",
+  "states": "TX",
+  "image": "big_bend"
+ },
+ {
+  "name": "Biscayne",
+  "full_name": "Biscayne National Park",
+  "id": "FBF9F793-5114-4B61-A5BA-6F9ADDFDF459",
+  "designation": "National Park",
+  "description": "Within sight of Miami, yet worlds away, Biscayne protects a rare combination of aquamarine waters, emerald islands, and fish-bejeweled coral reefs. Evidence of 10,000 years of human history is here too; from prehistoric tribes to shipwrecks, and pineapple farmers to presidents. For many, the park is a boating, fishing, and diving destination, while others enjoy a warm breeze and peaceful scenery.",
+  "parkCode": "bisc",
+  "states": "FL",
+  "image": "biscayne"
+ },
+ {
+  "name": "Black Canyon Of The Gunnison",
+  "full_name": "Black Canyon Of The Gunnison National Park",
+  "id": "BDBD573F-97EF-44E7-A579-471679F2C42A",
+  "designation": "National Park",
+  "description": "Big enough to be overwhelming, yet still intimate enough to feel the pulse of time. Come see some of the steepest cliffs, oldest rock, and craggiest spires in North America. Forces of nature and the Gunnison River sculpted this canyon over two million years. The result is a vertical wilderness of rock, water, and sky.",
+  "parkCode": "blca",
+  "states": "CO",
+  "image": "black_canyon_of_the_gunnison"
+ },
+ {
+  "name": "Bryce Canyon",
+  "full_name": "Bryce Canyon National Park",
+  "id": "6B1D053D-714F-46D1-B410-04BE868F14C1",
+  "designation": "National Park",
+  "description": "Hoodoos (irregular columns of rock) exist on every continent, but here is the largest concentration found anywhere on Earth. Situated along a high plateau at the top of the Grand Staircase, the park's high elevations include numerous life communities, fantastic dark skies, and geological wonders that defy description.",
+  "parkCode": "brca",
+  "states": "UT",
+  "image": "bryce_canyon"
+ },
+ {
+  "name": "Canyonlands",
+  "full_name": "Canyonlands National Park",
+  "id": "319E07D8-E176-41F8-98A9-1E3F8099D0AB",
+  "designation": "National Park",
+  "description": "Canyonlands is a wilderness of canyons, buttes, and spires carved by the Colorado River and Green River. The park is divided into four distinct districts; no roads join them together. The districts share similar desert ecosystems, but each one provides unique opportunities for adventure and discovery.",
+  "parkCode": "cany",
+  "states": "UT",
+  "image": "canyonlands"
+ },
+ {
+  "name": "Capitol Reef",
+  "full_name": "Capitol Reef National Park",
+  "id": "2F05E2B8-CDA3-434E-9C4C-C7DD828CAC3B",
+  "designation": "National Park",
+  "description": "Located in south-central Utah in the heart of red rock country, Capitol Reef National Park is a hidden treasure filled with cliffs, canyons, domes, and bridges in the Waterpocket Fold, a geologic monocline (a wrinkle on the earth) extending almost 100 miles.",
+  "parkCode": "care",
+  "states": "UT",
+  "image": "capitol_reef"
+ },
+ {
+  "name": "Carlsbad Caverns",
+  "full_name": "Carlsbad Caverns National Park",
+  "id": "6FDE39B1-AB4A-4C9A-A5CD-4AF67601CD78",
+  "designation": "National Park",
+  "description": "High ancient sea ledges, deep rocky canyons, flowering cactus, and desert wildlife\u2014treasures above the ground in the Chihuahuan Desert. Hidden beneath the surface are more than 119 caves\u2014formed when sulfuric acid dissolved limestone leaving behind caverns of all sizes.",
+  "parkCode": "cave",
+  "states": "NM",
+  "image": "carlsbad_caverns"
+ },
+ {
+  "name": "Channel Islands",
+  "full_name": "Channel Islands National Park",
+  "id": "5595FC7A-F218-4439-8D2E-F47449838820",
+  "designation": "National Park",
+  "description": "Channel Islands National Park encompasses five remarkable islands and their ocean environment, preserving and protecting a wealth of natural and cultural resources. Isolation over thousands of years has created unique animals, plants, and archeological resources found nowhere else on Earth and helped preserve a place where visitors can experience coastal southern California as it once was.",
+  "parkCode": "chis",
+  "states": "CA",
+  "image": "channel_islands"
+ },
+ {
+  "name": "Congaree",
+  "full_name": "Congaree National Park",
+  "id": "EEBA7225-7FF5-4B62-B60C-6BBC66351A4E",
+  "designation": "National Park",
+  "description": "Astonishing biodiversity exists in Congaree National Park, the largest intact expanse of old growth bottomland hardwood forest remaining in the southeastern United States. Waters from the Congaree and Wateree Rivers sweep through the floodplain, carrying nutrients and sediments that nourish and rejuvenate this ecosystem and support the growth of national and state champion trees.",
+  "parkCode": "cong",
+  "states": "SC",
+  "image": "congaree"
+ },
+ {
+  "name": "Crater Lake",
+  "full_name": "Crater Lake National Park",
+  "id": "7DC1050A-0DDE-4EF9-B777-3C9349BCC4DE",
+  "designation": "National Park",
+  "description": "Crater Lake inspires awe. Native Americans witnessed its formation 7,700 years ago, when a violent eruption triggered the collapse of a tall peak. Scientists marvel at its purity\u2014fed by rain and snow, it\u2019s the deepest lake in the USA and one of the most pristine on Earth. Artists, photographers, and sightseers gaze in wonder at its blue water and stunning setting atop the Cascade Mountain Range.",
+  "parkCode": "crla",
+  "states": "OR",
+  "image": "crater_lake"
+ },
+ {
+  "name": "Cuyahoga Valley",
+  "full_name": "Cuyahoga Valley National Park",
+  "id": "F4D44F29-3F67-498F-B05B-0783473D2708",
+  "designation": "National Park",
+  "description": "Though a short distance from the urban areas of Cleveland and Akron, Cuyahoga Valley National Park seems worlds away. The park is a refuge for native plants and wildlife, and provides routes of discovery for visitors. The winding Cuyahoga River gives way to deep forests, rolling hills, and open farmlands. Walk or ride the Towpath Trail to follow the historic route of the Ohio & Erie Canal.",
+  "parkCode": "cuva",
+  "states": "OH",
+  "image": "cuyahoga_valley"
+ },
+ {
+  "name": "Death Valley",
+  "full_name": "Death Valley National Park",
+  "id": "FFC9F9C4-D79D-4CA7-AB0F-7A2AD30061CD",
+  "designation": "National Park",
+  "description": "In this below-sea-level basin, steady drought and record summer heat make Death Valley a land of extremes. Yet, each extreme has a striking contrast. Towering peaks are frosted with winter snow. Rare rainstorms bring vast fields of wildflowers. Lush oases harbor tiny fish and refuge for wildlife and humans. Despite its morbid name, a great diversity of life thrives in Death Valley.",
+  "parkCode": "deva",
+  "states": "CA,NV",
+  "image": "death_valley"
+ },
+ {
+  "name": "Denali",
+  "full_name": "Denali National Park & Preserve",
+  "id": "C0BF2A42-E353-4FAE-B4C4-AA0676B58100",
+  "designation": "National Park & Preserve",
+  "description": "Denali is six million acres of wild land, bisected by one ribbon of road. Travelers along it see the relatively low-elevation taiga forest give way to high alpine tundra and snowy mountains, culminating in North America's tallest peak, 20,310' Mount McKinley. Wild animals large and small roam un-fenced lands, living as they have for ages. Solitude, tranquility and wilderness await.",
+  "parkCode": "dena",
+  "states": "AK",
+  "image": "denali"
+ },
+ {
+  "name": "Dry Tortugas",
+  "full_name": "Dry Tortugas National Park",
+  "id": "167A05D1-5793-49E0-89FE-0A1DDFA9A7F4",
+  "designation": "National Park",
+  "description": "Almost 70 miles (113 km) west of Key West lies the remote Dry Tortugas National Park. This 100-square mile park is mostly open water with seven small islands. Accessible only by boat or seaplane, the park is known the world over as the home of magnificent Fort Jefferson, picturesque blue waters, superlative coral reefs and marine life, and the vast assortment of bird life that frequents the area.",
+  "parkCode": "drto",
+  "states": "FL",
+  "image": "dry_tortugas"
+ },
+ {
+  "name": "Everglades",
+  "full_name": "Everglades National Park",
+  "id": "5EA02193-276A-4037-B7DB-5765A56935FD",
+  "designation": "National Park",
+  "description": "Established in 1947 as the first national park created for its biodiversity, Everglades National Park protects 1.5 million acres of wetland, forest, and marine habitats and the native plants and animals that call it home. With several international designations, the park provides a major source of drinking water for local residents of South Florida and recreational opportunities for all.",
+  "parkCode": "ever",
+  "states": "FL",
+  "image": "everglades"
+ },
+ {
+  "name": "Gates Of The Arctic",
+  "full_name": "Gates Of The Arctic National Park & Preserve",
+  "id": "BC195D18-71C8-4A99-BF8E-10BFAB849679",
+  "designation": "National Park & Preserve",
+  "description": "This vast landscape does not contain any roads or trails. Visitors discover intact ecosystems where people have lived with the land for over ten thousand years. Wild rivers meander through glacier-carved valleys, caribou migrate along age-old trails, endless summer light fades into aurora-lit night skies of winter. Virtually unchanged, except by the forces of nature.",
+  "parkCode": "gaar",
+  "states": "AK",
+  "image": "gates_of_the_arctic"
+ },
+ {
+  "name": "Gateway Arch",
+  "full_name": "Gateway Arch National Park",
+  "id": "BD588493-EC77-4B97-B73E-3BA444864DC5",
+  "designation": "National Park",
+  "description": "Gateway Arch National Park commemorates President Jefferson\u2019s vision of a continental nation, the individuals and cultural groups who helped shape its history, St. Louis\u2019 role in westward expansion, and Dred and Harriet Scott, who sued for their freedom in the Old Courthouse.",
+  "parkCode": "jeff",
+  "states": "MO",
+  "image": "gateway_arch"
+ },
+ {
+  "name": "Glacier Bay",
+  "full_name": "Glacier Bay National Park & Preserve",
+  "id": "3682DBDE-6746-4979-86CC-2358C5B72661",
+  "designation": "National Park & Preserve",
+  "description": "Covering 3.3 million acres of rugged mountains, dynamic glaciers, temperate rainforest, wild coastlines and deep sheltered fjords, Glacier Bay National Park and Preserve is known as Homeland to the Huna and Yakutat Ling\u00edt, and is a highlight of Alaska's Inside Passage. From sea to summit, Glacier Bay offers limitless opportunities for adventure and inspiration.",
+  "parkCode": "glba",
+  "states": "AK",
+  "image": "glacier_bay"
+ },
+ {
+  "name": "Glacier",
+  "full_name": "Glacier National Park",
+  "id": "2B5178C6-2446-488C-AC31-47E3CEBF7159",
+  "designation": "National Park",
+  "description": "A showcase of melting glaciers, alpine meadows, carved valleys, and spectacular lakes. With over 700 miles of trails, Glacier is a paradise for adventurous visitors seeking a landscape steeped in human culture. Relive the days of old through historic chalets, lodges, and the famous Going-to-the-Sun Road.",
+  "parkCode": "glac",
+  "states": "MT",
+  "image": "glacier"
+ },
+ {
+  "name": "Grand Canyon",
+  "full_name": "Grand Canyon National Park",
+  "id": "B7FF43E5-3A95-4C8E-8DBE-72D8608D6588",
+  "designation": "National Park",
+  "description": "Entirely within the state of Arizona, the park encompasses 278 miles (447 km) of the Colorado River and adjacent uplands. Located on the ancestral homelands of 11 present day Tribal Communities, Grand Canyon is one of the most spectacular examples of erosion anywhere in the world\u2014a mile deep canyon unmatched in the incomparable vistas it offers visitors from both north and south rims.",
+  "parkCode": "grca",
+  "states": "AZ",
+  "image": "grand_canyon"
+ },
+ {
+  "name": "Grand Teton",
+  "full_name": "Grand Teton National Park",
+  "id": "FF73E2AA-E274-44E1-A8F5-9DD998B0F579",
+  "designation": "National Park",
+  "description": "Soaring over a landscape rich with wildlife, pristine lakes, and majestic alpine vistas, the Teton Range stands as a testament to generations of stewards. For over 11,000 years, communities have thrived in the valley known as Jackson Hole, turning these mountains into more than just peaks\u2014they embody imagination and enduring human connection.",
+  "parkCode": "grte",
+  "states": "WY",
+  "image": "grand_teton"
+ },
+ {
+  "name": "Great Basin",
+  "full_name": "Great Basin National Park",
+  "id": "4C1A549B-080F-4522-9CA7-67BB5A0845CA",
+  "designation": "National Park",
+  "description": "From the 13,063-foot summit of Wheeler Peak to the sagebrush-covered foothills, Great Basin National Park hosts a sample of the incredible diversity of the larger Great Basin region. Come and partake of the solitude of the wilderness, walk among ancient bristlecone pines, bask in the darkest of night skies, and explore mysterious subterranean passages. There's a lot more than just desert here.",
+  "parkCode": "grba",
+  "states": "NV",
+  "image": "great_basin"
+ },
+ {
+  "name": "Great Sand Dunes",
+  "full_name": "Great Sand Dunes National Park & Preserve",
+  "id": "461D40CC-4379-4C1B-ADB8-3563147F61A1",
+  "designation": "National Park & Preserve",
+  "description": "The tallest dunes in North America are the centerpiece in a diverse landscape of grasslands, wetlands, forests, alpine lakes, and tundra. Stay on a moonless night to experience countless stars in this International Dark Sky Park! Open 24 hours a day, 7 days a week year-round. There are no timed entries or reservations to visit.",
+  "parkCode": "grsa",
+  "states": "CO",
+  "image": "great_sand_dunes"
+ },
+ {
+  "name": "Great Smoky Mountains",
+  "full_name": "Great Smoky Mountains National Park",
+  "id": "D9819727-18DF-4A84-BDDE-D4F2696DE340",
+  "designation": "National Park",
+  "description": "Ridge upon ridge of forest straddles the border between North Carolina and Tennessee in Great Smoky Mountains National Park. World renowned for its diversity of plant and animal life, the beauty of its ancient mountains, and the quality of its remnants of Southern Appalachian mountain culture, this is America's most visited national park. Plan your visit today!",
+  "parkCode": "grsm",
+  "states": "NC,TN",
+  "image": "great_smoky_mountains"
+ },
+ {
+  "name": "Guadalupe Mountains",
+  "full_name": "Guadalupe Mountains National Park",
+  "id": "6510001B-685D-4688-A963-4ECE7AB609DB",
+  "designation": "National Park",
+  "description": "Come experience mountains and canyons, desert and dunes, night skies and spectacular vistas within a place unlike any other. Guadalupe Mountains National Park protects the world's most extensive Permian fossil reef, the four highest peaks in Texas, an environmentally diverse collection of flora and fauna, and the stories of lives shaped through conflict, cooperation and survival.",
+  "parkCode": "gumo",
+  "states": "TX",
+  "image": "guadalupe_mountains"
+ },
+ {
+  "name": "Haleakala",
+  "full_name": "Haleakala National Park",
+  "id": "4930BAEB-A3BF-4825-9796-DCD0FD1C3BD5",
+  "designation": "National Park",
+  "description": "This special place vibrates with stories of ancient and modern Hawaiian culture and protects the bond between the land and its people. The park also cares for endangered species, some of which exist nowhere else. Come visit this special place - renew your spirit amid stark volcanic landscapes and sub-tropical rain forest with an unforgettable hike through the backcountry.",
+  "parkCode": "hale",
+  "states": "HI",
+  "image": "haleakala"
+ },
+ {
+  "name": "Hawaii Volcanoes",
+  "full_name": "Hawaii Volcanoes National Park",
+  "id": "D9BF4288-9AC3-4526-9598-BE8920839ACC",
+  "designation": "National Park",
+  "description": "Hawaii Volcanoes National Park protects some of the most unique geological, biological, and cherished cultural landscapes in the world. Extending from sea level to 13,680 feet, the park encompasses the summits of two of the world's most active volcanoes - K\u012blauea and Mauna Loa - and is a designated International Biosphere Reserve and UNESCO World Heritage Site.",
+  "parkCode": "havo",
+  "states": "HI",
+  "image": "hawaii_volcanoes"
+ },
+ {
+  "name": "Hot Springs",
+  "full_name": "Hot Springs National Park",
+  "id": "ED9C0322-68FB-4DE1-A884-61C623281C9D",
+  "designation": "National Park",
+  "description": "Hot Springs National Park has a rich cultural past. The grand architecture of our historic bathhouses is equally matched by the natural curiosities that have been drawing people here for hundreds of years. Ancient thermal springs, mountain views, incredible geology, forested hikes, and abundant creeks \u2013 all in the middle of town \u2013 make Hot Springs National Park a unique and beautiful destination.",
+  "parkCode": "hosp",
+  "states": "AR",
+  "image": "hot_springs"
+ },
+ {
+  "name": "Indiana Dunes",
+  "full_name": "Indiana Dunes National Park",
+  "id": "473EFACE-EE15-4A4F-AA6C-666810A9E27D",
+  "designation": "National Park",
+  "description": "Lake Michigan's might has influenced Indiana Dunes for millennia. Wind and waves have shaped the land, leaving a rich mosaic of habitats along these 15 miles of Indiana coast. Over 50 miles of trails lead through shifting sand dunes, quiet woodlands, sunny prairies and lush wetlands. Known for its striking plant and bird diversity, it's easy to find inspiration throughout the park\u2019s 16,000 acres.",
+  "parkCode": "indu",
+  "states": "IN",
+  "image": "indiana_dunes"
+ },
+ {
+  "name": "Isle Royale",
+  "full_name": "Isle Royale National Park",
+  "id": "0F6893CF-FC15-4AC5-8C95-E70FC9C21B1A",
+  "designation": "National Park",
+  "description": "Explore a rugged, isolated island far from our connected communities. Isle Royale offers adventures for backpackers, hikers, boaters, paddlers, and divers. Cross Lake Superior and make a commitment: Become a part of this island, and let it become a part of you. Find peace and refuge in island wilderness \u2013 because Isle Royale, in turn, finds refuge in us. Help Isle Royale stay wild.",
+  "parkCode": "isro",
+  "states": "MI",
+  "image": "isle_royale"
+ },
+ {
+  "name": "Joshua Tree",
+  "full_name": "Joshua Tree National Park",
+  "id": "F5CD58FB-05DC-4074-99DA-F327A537F1BC",
+  "designation": "National Park",
+  "description": "Two distinct desert ecosystems, the Mojave and the Colorado, come together in Joshua Tree National Park. A fascinating variety of plants and animals make their homes in a land sculpted by strong winds and occasional torrents of rain. Dark night skies, a rich cultural history, and surreal geologic features add to the wonder of this vast wilderness in southern California. Come explore for yourself!",
+  "parkCode": "jotr",
+  "states": "CA",
+  "image": "joshua_tree"
+ },
+ {
+  "name": "Katmai",
+  "full_name": "Katmai National Park & Preserve",
+  "id": "B712CB0C-B3DD-48A6-AA4F-CCD72C87F48B",
+  "designation": "National Park & Preserve",
+  "description": "A landscape is alive underneath our feet, filled with creatures that remind us what it is to be wild. Katmai was established in 1918 to protect the volcanically devastated region surrounding Novarupta and the Valley of Ten Thousand Smokes. Today, Katmai National Park and Preserve also protects 9,000 years of human history and important habitat for salmon and thousands of brown bears.",
+  "parkCode": "katm",
+  "states": "AK",
+  "image": "katmai"
+ },
+ {
+  "name": "Kenai Fjords",
+  "full_name": "Kenai Fjords National Park",
+  "id": "11E73438-0CCC-4441-A76A-1995F67F2D89",
+  "designation": "National Park",
+  "description": "At the edge of the Kenai Peninsula lies a land where the ice age lingers. Nearly 40 glaciers flow from the Harding Icefield, Kenai Fjords' crowning feature. Wildlife thrives in icy waters and lush forests along the fjords once carved by the vast expanse of ice. Today, shrinking glaciers bear witness to the effects of our changing climate.",
+  "parkCode": "kefj",
+  "states": "AK",
+  "image": "kenai_fjords"
+ },
+ {
+  "name": "Kobuk Valley",
+  "full_name": "Kobuk Valley National Park",
+  "id": "691831BF-F280-4E02-BF4A-FF476BC66B23",
+  "designation": "National Park",
+  "description": "Caribou, sand dunes, the Kobuk River, Onion Portage - just some of the facets of Kobuk Valley National Park. Thousands of caribou migrate through, their tracks crisscrossing sculpted dunes. The Kobuk River is an ancient and current corridor for people and wildlife. For 9000 years, people came to Onion Portage to harvest caribou as they swam the river. Even today, that rich tradition continues.",
+  "parkCode": "kova",
+  "states": "AK",
+  "image": "kobuk_valley"
+ },
+ {
+  "name": "Lake Clark",
+  "full_name": "Lake Clark National Park & Preserve",
+  "id": "5F76F85B-23F4-4616-AA0B-A26E8DE76593",
+  "designation": "National Park & Preserve",
+  "description": "Lake Clark National Park and Preserve is a land of stunning beauty. Volcanoes steam, salmon run, bears forage, and craggy mountains reflect in shimmering turquoise lakes. Here, too, local people and culture still depend on the land and water. Venture into the park to become part of the wilderness.",
+  "parkCode": "lacl",
+  "states": "AK",
+  "image": "lake_clark"
+ },
+ {
+  "name": "Lassen Volcanic",
+  "full_name": "Lassen Volcanic National Park",
+  "id": "9AA4A53C-0331-43CC-99F5-379BC929FFB2",
+  "designation": "National Park",
+  "description": "Lassen Volcanic National Park is home to steaming fumaroles, meadows freckled with wildflowers, clear mountain lakes, and numerous volcanoes. Jagged peaks tell the story of its eruptive past while hot water continues to shape the land.",
+  "parkCode": "lavo",
+  "states": "CA",
+  "image": "lassen_volcanic"
+ },
+ {
+  "name": "Mammoth Cave",
+  "full_name": "Mammoth Cave National Park",
+  "id": "6A1737A1-6848-4087-AAF7-68A427247357",
+  "designation": "National Park",
+  "description": "Rolling hills, deep river valleys, and the world's longest known cave system. Mammoth Cave National Park is home to thousands of years of human history and a rich diversity of plant and animal life, earning it the title of UNESCO World Heritage Site and International Biosphere Region.",
+  "parkCode": "maca",
+  "states": "KY",
+  "image": "mammoth_cave"
+ },
+ {
+  "name": "Mesa Verde",
+  "full_name": "Mesa Verde National Park",
+  "id": "BE3A981E-BB55-474D-8A0E-D711408682DC",
+  "designation": "National Park",
+  "description": "For over 700 years, the Ancestral Pueblo people built thriving communities on the mesas and in the cliffs of Mesa Verde. Today, the park protects the rich cultural heritage of 27 Pueblos and Tribes and offers visitors a spectacular window into the past. This World Heritage Site and International Dark Sky Park is home to over a thousand species, including several that live nowhere else on earth.",
+  "parkCode": "meve",
+  "states": "CO",
+  "image": "mesa_verde"
+ },
+ {
+  "name": "Mount Rainier",
+  "full_name": "Mount Rainier National Park",
+  "id": "07229CB8-8533-4669-B614-2B884779DD93",
+  "designation": "National Park",
+  "description": "Ascending to 14,410 feet above sea level, Mount Rainier stands as an icon in the Washington landscape. An active volcano, Mount Rainier is the most glaciated peak in the contiguous U.S.A., spawning five major rivers. Subalpine wildflower meadows ring the icy volcano while ancient forest cloaks Mount Rainier\u2019s lower slopes. Wildlife abounds in the park\u2019s ecosystems. A lifetime of discovery awaits.",
+  "parkCode": "mora",
+  "states": "WA",
+  "image": "mount_rainier"
+ },
+ {
+  "name": "National Park of American Samoa",
+  "full_name": "National Park of American Samoa",
+  "id": "6E71B72E-4F2F-495D-9225-A6634E6C2EB1",
+  "designation": "",
+  "description": "The National Park of American Samoa invites you to discover the vibrant culture and stunning landscapes of the South Pacific. Experience a world unlike any other, where natural beauty and cultural heritage are protected for future generations. Join us in exploring these islands of sacred earth!",
+  "parkCode": "npsa",
+  "states": "AS",
+  "image": "national_park_of_american_samoa"
+ },
+ {
+  "name": "New River Gorge",
+  "full_name": "New River Gorge National Park & Preserve",
+  "id": "28F155F2-5116-4E4F-9E21-E8CBCFA5FF49",
+  "designation": "National Park & Preserve",
+  "description": "A rugged, whitewater river flowing northward through deep canyons, the New River is among the oldest rivers on the continent. The park encompasses over 70,000 acres of land along the New River, is rich in cultural and natural history, and offers an abundance of scenic and recreational opportunities.",
+  "parkCode": "neri",
+  "states": "WV",
+  "image": "new_river_gorge"
+ },
+ {
+  "name": "North Cascades",
+  "full_name": "North Cascades National Park",
+  "id": "80EB184D-4B6D-4AD2-B6E2-CAAD6312B27D",
+  "designation": "National Park",
+  "description": "Less than three hours from Seattle, an alpine landscape beckons. Discover communities of life adapted to moisture in the west and recurring fire in the east. Explore jagged peaks crowned by more than 300 glaciers. Listen to cascading waters in forested valleys. Witness a landscape sensitive to the Earth's changing climate. Help steward the ecological heart of the Cascades.",
+  "parkCode": "noca",
+  "states": "WA",
+  "image": "north_cascades"
+ },
+ {
+  "name": "Olympic",
+  "full_name": "Olympic National Park",
+  "id": "81CFE898-AD06-4C0D-8A9B-C8D356273F0D",
+  "designation": "National Park",
+  "description": "With its incredible range of precipitation and elevation, diversity is the hallmark of Olympic National Park. Encompassing nearly a million acres, the park protects a vast wilderness, thousands of years of human history, and several distinctly different ecosystems, including glacier-capped mountains, old-growth temperate rain forests, and over 70 miles of wild coastline. Come explore!",
+  "parkCode": "olym",
+  "states": "WA",
+  "image": "olympic"
+ },
+ {
+  "name": "Petrified Forest",
+  "full_name": "Petrified Forest National Park",
+  "id": "1ABD0EFF-AC09-4EA1-8CC1-2351A3E160D0",
+  "designation": "National Park",
+  "description": "A landscape where deep time lies fully on display, Petrified Forest National Park blends colorful badlands, vast grasslands, and one of the world\u2019s largest and most vivid collections of petrified wood. Spanning more than 200 million years of geologic history, the park protects ancient fossils, ancestral Puebloan sites, habitat for desert animals, and a sweeping stretch of historic Route 66.",
+  "parkCode": "pefo",
+  "states": "AZ",
+  "image": "petrified_forest"
+ },
+ {
+  "name": "Pinnacles",
+  "full_name": "Pinnacles National Park",
+  "id": "9B266961-3364-43D2-9A08-82BB5EF5643F",
+  "designation": "National Park",
+  "description": "Around 23 million years ago, a series of volcanic eruptions shaped the landscape that is now Pinnacles National Park. The remnants of these ancient eruptions have formed a striking terrain of rocky spires and deep canyons. Visitors can explore diverse environments, from chaparral and oak woodlands to the cool, shaded depths of canyon floors.",
+  "parkCode": "pinn",
+  "states": "CA",
+  "image": "pinnacles"
+ },
+ {
+  "name": "Rocky Mountain",
+  "full_name": "Rocky Mountain National Park",
+  "id": "67A56B17-F533-4A56-B2DA-26091C6AD295",
+  "designation": "National Park",
+  "description": "Rocky Mountain National Park's 415 square miles (265,807 acres) encompasses a spectacular range of mountain environments. From meadows found in the montane life zone to glistening alpine lakes and up to the towering mountain peaks, there is something for everyone to discover. Along the way explore over 300 miles of hiking trails and incredible wildlife viewing.",
+  "parkCode": "romo",
+  "states": "CO",
+  "image": "rocky_mountain"
+ },
+ {
+  "name": "Saguaro",
+  "full_name": "Saguaro National Park",
+  "id": "A6F169CF-B830-499C-A5EB-A35138C77589",
+  "designation": "National Park",
+  "description": "Tucson, Arizona is home to the nation's largest cacti. The giant saguaro is the universal symbol of the American west. These majestic plants, found only in a small portion of the United States, are protected by Saguaro National Park, to the east and west of the modern city of Tucson. Here you have a chance to see these enormous cacti, silhouetted by the beauty of a magnificent desert sunset.",
+  "parkCode": "sagu",
+  "states": "AZ",
+  "image": "saguaro"
+ },
+ {
+  "name": "Kings Canyon",
+  "full_name": "Kings Canyon National Park",
+  "id": "7E5A693C-2F63-44FD-B791-31FC8B8B6285",
+  "designation": "National Parks",
+  "description": "Huge mountains, rugged foothills, deep canyons, vast caverns, and the world\u2019s largest trees exemplify the diversity of landscapes, life, and beauty here. Explore these pages to plan your visit or to learn about the plants and animals here and the threats they face. Ancient giant sequoias may seem invincible, but they, too are vulnerable.",
+  "parkCode": "seki",
+  "states": "CA",
+  "image": "kings_canyon"
+ },
+ {
+  "name": "Sequoia",
+  "full_name": "Sequoia Park",
+  "id": "7E5A693C-2F63-44FD-B791-31FC8B8B6285",
+  "designation": "National Parks",
+  "description": "Huge mountains, rugged foothills, deep canyons, vast caverns, and the world\u2019s largest trees exemplify the diversity of landscapes, life, and beauty here. Explore these pages to plan your visit or to learn about the plants and animals here and the threats they face. Ancient giant sequoias may seem invincible, but they, too are vulnerable.",
+  "parkCode": "seki",
+  "states": "CA",
+  "image": "sequoia"
+ },
+ {
+  "name": "Shenandoah",
+  "full_name": "Shenandoah National Park",
+  "id": "E991C8BC-C203-4A09-AFD5-87380CF5C387",
+  "designation": "National Park",
+  "description": "Just 75 miles from the bustle of Washington, D.C., Shenandoah National Park is a land bursting with cascading waterfalls, spectacular vistas, fields of wildflowers, and quiet wooded hollows. With over 200,000 acres of protected lands that are haven to deer, songbirds, and black bear, there's so much to explore...and your journey begins right here!",
+  "parkCode": "shen",
+  "states": "VA",
+  "image": "shenandoah"
+ },
+ {
+  "name": "Theodore Roosevelt",
+  "full_name": "Theodore Roosevelt National Park",
+  "id": "B5FE5682-7981-47DD-AC96-13F4B33A466E",
+  "designation": "National Park",
+  "description": "When Theodore Roosevelt came to Dakota Territory to hunt bison in 1883, he was a skinny, young, spectacled dude from New York. He could not have imagined how his adventure in this remote and unfamiliar place would forever alter the course of the nation. The rugged landscape and strenuous life that TR experienced here would help shape a conservation policy that we still benefit from today.",
+  "parkCode": "thro",
+  "states": "ND",
+  "image": "theodore_roosevelt"
+ },
+ {
+  "name": "Virgin Islands",
+  "full_name": "Virgin Islands National Park",
+  "id": "C65070FE-942C-4E00-8C2B-64CA33C85B4A",
+  "designation": "National Park",
+  "description": "Go beyond Virgin Islands National Park's stunning white-sand beaches. Hike to historic plantation sites to learn about a challenging past when sugar and enslaved labor dominated life on the island. Visit the Indigenous Taino's ancient petroglyphs. Snorkel coral reefs to discover hidden marine life. Two-thirds of the island of St. John is national park, making it a unique destination for visitors.",
+  "parkCode": "viis",
+  "states": "VI",
+  "image": "virgin_islands"
+ },
+ {
+  "name": "Voyageurs",
+  "full_name": "Voyageurs National Park",
+  "id": "859727CB-2812-40DF-B8DB-D4AE9EA00089",
+  "designation": "National Park",
+  "description": "Voyageurs National Park spans 218,000 acres of lakes, forests, and streams in northern Minnesota. Established in 1975, the park is named after the French-Canadian Voyageurs who once navigated these abundant waters. Voyageurs National Park provides exceptional opportunities for recreation and exploration amidst landscapes rich in natural beauty, history, and cultural heritage.",
+  "parkCode": "voya",
+  "states": "MN",
+  "image": "voyageurs"
+ },
+ {
+  "name": "White Sands",
+  "full_name": "White Sands National Park",
+  "id": "32D2B528-193E-43FA-BF38-32493D9E317D",
+  "designation": "National Park",
+  "description": "Rising from the heart of the Tularosa Basin is one of the world's great natural wonders - the glistening white sands of New Mexico. Great wave-like dunes of gypsum sand have engulfed 275 square miles of desert, creating the world's largest gypsum dunefield. White Sands National Park preserves a major portion of this unique dunefield, along with the plants and animals that live here.",
+  "parkCode": "whsa",
+  "states": "NM",
+  "image": "white_sands"
+ },
+ {
+  "name": "Wind Cave",
+  "full_name": "Wind Cave National Park",
+  "id": "37C48EE0-2881-4D22-8F91-A249AE3B0CD0",
+  "designation": "National Park",
+  "description": "Wind Cave National Park protects two very different worlds - one deep within the earth, the other a sunlit world of many resources. Bison, elk, and other wildlife roam the rolling prairie grasslands and forested hillsides of one of America's oldest national parks. Below the remnant island of intact prairie sits Wind Cave, one of the longest and most complex caves in the world.",
+  "parkCode": "wica",
+  "states": "SD",
+  "image": "wind_cave"
+ },
+ {
+  "name": "Wrangell - St Elias",
+  "full_name": "Wrangell - St Elias National Park & Preserve",
+  "id": "B7944940-3FE5-4F9B-80AB-2FD78A4CDD48",
+  "designation": "National Park & Preserve",
+  "description": "Wrangell-St. Elias is a vast national park that rises from the ocean all the way up to 18,008 ft. At 13.2 million acres, the park is the same size as Yellowstone National Park, Yosemite National Park, and Switzerland combined! Within this wild landscape, people continue to live off the land as they have done for centuries. This rugged, beautiful land is filled with opportunities for adventure.",
+  "parkCode": "wrst",
+  "states": "AK",
+  "image": "wrangell___st_elias"
+ },
+ {
+  "name": "Yellowstone",
+  "full_name": "Yellowstone National Park",
+  "id": "F58C6D24-8D10-4573-9826-65D42B8B83AD",
+  "designation": "National Park",
+  "description": "On March 1, 1872, Yellowstone became the first national park for all to enjoy the unique hydrothermal wonders. Today, millions of people come here each year to camp, hike, and enjoy the majesty of the park.",
+  "parkCode": "yell",
+  "states": "ID,MT,WY",
+  "image": "yellowstone"
+ },
+ {
+  "name": "Yosemite",
+  "full_name": "Yosemite National Park",
+  "id": "4324B2B4-D1A3-497F-8E6B-27171FAE4DB2",
+  "designation": "National Park",
+  "description": "Not just a great valley, but a shrine to human foresight, the strength of granite, the power of glaciers, the persistence of life, and the tranquility of the High Sierra. First protected in 1864, Yosemite National Park is best known for its waterfalls, but within its nearly 1,200 square miles, you can find deep valleys, grand meadows, ancient giant sequoias, a vast wilderness area, and much more.",
+  "parkCode": "yose",
+  "states": "CA",
+  "image": "yosemite"
+ },
+ {
+  "name": "Zion",
+  "full_name": "Zion National Park",
+  "id": "41BAB8ED-C95F-447D-9DA1-FCC4E4D808B2",
+  "designation": "National Park",
+  "description": "Follow the paths where people have walked for thousands of years. Gaze up at massive sandstone cliffs of cream, pink, and red that soar into a brilliant blue sky. Experience the tall, stretching walls of a narrow slot canyon. Zion\u2019s unique array of plants and animals will enchant you as you absorb the rich history of the past and enjoy the excitement of present-day adventures.",
+  "parkCode": "zion",
+  "states": "UT",
+  "image": "zion"
+ },
+ {
+  "name": "Redwood",
+  "full_name": "Redwood National and State Parks",
+  "id": "041B325C-A34F-4027-8E41-1DF3F9A1D799",
+  "designation": "National and State Parks",
+  "description": "Renowned for the world\u2019s tallest trees, Redwood\u2019s landscapes span from open prairies and oak woodlands to pristine rivers and untamed coastline. This ancient home has supported people for thousands of years. The National Park Service and California State Parks now work to safeguard and rejuvenate these lands for everyone\u2019s enjoyment, learning, and inspiration.",
+  "parkCode": "redw",
+  "states": "CA",
+  "image": "redwood"
+ }
+]

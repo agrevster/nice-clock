@@ -1,16 +1,16 @@
 # Nice Clock Luau
-> UPDATED: 2025-11-13
+> UPDATED: 2026-06-08
 
 
 ##### Contents
-[http](#http-library) - [json](#json-library) - [datetime](#datetime-library) - [global](#datetime) - [nice-clock (**Used to make modules**)](#niceclock-library)
+[http](#http-library) - [json](#json-library) - [datetime](#datetime-library) - [global](#global-additions) - [nice-clock (**Used to make modules**)](#niceclock-library) - [config](#config-file)
 
 ## `http` library
 - `http.fetch`
   ```lua
-    function http.fetch(url: string, method: http.Methods, body: string?, content_type: string?, authorization: string?): http.Response
+    function http.fetch(url: string, method: http.Methods, body: string?, content_type: string?, authorization: string?, headers: table?): http.Response
     ```
-    - Makes an HTTP request to the given `url` with the given `method`. Optionally a `body`, can be supplied as well as the `content_type` of the body and an `authorization` header. This function returns an `http.Response` table. *In some cases including but not limited to a lack of connection, an error will be thrown by this method.* 
+    - Makes an HTTP request to the given `url` with the given `method`. Optionally a `body`, can be supplied as well as the `content_type` of the body and an `authorization` header. Additional headers can be specified by passing a table with string keys and string values to the `headers` field. This function returns an `http.Response` table. *In some cases including but not limited to a lack of connection, an error will be thrown by this method.* 
 - `http.Methods`
     ```lua
     http.Methods = {
@@ -43,13 +43,18 @@
   ```lua
     function json.load(str: string): any
     ```
-    - Converts a giving JSON `str` into a Luau table. If the given `str` is not valid JSON an error will be thrown. 
+    - Converts a given JSON `str` into a Luau table. If the given `str` is not valid JSON an error will be thrown. 
 - `json.dump`
   ```lua
     function json.dump(obj: any): string
     ```
     - Converts a given Luau table (`obj`) to a JSON string. If values in the table cannot traditionally be represented as JSON like: `userdata`, `functions` or `vectors` an error will be thrown.
 
+- `json.read`
+  ```lua
+    function json.read(filename: string): string? 
+    ```
+    - Reads a given `filename` from `assets/json`. If the file does not exist returns `nil`.
 
 ## `datetime` library
 - `datetime.utcnow`
@@ -148,9 +153,19 @@
     - Throws a luau error halting executing of the current module.
 - `getenv`
     ```lua
-    function getenv(key: str): str?
+    function getenv(key: string): string?
     ```
     - Gets an environment variable with the given `key`. If it does not exist returns `nil`.
+- `getcfg`
+    ```lua
+    function getcfg(key: string): string?
+    ```
+    - Gets a value from the [clock config](./README.md#config) where the key is the given `key`. If it does not exist returns `nil`.
+- `sanitizetoascii`
+    ```lua
+    function sanitizetoascii(str: string): string
+    ```
+    - Replaces accented characters, UTF8 quotes and dashes with their ASCII equivalents.
 
 ## `niceclock` library
 - **This is the main library used to create modules**
@@ -319,3 +334,17 @@
     ```
     - Represents all of the fonts loaded in the clock.
 
+
+## `Config` file
+- `ClockConfig`
+  ```lua
+    ClockConfig = {
+        brightness: number,
+        modules: {string},
+        config: {},
+    }
+    ```
+    - Used to store information passed to the clock via the [clock config file](./README.md#config). 
+    - `brightness` is used to determine the brightness of the clock display, and must be a whole number between `0` and `100`. (*Does not display on the simulator*)
+    - `modules` is a list of clock modules for the clock to load.
+    - `config` is a key to value store used by modules Luau files.

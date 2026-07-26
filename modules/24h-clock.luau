@@ -3,9 +3,7 @@ local module_time = 30
 
 function time_text(datetime: Datetime): string
   local time = datetime.time
-  return if time.twelve_hour > 9
-    then `{time.twelve_hour}:{time.padded_minute}`
-    else ` {time.twelve_hour}:{time.padded_minute}`
+  return if time.hour > 9 then `{time.hour}:{time.padded_minute}` else ` {time.hour}:{time.padded_minute}`
 end
 
 function date_text(datetime: Datetime): string
@@ -23,6 +21,6 @@ local second_advance_animation: CustomAnimation = {
 }
 
 return niceclock
-  .modulebuilder("Basic Clock", module_time, {}, { second_advance_animation })
+  .modulebuilder("24 Hour Clock", module_time, {}, { second_advance_animation })
   :text({ y = 0, x = 0 }, niceclock.fonts.Font12x24, time_text(dt), { r = 255, g = 0, b = 0 })
   :text({ y = 24, x = 8 }, niceclock.fonts.Font5x8, date_text(dt), { r = 255, g = 0, b = 0 })
