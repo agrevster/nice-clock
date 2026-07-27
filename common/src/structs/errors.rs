@@ -41,6 +41,7 @@ impl ClockError {
     }
 
     ///Returns a `ClockError` for when an issue occurs when parsing a BDF font.
+    // /`font_name`,`message`
     pub fn bdf_font_parsing(font_name: &str, message: &str) -> ClockError {
         ClockError::AssetError(ClockAssetError::BDFParsing(
             font_name.to_string(),

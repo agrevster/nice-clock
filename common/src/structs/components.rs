@@ -8,7 +8,8 @@ use chrono::TimeDelta;
 
 use crate::{
     HEIGHT, VoidClockResult, WIDTH,
-    structs::{color::Color, connector::ClockConnector, errors::ClockError, pos::Pos},
+    structs::{color::Color, connector::ClockConnector, errors::ClockError, fonts::Font, pos::Pos},
+    utils::LogUnwrap,
 };
 
 ///Trait used for all clock components. Each component must implement this
@@ -206,5 +207,77 @@ impl Component for CircleComponent {
         }
 
         Ok(())
+    }
+}
+fn draw_char(
+    connector: &mut dyn ClockConnector,
+    y_pos: u8,
+    x_pos: u8,
+    font: Font,
+    ch: char,
+    color: Color,
+) -> VoidClockResult {
+    let bdf = font.get();
+    let glyph = bdf
+        .glyphs
+        .get(&ch)
+        .or_else(|| bdf.glyphs.get(&bdf.default_char))
+        .unwrap_and_log("Font's default glyph is undefined in the bitmap!");
+
+    let bytes_per_row = ((bdf.width as usize) + 7) / 8;
+    let row_count = glyph.len().min(bdf.height as usize);
+
+    for row in 0..row_count {
+        let row_start = row * bytes_per_row;
+        let row_end = row_start + bytes_per_row;
+        let row_bytes = glyph
+            .get(row_start..row_end)
+            .ok_or(ClockError::bdf_font_parsing(
+                font.into(),
+                "Failed to draw char!",
+            ))?;
+
+        let mut tile_index: u8 = 0;
+        for byte in row_bytes {
+            for bit in 0..8u8 {
+                if tile_index >= bdf.width {
+                    break;
+                }
+                if byte & (0x80 >> bit) != 0 {
+                    connector.set_tile(
+                        &(
+                            (row as u8).saturating_add(y_pos),
+                            tile_index.saturating_add(x_pos),
+                        )
+                            .into(),
+                        &color,
+                    )?;
+                }
+                tile_index += 1;
+            }
+        }
+    }
+
+    Ok(())
+}
+
+///Used to draw a single `char` on the screen at the given `Pos` and with the given `Color`
+pub struct CharComponent {
+    pub color: Color,
+    pub chr: char,
+    pub pos: Pos,
+    pub font: Font,
+}
+
+impl Component for CharComponent {
+    #[inline]
+    fn name(&self) -> String {
+        "char".to_string()
+    }
+    fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
+        self.pos.validate()?;
+        draw_char(
+            clock, self.pos.y, self.pos.x, self.font, self.chr, self.color,
+        )
     }
 }

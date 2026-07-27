@@ -303,6 +303,7 @@ dependencies = [
  "log",
  "sdl2",
  "simplelog",
+ "strum",
  "time",
 ]
 

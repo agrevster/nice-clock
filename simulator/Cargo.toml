@@ -9,4 +9,5 @@ common = { version = "0.0.0", path = "../common" }
 log = { version = "0.4.33", features = ["std"] }
 sdl2 = "0.38.0"
 simplelog = "0.12.2"
+strum = { version = "0.28.0", features = ["derive"] }
 time = "0.3.53"

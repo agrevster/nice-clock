@@ -2,7 +2,7 @@ use std::{
     char, collections::HashMap, fs::read_to_string, path::PathBuf, str::FromStr, sync::OnceLock,
 };
 
-use strum::{EnumCount, EnumString, VariantNames};
+use strum::{EnumCount, EnumString, IntoStaticStr, VariantNames};
 
 use crate::utils::{LogUnwrap, assets_dir};
 use crate::{VoidClockResult, structs::errors::ClockError};
@@ -121,7 +121,7 @@ impl BDFFont {
 /// Used to represent the fonts available for use with the clock.
 /// In order to access these fonts, Font::load() must be called to load of of the available fonts
 /// into memory
-#[derive(EnumCount, VariantNames, EnumString)]
+#[derive(EnumCount, VariantNames, EnumString, IntoStaticStr, Clone, Copy)]
 pub enum Font {
     Font12x24,
     Font5x8_2,
@@ -133,7 +133,7 @@ pub enum Font {
     Font7x14,
 }
 
-static FONTS: OnceLock<[BDFFont; Font::COUNT]> = OnceLock::new();
+pub static FONTS: OnceLock<[BDFFont; Font::COUNT]> = OnceLock::new();
 
 pub fn load_font_from_file(path: PathBuf, font_name: &str) -> Result<BDFFont, ClockError> {
     let file_content = read_to_string(path.clone()).map_err(|e| ClockError::file_error(e, path))?;
@@ -142,8 +142,8 @@ pub fn load_font_from_file(path: PathBuf, font_name: &str) -> Result<BDFFont, Cl
 }
 
 impl Font {
-    ///Loads a BDF font from a given `path` from the filesystem.
-    ///**This should only be called once, and will panic if set more than once.**
+    ///Loads all fonts into the font store.
+    ///**This only needs to be called once at the beginning of the program.**
     pub fn load_fonts() -> VoidClockResult {
         let mut buffer: Vec<BDFFont> = Vec::with_capacity(Font::COUNT);
 
@@ -157,13 +157,11 @@ impl Font {
             buffer.push(load_font_from_file(path, fontname)?);
         }
 
-        FONTS
-            .set(
-                buffer
-                    .try_into()
-                    .expect("Failed to convert font buffer into array!"),
-            )
-            .expect("Fone store already initialized!");
+        FONTS.get_or_init(|| {
+            buffer
+                .try_into()
+                .expect("Failed to convert font buffer into array!")
+        });
 
         Ok(())
     }

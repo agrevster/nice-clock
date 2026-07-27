@@ -1,4 +1,4 @@
-use std::{env::current_dir, fmt::Display, path::PathBuf};
+use std::{fmt::Display, path::PathBuf};
 
 use log::{error, warn};
 
@@ -31,7 +31,7 @@ impl<T, E: Display> LogUnwrap<T> for Result<T, E> {
 impl<T> LogUnwrap<T> for Option<T> {
     fn unwrap_and_log(self, msg: &str) -> T {
         self.unwrap_or_else(|| {
-            error!("{}", msg);
+            error!("{msg}");
             panic!();
         })
     }
@@ -46,15 +46,10 @@ impl<T> LogUnwrap<T> for Option<T> {
     }
 }
 
-///Returns the path to the assets dir. Located in `$CWD/assets`.
+///Returns the path to the assets dir.
+///The assets dir **MUST** be located in `CARGO_MANIFEST_DIR` (Where the App was compiled).
 pub fn assets_dir() -> PathBuf {
-    if cfg!(test) {
-        let mut path = current_dir().unwrap_and_log("Failed to get CWD");
-        path.pop();
-        path.join("assets")
-    } else {
-        current_dir()
-            .unwrap_and_log("Failed to get CWD")
-            .join("assets")
-    }
+    let mut path = PathBuf::new().join(env!("CARGO_MANIFEST_DIR"));
+    path.pop();
+    path.join("assets")
 }

@@ -7,6 +7,7 @@ use std::{
     time::Duration,
 };
 
+use common::structs::fonts::Font;
 use common::{
     FPS,
     structs::{
@@ -188,6 +189,7 @@ fn main() {
     )
     .expect("Failed to start logger!");
 
+    Font::load_fonts().unwrap_and_log("Error loading fonts!");
     let (tx, rx) = channel::<[[Color; 64]; 32]>();
 
     let args = std::env::args().collect::<Vec<String>>();
