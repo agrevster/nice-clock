@@ -9,9 +9,9 @@ use strum::VariantNames;
 #[test]
 fn check_chars_with_l() {
     Font::load_fonts().unwrap();
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     for font_str in Font::VARIANTS {
-        let font_enum = Font::from_str(*font_str).expect("Failed to find font with given name!");
+        let font_enum = Font::from_str(font_str).expect("Failed to find font with given name!");
         let actual = render_to_hex(
             &mut clock,
             single_component_test_module(Box::new(components::CharComponent {
@@ -34,7 +34,7 @@ fn check_chars_with_l() {
 #[should_panic]
 fn check_char_out_of_bounds() {
     Font::load_fonts().unwrap();
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::CharComponent {
@@ -49,7 +49,7 @@ fn check_char_out_of_bounds() {
 #[test]
 fn check_invalid_char_does_default() {
     Font::load_fonts().unwrap();
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::CharComponent {

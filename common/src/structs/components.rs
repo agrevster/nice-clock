@@ -197,7 +197,7 @@ impl Component for CircleComponent {
                 let y = y as f32;
                 let x = x as f32;
 
-                let distance = ((y - center_y).powi(2) as f32 + (x - center_x).powi(2) as f32)
+                let distance = ((y - center_y).powi(2) + (x - center_x).powi(2))
                     .sqrt()
                     .trunc() as u8;
                 if distance >= (self.radius - self.outline_thickness) && distance < self.radius {
@@ -224,7 +224,7 @@ fn draw_char(
         .or_else(|| bdf.glyphs.get(&bdf.default_char))
         .unwrap_and_log("Font's default glyph is undefined in the bitmap!");
 
-    let bytes_per_row = ((bdf.width as usize) + 7) / 8;
+    let bytes_per_row = (bdf.width as usize).div_ceil(8);
     let row_count = glyph.len().min(bdf.height as usize);
 
     for row in 0..row_count {

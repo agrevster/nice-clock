@@ -97,7 +97,7 @@ impl BDFFont {
                                     ),
                                 )
                             })?;
-                            let num_bytes = (line.len() + 1) / 2;
+                            let num_bytes = line.len().div_ceil(2);
                             for i in 0..num_bytes {
                                 let shift = 8 * (num_bytes - 1 - i);
                                 let byte = ((bytes >> shift) & 0xFF) as u8;
@@ -181,7 +181,7 @@ fn get_font_key<T: FromStr>(
     var_name: &str,
     key_name: &str,
 ) -> Result<T, ClockError> {
-    Ok(line
+    line
         .get(index)
         .ok_or_else(|| {
             ClockError::bdf_font_parsing(
@@ -195,7 +195,7 @@ fn get_font_key<T: FromStr>(
                 font_name,
                 &format!("Failed to parse {key_name}: {var_name} as int."),
             )
-        })?)
+        })
 }
 
 #[cfg(test)]

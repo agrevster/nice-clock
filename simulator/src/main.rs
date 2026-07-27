@@ -39,32 +39,30 @@ struct SimulatorConnector {
 }
 
 impl ClockConnector for SimulatorConnector {
-    fn set_tile(self: &mut Self, pos: &Pos, color: &Color) -> common::VoidClockResult {
+    fn set_tile(&mut self, pos: &Pos, color: &Color) -> common::VoidClockResult {
         let pos = pos.validate()?;
         self.scratch[pos.y as usize][pos.x as usize] = *color;
         Ok(())
     }
 
-    fn update_screen(self: &mut Self) -> common::VoidClockResult {
+    fn update_screen(&mut self) -> common::VoidClockResult {
         // Ignore error because as eventually the thread will close once the sdl thread closes.
         let _ = self.transmitter.send(self.scratch);
         Ok(())
     }
 
-    fn clear_screen(self: &mut Self) -> common::VoidClockResult {
+    fn clear_screen(&mut self) -> common::VoidClockResult {
         self.scratch = [[Color::black(); 64]; 32];
         Ok(())
     }
 
-    fn set_brightness(self: &mut Self, brightness: u8) -> common::VoidClockResult {
+    fn set_brightness(&mut self, brightness: u8) -> common::VoidClockResult {
         _ = brightness;
         warn!("set_brightness is not implemented on the simulator!");
         unimplemented!()
     }
 
-    fn fetch_module_names(
-        self: &mut Self,
-    ) -> Result<Vec<String>, common::structs::errors::ClockError> {
+    fn fetch_module_names(&mut self) -> Result<Vec<String>, common::structs::errors::ClockError> {
         warn!("fetch_module_names is not implemented on the simulator!");
         unimplemented!()
     }
@@ -98,7 +96,7 @@ fn tile_pos_for_click_pos(click: (i32, i32)) -> Pos {
 }
 
 fn start_simulator(rx: Receiver<[[Color; 64]; 32]>) {
-    let sleep_time = Duration::from_millis(((1 as f32).div(FPS as f32) * 1000.0) as u64);
+    let sleep_time = Duration::from_millis(((1.0).div(FPS as f32) * 1000.0) as u64);
     let sdl = sdl2::init().unwrap_and_log("Failed to create SDL session for simulator!");
     let video = sdl
         .video()

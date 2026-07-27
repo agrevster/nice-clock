@@ -20,8 +20,8 @@ pub struct TestingConnector {
     scratch: [[Color; 64]; 32],
 }
 
-impl TestingConnector {
-    pub fn new() -> Self {
+impl Default for TestingConnector {
+    fn default() -> Self {
         Self {
             tiles: [[Color::black(); 64]; 32],
             scratch: [[Color::black(); 64]; 32],
@@ -30,29 +30,29 @@ impl TestingConnector {
 }
 
 impl ClockConnector for TestingConnector {
-    fn set_tile(self: &mut Self, pos: &Pos, color: &Color) -> VoidClockResult {
+    fn set_tile(&mut self, pos: &Pos, color: &Color) -> VoidClockResult {
         pos.validate()?;
         self.scratch[pos.y as usize][pos.x as usize] = *color;
         Ok(())
     }
 
-    fn update_screen(self: &mut Self) -> VoidClockResult {
+    fn update_screen(&mut self) -> VoidClockResult {
         self.tiles = self.scratch;
         Ok(())
     }
 
-    fn clear_screen(self: &mut Self) -> VoidClockResult {
+    fn clear_screen(&mut self) -> VoidClockResult {
         self.scratch = [[Color::black(); 64]; 32];
         Ok(())
     }
 
-    fn set_brightness(self: &mut Self, brightness: u8) -> VoidClockResult {
+    fn set_brightness(&mut self, brightness: u8) -> VoidClockResult {
         _ = brightness;
         warn!("set_brightness is not implemented in testing!");
         unimplemented!()
     }
 
-    fn fetch_module_names(self: &mut Self) -> Result<Vec<String>, ClockError> {
+    fn fetch_module_names(&mut self) -> Result<Vec<String>, ClockError> {
         warn!("fetch_module_names is not implemented in testing!");
         unimplemented!()
     }
@@ -73,6 +73,7 @@ pub fn tiles_to_hex(tiles: [[Color; 64]; 32]) -> String {
         .collect::<String>()
 }
 
+#[expect(clippy::needless_range_loop)]
 pub fn tiles_from_hex(hex: String) -> Result<[[Color; 64]; 32], ParseIntError> {
     let mut buf = [[Color { r: 0, g: 0, b: 0 }; 64]; 32];
     for y in 0..32 {

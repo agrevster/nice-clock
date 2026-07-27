@@ -10,9 +10,9 @@ pub struct Pos {
 impl Pos {
     ///Validates the given `Pos` to ensure the `x` and `y` are within the bounds of the clock.
     ///If they are not returns a `TileOutOfBounds` error.
-    pub fn validate(self: &Self) -> Result<&Pos, ClockError> {
+    pub fn validate(&self) -> Result<&Pos, ClockError> {
         if self.x >= WIDTH || self.y >= HEIGHT {
-            Err(ClockError::tile_out_of_bounds(self.clone()))
+            Err(ClockError::tile_out_of_bounds(*self))
         } else {
             Ok(self)
         }

@@ -5,7 +5,7 @@ use simulator::test_utils::{
 
 #[test]
 fn check_basic_box() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::BoxComponent {
@@ -25,7 +25,7 @@ fn check_basic_box() {
 
 #[test]
 fn check_line_box() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::BoxComponent {
@@ -45,7 +45,7 @@ fn check_line_box() {
 
 #[test]
 fn check_box2() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::BoxComponent {
@@ -65,7 +65,7 @@ fn check_box2() {
 
 #[test]
 fn check_line_box_vert() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::BoxComponent {
@@ -85,7 +85,7 @@ fn check_line_box_vert() {
 
 #[test]
 fn check_filled_inside_box() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::BoxComponent {

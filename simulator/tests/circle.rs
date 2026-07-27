@@ -5,7 +5,7 @@ use simulator::test_utils::{
 
 #[test]
 fn check_zero_args_circles() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::CircleComponent {
@@ -59,7 +59,7 @@ fn check_zero_args_circles() {
 
 #[test]
 fn check_basic_circle() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::CircleComponent {
@@ -78,7 +78,7 @@ fn check_basic_circle() {
 
 #[test]
 fn check_odd_sized_circle() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::CircleComponent {
@@ -97,7 +97,7 @@ fn check_odd_sized_circle() {
 
 #[test]
 fn check_large_circle() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::CircleComponent {
@@ -116,7 +116,7 @@ fn check_large_circle() {
 
 #[test]
 fn check_circle_with_nonzero_thickness() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::CircleComponent {
@@ -135,7 +135,7 @@ fn check_circle_with_nonzero_thickness() {
 
 #[test]
 fn check_circle_filled() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::CircleComponent {
@@ -154,7 +154,7 @@ fn check_circle_filled() {
 
 #[test]
 fn check_circle_filled_partial() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::CircleComponent {
@@ -174,7 +174,7 @@ fn check_circle_filled_partial() {
 #[test]
 #[should_panic]
 fn check_circle_filled_too_big() {
-    let mut clock = TestingConnector::new();
+    let mut clock = TestingConnector::default();
     render_to_hex(
         &mut clock,
         single_component_test_module(Box::new(components::CircleComponent {
