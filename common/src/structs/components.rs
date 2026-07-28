@@ -308,3 +308,52 @@ impl Component for TextComponent {
         Ok(())
     }
 }
+
+///Used to draw a wrapped `string` on the screen at the given `Pos` and with the given `Color`.
+///Wrapped strings will go to the next line + `line_spacing` pixels if they encounter `\n` or go over `64`px.
+pub struct WrappedTextComponent {
+    pub color: Color,
+    pub text: String,
+    pub pos: Pos,
+    pub font: Font,
+    pub line_spacing: i8,
+}
+
+impl Component for WrappedTextComponent {
+    #[inline]
+    fn name(&self) -> String {
+        "wrapped_text".to_string()
+    }
+    fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
+        self.pos.validate()?;
+
+        let mut x = self.pos.x;
+        let mut y = self.pos.y;
+        let font = self.font.get();
+
+        let min_spacing = 0.max(font.height as i8 - self.line_spacing) as u8;
+
+        for char in self.text.chars() {
+            //Reset x and increase y on newline
+            if char == '\n' {
+                y += min_spacing;
+                x = self.pos.x;
+                continue;
+            }
+
+            if font.width + x >= WIDTH {
+                x = self.pos.x;
+                y += min_spacing;
+
+                // We can't draw outside y range
+                if y > 31 - font.height {
+                    break;
+                }
+            }
+
+            draw_char(clock, y, x, self.font, char, self.color)?;
+            x += font.width;
+        }
+        Ok(())
+    }
+}
