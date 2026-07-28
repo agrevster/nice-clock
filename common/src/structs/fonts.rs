@@ -181,8 +181,7 @@ fn get_font_key<T: FromStr>(
     var_name: &str,
     key_name: &str,
 ) -> Result<T, ClockError> {
-    line
-        .get(index)
+    line.get(index)
         .ok_or_else(|| {
             ClockError::bdf_font_parsing(
                 font_name,
@@ -223,7 +222,7 @@ fn print_char(font: &BDFFont, chr: char) {
                 tile_index += 1;
             }
         }
-        println!("");
+        println!();
     }
 }
 

@@ -281,3 +281,30 @@ impl Component for CharComponent {
         )
     }
 }
+
+///Used to draw a `string` on the screen at the given `Pos` and with the given `Color`
+pub struct TextComponent {
+    pub color: Color,
+    pub text: String,
+    pub pos: Pos,
+    pub font: Font,
+}
+
+impl Component for TextComponent {
+    #[inline]
+    fn name(&self) -> String {
+        "text".to_string()
+    }
+    fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
+        self.pos.validate()?;
+
+        let width = self.font.get().width;
+        let mut char_x = self.pos.x;
+
+        for char in self.text.chars() {
+            draw_char(clock, self.pos.y, char_x, self.font, char, self.color)?;
+            char_x += width;
+        }
+        Ok(())
+    }
+}

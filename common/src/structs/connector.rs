@@ -27,7 +27,7 @@ pub mod module_loader {
         VoidClockResult,
         structs::{
             color::Color,
-            components::{CharComponent, RootComponent},
+            components::{RootComponent, TextComponent},
             connector::ClockConnector,
             fonts::Font,
             module::ClockModule,
@@ -43,11 +43,11 @@ pub mod module_loader {
             name: "test".to_string(),
             time_limt: Duration::seconds(5),
             images_names: vec![],
-            root_compoent: RootComponent::new(vec![Box::new(CharComponent {
-                pos: (0, 20).into(),
+            root_compoent: RootComponent::new(vec![Box::new(TextComponent {
+                pos: (25, 35).into(),
                 color: Color::green(),
-                chr: '?',
-                font: Font::Font5x5,
+                text: "Hi mom".to_string(),
+                font: Font::Font5x8_2,
             })]),
         }
     }
