@@ -7,10 +7,10 @@ use std::{
     time::Duration,
 };
 
-use common::structs::fonts::Font;
+use common::clock::fonts::Font;
 use common::{
     FPS,
-    structs::{
+    clock::{
         color::Color,
         connector::{
             ClockConnector,
@@ -62,7 +62,7 @@ impl ClockConnector for SimulatorConnector {
         unimplemented!()
     }
 
-    fn fetch_module_names(&mut self) -> Result<Vec<String>, common::structs::errors::ClockError> {
+    fn fetch_module_names(&mut self) -> Result<Vec<String>, common::clock::errors::ClockError> {
         warn!("fetch_module_names is not implemented on the simulator!");
         unimplemented!()
     }

@@ -8,7 +8,7 @@ use chrono::TimeDelta;
 
 use crate::{
     HEIGHT, VoidClockResult, WIDTH,
-    structs::{color::Color, connector::ClockConnector, errors::ClockError, fonts::Font, pos::Pos},
+    clock::{color::Color, connector::ClockConnector, errors::ClockError, fonts::Font, pos::Pos},
     utils::LogUnwrap,
 };
 

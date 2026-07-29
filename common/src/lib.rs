@@ -1,8 +1,8 @@
 ///A `Result` of `void` or `ClockError`.
-pub type VoidClockResult = Result<(), structs::errors::ClockError>;
+pub type VoidClockResult = Result<(), clock::errors::ClockError>;
 
 ///Stores structures defined for use in nice-clock
-pub mod structs;
+pub mod clock;
 ///Utilities
 pub mod utils;
 

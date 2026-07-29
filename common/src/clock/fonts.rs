@@ -5,7 +5,7 @@ use std::{
 use strum::{EnumCount, EnumString, IntoStaticStr, VariantNames};
 
 use crate::utils::{LogUnwrap, assets_dir};
-use crate::{VoidClockResult, structs::errors::ClockError};
+use crate::{VoidClockResult, clock::errors::ClockError};
 
 #[derive(Debug)]
 pub struct BDFFont {

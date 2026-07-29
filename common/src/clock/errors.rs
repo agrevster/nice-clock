@@ -1,6 +1,6 @@
 use std::{error::Error, fmt::Display, path::PathBuf};
 
-use crate::structs::pos::Pos;
+use crate::clock::pos::Pos;
 
 ///An exhaustive enum of all the errors the clock can return.
 #[derive(Debug)]

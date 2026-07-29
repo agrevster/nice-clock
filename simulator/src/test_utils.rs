@@ -4,7 +4,7 @@ use std::{num::ParseIntError, path::PathBuf};
 use chrono::{Duration, TimeDelta};
 use common::{
     VoidClockResult,
-    structs::{
+    clock::{
         color::Color,
         components::{Component, RootComponent},
         connector::ClockConnector,

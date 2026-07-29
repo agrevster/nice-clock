@@ -1,4 +1,4 @@
-use crate::{HEIGHT, WIDTH, structs::errors::ClockError};
+use crate::{HEIGHT, WIDTH, clock::errors::ClockError};
 
 ///Used to represent the `x` and `y` position of a tile on the clock.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]

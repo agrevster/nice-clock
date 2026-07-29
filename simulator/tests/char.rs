@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use common::structs::{color::Color, components, fonts::Font};
+use common::clock::{color::Color, components, fonts::Font};
 use simulator::test_utils::{
     TestingConnector, get_dump, hex_from_file, render_to_hex, single_component_test_module,
 };

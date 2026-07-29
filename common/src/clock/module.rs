@@ -1,6 +1,6 @@
 use chrono::Duration;
 
-use crate::structs::components::RootComponent;
+use crate::clock::components::RootComponent;
 
 #[derive(Debug)]
 pub struct ClockModule {

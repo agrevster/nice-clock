@@ -1,6 +1,6 @@
 use crate::{
     VoidClockResult,
-    structs::{color::Color, errors::ClockError, pos::Pos},
+    clock::{color::Color, errors::ClockError, pos::Pos},
 };
 
 ///Required to create a nice-clock connector.
@@ -25,7 +25,7 @@ pub mod module_loader {
 
     use crate::{
         VoidClockResult,
-        structs::{
+        clock::{
             color::Color,
             components::{RootComponent, WrappedTextComponent},
             connector::ClockConnector,
