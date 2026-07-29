@@ -331,7 +331,7 @@ impl Component for WrappedTextComponent {
         let mut y = self.pos.y;
         let font = self.font.get();
 
-        let min_spacing = 0.max(font.height as i8 - self.line_spacing) as u8;
+        let min_spacing = 0.max(font.height as i8 + self.line_spacing) as u8;
 
         for char in self.text.chars() {
             //Reset x and increase y on newline

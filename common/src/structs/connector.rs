@@ -44,11 +44,11 @@ pub mod module_loader {
             time_limt: Duration::seconds(5),
             images_names: vec![],
             root_compoent: RootComponent::new(vec![Box::new(WrappedTextComponent {
-                pos: (0, 0).into(),
+                pos: (0, 10).into(),
                 color: Color::green(),
-                text: "Hi mom and hello dad".to_string(),
+                text: "1:The left\n2:right\n3:Center".to_string(),
                 font: Font::Font5x8_2,
-                line_spacing: 0,
+                line_spacing: -5,
             })]),
         }
     }
