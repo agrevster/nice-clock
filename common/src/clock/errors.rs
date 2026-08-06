@@ -21,8 +21,12 @@ pub enum ClockError {
 pub enum ClockAssetError {
     ///Returned when a BDF font cannot be parsed.
     BDFParsing(String, String),
+    ///Returned when a PPM image cannot be parsed.
+    PPMParsing(String, String),
     ///Returned when an IO error occurs
     FileError(std::io::Error, PathBuf),
+    ///Returned when an asset cannot be found.
+    AssetNotFound(String),
 }
 
 impl ClockError {
@@ -49,8 +53,23 @@ impl ClockError {
         ))
     }
 
+    ///Returns a `ClockError` for when an issue occurs when parsing a PPM Image.
+    // /`image_name`,`message`
+    pub fn ppm_image_parsing(image_name: &str, message: &str) -> ClockError {
+        ClockError::AssetError(ClockAssetError::PPMParsing(
+            image_name.to_string(),
+            message.to_string(),
+        ))
+    }
+
+    ///Converts a `std::io::Error` into a `ClockError`
     pub fn file_error(err: std::io::Error, filepath: PathBuf) -> ClockError {
         ClockError::AssetError(ClockAssetError::FileError(err, filepath))
+    }
+
+    ///Returns a `ClockError` for when an asset can't be found.
+    pub fn asset_not_found(asset_name: String) -> ClockError {
+        ClockError::AssetError(ClockAssetError::AssetNotFound(asset_name))
     }
 }
 
@@ -71,11 +90,17 @@ impl Display for ClockError {
                         "Failed to parse the header of BDF font: {font_name}; {message}"
                     )
                 }
+                ClockAssetError::PPMParsing(image_name, message) => {
+                    write!(f, "Failed to parse a PPM image: {image_name}; {message}")
+                }
                 ClockAssetError::FileError(error, filepath) => {
                     write!(
                         f,
                         "There was an error trying to work with file: {filepath:?}: {error:?}"
                     )
+                }
+                ClockAssetError::AssetNotFound(asset_filename) => {
+                    write!(f, "Asset not found: {asset_filename}!")
                 }
             },
         }
