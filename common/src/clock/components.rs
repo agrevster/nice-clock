@@ -357,3 +357,41 @@ impl Component for WrappedTextComponent {
         Ok(())
     }
 }
+
+///Used to draw an image the screen at the given `Pos`. The image must be loaded in the Clock's
+///image store. This can be done by specifying it in the current module's image list.
+pub struct ImageComponent {
+    pub pos: Pos,
+    pub image_name: String,
+}
+
+impl Component for ImageComponent {
+    #[inline]
+    fn name(&self) -> String {
+        "image".to_string()
+    }
+    fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
+        self.pos.validate()?;
+        let image = clock.get_image_store().get_image(&self.image_name)?;
+        let black = Color::black();
+
+        for y in 0..image.height {
+            for x in 0..image.width {
+                let pixel = image
+                    .pixels
+                    .get((y * image.width + x) as usize)
+                    .ok_or_else(|| {
+                        ClockError::ppm_image_parsing(
+                            &self.image_name,
+                            &format!("Failed to find pixel on image y={y};x={x}"),
+                        )
+                    })?;
+                if pixel != &black {
+                    clock.set_tile(&(y + self.pos.y, x + self.pos.x).into(), pixel)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+}

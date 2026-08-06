@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use std::{collections::HashMap, sync::OnceLock};
 
 use log::error;
@@ -152,14 +153,15 @@ impl PPM {
 #[derive(Default)]
 ///Used to store `PPM` images for the clock and its modules.
 pub struct ImageStore {
-    images: HashMap<String, PPM>,
+    images: HashMap<String, Rc<PPM>>,
 }
 
 impl ImageStore {
     ///Attempts to locate an image from the `ImageStore`. If the image is not found returns a `ClockError`.
-    pub fn get_image<'a>(&'a mut self, name: &str) -> Result<&'a PPM, ClockError> {
+    pub fn get_image(&mut self, name: &str) -> Result<Rc<PPM>, ClockError> {
         self.images
             .get(name)
+            .map(Rc::clone)
             .ok_or_else(|| ClockError::asset_not_found(format!("{name}.ppm")))
     }
 
@@ -177,7 +179,10 @@ impl ImageStore {
 
         self.images.insert(
             filename,
-            PPM::parse(&file_data, &(ppm_filename.to_string() + ".ppm"))?,
+            Rc::new(PPM::parse(
+                &file_data,
+                &(ppm_filename.to_string() + ".ppm"),
+            )?),
         );
 
         Ok(())

@@ -8,6 +8,7 @@ use std::{
 };
 
 use common::clock::fonts::Font;
+use common::clock::images::ImageStore;
 use common::{
     FPS,
     clock::{
@@ -34,8 +35,9 @@ static BG_COLOR: SdlColor = SdlColor::RGB(27, 31, 25);
 mod test_utils;
 
 struct SimulatorConnector {
-    scratch: [[Color; 64]; 32],
     pub transmitter: Sender<[[Color; 64]; 32]>,
+    scratch: [[Color; 64]; 32],
+    image_store: ImageStore,
 }
 
 impl ClockConnector for SimulatorConnector {
@@ -65,6 +67,10 @@ impl ClockConnector for SimulatorConnector {
     fn fetch_module_names(&mut self) -> Result<Vec<String>, common::clock::errors::ClockError> {
         warn!("fetch_module_names is not implemented on the simulator!");
         unimplemented!()
+    }
+
+    fn get_image_store(&mut self) -> &mut ImageStore {
+        &mut self.image_store
     }
 }
 
@@ -198,6 +204,7 @@ fn main() {
     let mut clock = SimulatorConnector {
         scratch: [[Color::black(); 64]; 32],
         transmitter: tx,
+        image_store: ImageStore::default(),
     };
 
     thread::scope(|scope| {

@@ -9,6 +9,7 @@ use common::{
         components::{Component, RootComponent},
         connector::ClockConnector,
         errors::ClockError,
+        images::ImageStore,
         module::ClockModule,
         pos::Pos,
     },
@@ -18,6 +19,7 @@ use log::warn;
 pub struct TestingConnector {
     tiles: [[Color; 64]; 32],
     scratch: [[Color; 64]; 32],
+    image_store: ImageStore,
 }
 
 impl Default for TestingConnector {
@@ -25,6 +27,7 @@ impl Default for TestingConnector {
         Self {
             tiles: [[Color::black(); 64]; 32],
             scratch: [[Color::black(); 64]; 32],
+            image_store: ImageStore::default(),
         }
     }
 }
@@ -55,6 +58,10 @@ impl ClockConnector for TestingConnector {
     fn fetch_module_names(&mut self) -> Result<Vec<String>, ClockError> {
         warn!("fetch_module_names is not implemented in testing!");
         unimplemented!()
+    }
+
+    fn get_image_store(&mut self) -> &mut ImageStore {
+        &mut self.image_store
     }
 }
 
