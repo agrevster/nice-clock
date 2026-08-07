@@ -66,6 +66,8 @@ impl ClockConnector for TestingConnector {
 }
 
 pub fn render_to_hex(clock: &mut TestingConnector, module: ClockModule) -> String {
+    clock.image_store.clear();
+    clock.image_store.load_images_for_module(&module).unwrap();
     module
         .root_compoent
         .render(clock, TimeDelta::seconds(1))
@@ -97,6 +99,18 @@ pub fn single_component_test_module(component: Box<dyn Component>) -> ClockModul
         name: "single_component_test_module".to_string(),
         time_limt: Duration::seconds(3),
         images_names: vec![],
+        root_compoent: RootComponent::new(vec![component]),
+    }
+}
+
+pub fn single_component_test_module_with_images(
+    component: Box<dyn Component>,
+    images: Vec<String>,
+) -> ClockModule {
+    ClockModule {
+        name: "single_component_test_module".to_string(),
+        time_limt: Duration::seconds(3),
+        images_names: images,
         root_compoent: RootComponent::new(vec![component]),
     }
 }

@@ -46,10 +46,10 @@ pub mod module_loader {
         ClockModule {
             name: "test".to_string(),
             time_limt: Duration::seconds(5),
-            images_names: vec!["test".to_string()],
+            images_names: vec!["tree".to_string()],
             root_compoent: RootComponent::new(vec![Box::new(ImageComponent {
-                pos: (0, 0).into(),
-                image_name: "test".to_string(),
+                pos: (10, 5).into(),
+                image_name: "tree".to_string(),
             })]),
         }
     }
