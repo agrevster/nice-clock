@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-chrono = { version = "0.4.45", features = ["alloc", "clock", "now", "std"] }
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "now"] }
 common = { version = "0.0.0", path = "../common" }
 log = { version = "0.4.33", features = ["std"] }
 sdl2 = "0.38.0"

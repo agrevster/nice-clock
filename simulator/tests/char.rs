@@ -14,7 +14,7 @@ fn check_chars_with_l() {
         let font_enum = Font::from_str(font_str).expect("Failed to find font with given name!");
         let actual = render_to_hex(
             &mut clock,
-            single_component_test_module(Box::new(components::CharComponent {
+            &mut single_component_test_module(Box::new(components::CharComponent {
                 pos: (9, 5).into(),
                 color: Color::blue(),
                 chr: 'L',
@@ -37,7 +37,7 @@ fn check_char_out_of_bounds() {
     let mut clock = TestingConnector::default();
     render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CharComponent {
+        &mut single_component_test_module(Box::new(components::CharComponent {
             pos: (0, 61).into(),
             color: Color::green(),
             chr: '}',
@@ -52,7 +52,7 @@ fn check_invalid_char_does_default() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CharComponent {
+        &mut single_component_test_module(Box::new(components::CharComponent {
             pos: (0, 20).into(),
             color: Color::green(),
             chr: 'æ',

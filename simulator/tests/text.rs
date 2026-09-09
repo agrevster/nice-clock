@@ -9,7 +9,7 @@ fn check_basic_text() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::TextComponent {
+        &mut single_component_test_module(Box::new(components::TextComponent {
             pos: (0, 0).into(),
             color: Color::green(),
             text: "Hello World".to_string(),
@@ -30,7 +30,7 @@ fn check_text_out_of_bounds() {
     let mut clock = TestingConnector::default();
     render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::TextComponent {
+        &mut single_component_test_module(Box::new(components::TextComponent {
             pos: (0, 0).into(),
             color: Color::green(),
             text: "Hello world and Hi Mom".to_string(),
@@ -45,7 +45,7 @@ fn check_basic_text_near_edge() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::TextComponent {
+        &mut single_component_test_module(Box::new(components::TextComponent {
             pos: (25, 35).into(),
             color: Color::green(),
             text: "Hi mom".to_string(),
@@ -65,7 +65,7 @@ fn check_wrapped_long() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::WrappedTextComponent {
+        &mut single_component_test_module(Box::new(components::WrappedTextComponent {
             pos: (0, 0).into(),
             color: Color::green(),
             text: "Hi mom and hello dad".to_string(),
@@ -86,7 +86,7 @@ fn check_wrapped_long_new_line() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::WrappedTextComponent {
+        &mut single_component_test_module(Box::new(components::WrappedTextComponent {
             pos: (0, 0).into(),
             color: Color::green(),
             text: "Hi mom and\nhello dad".to_string(),
@@ -107,7 +107,7 @@ fn check_wrapped_chain() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::WrappedTextComponent {
+        &mut single_component_test_module(Box::new(components::WrappedTextComponent {
             pos: (0, 10).into(),
             color: Color::green(),
             text: "1\n2\n3\n4".to_string(),
@@ -129,7 +129,7 @@ fn check_wrapped_toolong() {
     let mut clock = TestingConnector::default();
     render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::WrappedTextComponent {
+        &mut single_component_test_module(Box::new(components::WrappedTextComponent {
             pos: (10, 10).into(),
             color: Color::green(),
             text: "1\n2\n3\n4".to_string(),
@@ -145,7 +145,7 @@ fn check_wrapped_spacing() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::WrappedTextComponent {
+        &mut single_component_test_module(Box::new(components::WrappedTextComponent {
             pos: (0, 10).into(),
             color: Color::green(),
             text: "1:The left\n2:right\n3:Center".to_string(),
@@ -166,7 +166,7 @@ fn check_wrapped_spacing_negative() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::WrappedTextComponent {
+        &mut single_component_test_module(Box::new(components::WrappedTextComponent {
             pos: (0, 10).into(),
             color: Color::green(),
             text: "1:The left\n2:right\n3:Center".to_string(),

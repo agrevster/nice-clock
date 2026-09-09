@@ -1,12 +1,11 @@
 #![allow(dead_code)]
-use std::{num::ParseIntError, path::PathBuf};
+use std::{num::ParseIntError, path::PathBuf, time::Duration};
 
-use chrono::{Duration, TimeDelta};
 use common::{
     VoidClockResult,
     clock::{
         color::Color,
-        components::{Component, RootComponent},
+        components::{AnimatableComponent, RootComponent},
         connector::ClockConnector,
         errors::ClockError,
         images::ImageStore,
@@ -65,12 +64,12 @@ impl ClockConnector for TestingConnector {
     }
 }
 
-pub fn render_to_hex(clock: &mut TestingConnector, module: ClockModule) -> String {
+pub fn render_to_hex(clock: &mut TestingConnector, module: &mut ClockModule) -> String {
     clock.image_store.clear();
-    clock.image_store.load_images_for_module(&module).unwrap();
+    clock.image_store.load_images_for_module(module).unwrap();
     module
         .root_compoent
-        .render(clock, TimeDelta::seconds(1))
+        .render(clock, Duration::from_secs(1))
         .unwrap();
     tiles_to_hex(clock.tiles)
 }
@@ -94,24 +93,24 @@ pub fn tiles_from_hex(hex: String) -> Result<[[Color; 64]; 32], ParseIntError> {
     Ok(buf)
 }
 
-pub fn single_component_test_module(component: Box<dyn Component>) -> ClockModule {
+pub fn single_component_test_module(component: Box<dyn AnimatableComponent>) -> ClockModule {
     ClockModule {
         name: "single_component_test_module".to_string(),
-        time_limt: Duration::seconds(3),
+        time_limt: Duration::from_secs(3),
         images_names: vec![],
-        root_compoent: RootComponent::new(vec![component]),
+        root_compoent: RootComponent::new(vec![component], vec![]),
     }
 }
 
 pub fn single_component_test_module_with_images(
-    component: Box<dyn Component>,
+    component: Box<dyn AnimatableComponent>,
     images: Vec<String>,
 ) -> ClockModule {
     ClockModule {
         name: "single_component_test_module".to_string(),
-        time_limt: Duration::seconds(3),
+        time_limt: Duration::from_secs(3),
         images_names: images,
-        root_compoent: RootComponent::new(vec![component]),
+        root_compoent: RootComponent::new(vec![component], vec![]),
     }
 }
 

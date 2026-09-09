@@ -7,11 +7,12 @@ use crate::clock::pos::Pos;
 pub enum ClockError {
     ///Returned when a tile is created with a position not in the confines of the screen.
     TileOutOfBounds(Pos),
+    ///Returned when a `CustomAnimation` referees a component index that is not valid.
+    InvalidCustomAnimationIndex(usize, usize),
     ///Returned when an invalid argument is specified
     ///The first string is the argument name, the second is the given argument, and the third is the
     ///message of why it is wrong.
     ComponentInvalidArgument(String, String, String),
-
     ///Returned when an error occurs with a clock asset.
     AssetError(ClockAssetError),
 }
@@ -71,12 +72,24 @@ impl ClockError {
     pub fn asset_not_found(asset_name: String) -> ClockError {
         ClockError::AssetError(ClockAssetError::AssetNotFound(asset_name))
     }
+
+    ///Returns a `ClockError` for when a custom animation tries to animate a component with an
+    ///index not in the component list.
+    pub fn invalid_custom_animation_index(index: usize, len: usize) -> ClockError {
+        ClockError::InvalidCustomAnimationIndex(index, len)
+    }
 }
 
 impl Display for ClockError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ClockError::TileOutOfBounds(pos) => write!(f, "Tile out of bounds: {pos:?}"),
+            ClockError::InvalidCustomAnimationIndex(index, len) => {
+                write!(
+                    f,
+                    "Attempted to animation component index: {index},but there are only: {len} total components."
+                )
+            }
             ClockError::ComponentInvalidArgument(arg_name, given_arg, why) => {
                 write!(
                     f,

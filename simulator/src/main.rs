@@ -214,7 +214,7 @@ fn main() {
         });
 
         if !hexdump_view {
-            load_module(&mut clock, test_module()).unwrap_and_log("Error loading module!");
+            load_module(&mut clock, &mut test_module()).unwrap_and_log("Error loading module!");
         } else {
             let mut filepath = std::env::current_dir().expect("Error getting the CWD!");
             filepath.push(

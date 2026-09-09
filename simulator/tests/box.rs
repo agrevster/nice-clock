@@ -8,7 +8,7 @@ fn check_basic_box() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::BoxComponent {
+        &mut single_component_test_module(Box::new(components::BoxComponent {
             pos: (0, 0).into(),
             fill_inside: false,
             color: Color::red(),
@@ -28,7 +28,7 @@ fn check_line_box() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::BoxComponent {
+        &mut single_component_test_module(Box::new(components::BoxComponent {
             pos: (5, 7).into(),
             color: Color::red(),
             width: 5,
@@ -48,7 +48,7 @@ fn check_box2() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::BoxComponent {
+        &mut single_component_test_module(Box::new(components::BoxComponent {
             pos: (10, 20).into(),
             color: Color::red(),
             width: 15,
@@ -68,7 +68,7 @@ fn check_line_box_vert() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::BoxComponent {
+        &mut single_component_test_module(Box::new(components::BoxComponent {
             pos: (19, 10).into(),
             color: Color::red(),
             width: 1,
@@ -88,7 +88,7 @@ fn check_filled_inside_box() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::BoxComponent {
+        &mut single_component_test_module(Box::new(components::BoxComponent {
             pos: (19, 10).into(),
             color: Color::red(),
             width: 10,

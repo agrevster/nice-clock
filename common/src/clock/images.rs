@@ -205,7 +205,8 @@ impl ImageStore {
 
 #[cfg(test)]
 mod test {
-    use chrono::TimeDelta;
+
+    use std::time::Duration;
 
     use crate::clock::{
         color::Color,
@@ -297,8 +298,8 @@ mod test {
 
         let module = ClockModule {
             name: "test_module".to_string(),
-            time_limt: TimeDelta::zero(),
-            root_compoent: RootComponent::new(Vec::new()),
+            time_limt: Duration::ZERO,
+            root_compoent: RootComponent::new(Vec::new(), Vec::new()),
             images_names: vec![
                 "cat".to_string(),
                 "fireworks".to_string(),

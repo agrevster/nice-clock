@@ -8,7 +8,7 @@ fn check_zero_args_circles() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CircleComponent {
+        &mut single_component_test_module(Box::new(components::CircleComponent {
             pos: (10, 10).into(),
             color: Color::red(),
             radius: 0,
@@ -26,7 +26,7 @@ fn check_zero_args_circles() {
 
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CircleComponent {
+        &mut single_component_test_module(Box::new(components::CircleComponent {
             pos: (10, 10).into(),
             color: Color::red(),
             radius: 1,
@@ -42,7 +42,7 @@ fn check_zero_args_circles() {
 
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CircleComponent {
+        &mut single_component_test_module(Box::new(components::CircleComponent {
             pos: (10, 10).into(),
             color: Color::red(),
             radius: 0,
@@ -62,7 +62,7 @@ fn check_basic_circle() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CircleComponent {
+        &mut single_component_test_module(Box::new(components::CircleComponent {
             pos: (13, 5).into(),
             color: Color::red(),
             radius: 4,
@@ -81,7 +81,7 @@ fn check_odd_sized_circle() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CircleComponent {
+        &mut single_component_test_module(Box::new(components::CircleComponent {
             pos: (13, 5).into(),
             color: Color::red(),
             radius: 5,
@@ -100,7 +100,7 @@ fn check_large_circle() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CircleComponent {
+        &mut single_component_test_module(Box::new(components::CircleComponent {
             pos: (10, 20).into(),
             color: Color::red(),
             radius: 11,
@@ -119,7 +119,7 @@ fn check_circle_with_nonzero_thickness() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CircleComponent {
+        &mut single_component_test_module(Box::new(components::CircleComponent {
             pos: (13, 5).into(),
             color: Color::red(),
             radius: 5,
@@ -138,7 +138,7 @@ fn check_circle_filled() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CircleComponent {
+        &mut single_component_test_module(Box::new(components::CircleComponent {
             pos: (13, 5).into(),
             color: Color::red(),
             radius: 5,
@@ -157,7 +157,7 @@ fn check_circle_filled_partial() {
     let mut clock = TestingConnector::default();
     let actual = render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CircleComponent {
+        &mut single_component_test_module(Box::new(components::CircleComponent {
             pos: (13, 11).into(),
             color: Color::red(),
             radius: 7,
@@ -177,7 +177,7 @@ fn check_circle_filled_too_big() {
     let mut clock = TestingConnector::default();
     render_to_hex(
         &mut clock,
-        single_component_test_module(Box::new(components::CircleComponent {
+        &mut single_component_test_module(Box::new(components::CircleComponent {
             pos: (13, 11).into(),
             color: Color::red(),
             radius: 7,
