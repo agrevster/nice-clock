@@ -168,15 +168,13 @@ impl RootComponent {
     //TODO: Hardcoded Animations
     ///Clears the screen, draws a given `RootComponent` onto the `clock`, and blocks the thread until the `time_limit`
     ///is exceeded.
-    // /TODO: Optimize (if there are no animations can just draw once)
+    //TODO: Optimize (if there are no animations can just draw once)
+    //TODO:Sort custom animations by speed so we can only need to redraw once
     pub fn render(
         &mut self,
         clock: &mut impl ClockConnector,
         time_limit: Duration,
     ) -> VoidClockResult {
-        //Sort custom animations by speed so we can only need to redraw
-        let mut custom_animations = self.custom_animations.clone();
-
         //How long the module has been active for
         let module_active_time = Instant::now();
         let mut frame: u32 = 0;
@@ -187,31 +185,7 @@ impl RootComponent {
             let draw_time = Instant::now();
 
             //Update custom animations
-            for custom in &mut custom_animations {
-                //Is animation done?
-                if custom.current_timestamp > custom.animation.duration {
-                    //Skip if the animation is done and it doesn't loop
-                    if !custom.animation.should_loop {
-                        continue;
-                    }
-                    custom.current_timestamp = 0;
-                    custom.current_index = 0;
-                    custom.update_all_components(&mut self.components)?;
-                }
-
-                //Update animation if needed
-                if custom.animation.speed > 0 && frame.is_multiple_of(custom.animation.speed as u32)
-                {
-                    custom.current_timestamp += 1;
-
-                    //Do we need to update?
-                    if custom.current_index + 1 < custom.states.len()  && custom.current_timestamp >= custom.states.get(custom.current_index +1).unwrap_and_log("Failed to get next animation state because animations.current_index +1 > animations.states.len()!").timestamp{
-
-                        custom.current_index +=1;
-                    custom.update_all_components(&mut self.components)?;
-                    }
-                }
-            }
+            self.update_custom_animations(&frame)?;
 
             //Draw components
             for component in &self.components {
@@ -237,6 +211,35 @@ impl RootComponent {
             components,
             custom_animations,
         }
+    }
+
+    pub fn update_custom_animations(&mut self, frame: &u32) -> VoidClockResult {
+        for custom in &mut self.custom_animations {
+            //Is animation done?
+            if custom.current_timestamp > custom.animation.duration {
+                //Skip if the animation is done and it doesn't loop
+                if !custom.animation.should_loop {
+                    continue;
+                }
+                custom.current_timestamp = 0;
+                custom.current_index = 0;
+                custom.update_all_components(&mut self.components)?;
+            }
+
+            //Update animation if needed
+            if custom.animation.speed > 0 && frame.is_multiple_of(custom.animation.speed as u32) {
+                custom.current_timestamp += 1;
+
+                //Do we need to update?
+                if custom.current_index + 1 < custom.states.len()  && custom.current_timestamp >= custom.states.get(custom.current_index +1).unwrap_and_log("Failed to get next animation state because animations.current_index +1 > animations.states.len()!").timestamp{
+
+                        custom.current_index +=1;
+                    custom.update_all_components(&mut self.components)?;
+
+                    }
+            }
+        }
+        Ok(())
     }
 }
 

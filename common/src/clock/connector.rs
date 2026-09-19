@@ -30,9 +30,7 @@ pub mod module_loader {
         VoidClockResult,
         clock::{
             color::Color,
-            components::{
-                CustomAnimation, CustomAnimationState, ImageComponent, RootComponent, TileComponent,
-            },
+            components::{self, CustomAnimation, CustomAnimationState, RootComponent},
             connector::ClockConnector,
             module::ClockModule,
         },
@@ -53,29 +51,19 @@ pub mod module_loader {
         ClockModule {
             name: "test".to_string(),
             time_limt: Duration::from_secs(5),
-            images_names: vec!["tree".to_string()],
+            images_names: vec![],
             root_compoent: RootComponent::new(
-                vec![
-                    Box::new(ImageComponent {
-                        pos: (10, 5).into(),
-                        image_name: "tree".to_string(),
-                    }),
-                    Box::new(TileComponent {
-                        pos: (18, 6).into(),
-                        color: Color::red(),
-                    }),
-                    Box::new(TileComponent {
-                        pos: (18, 14).into(),
-                        color: Color::red(),
-                    }),
-                ],
+                vec![Box::new(components::TileComponent {
+                    pos: (9, 5).into(),
+                    color: Color::red(),
+                })],
                 vec![CustomAnimation::new(
-                    vec![1, 2],
+                    vec![0],
                     vec![
-                        CustomAnimationState::color(1, Color::red()),
-                        CustomAnimationState::color(2, Color::green()),
+                        CustomAnimationState::color(1, Color::blue()),
+                        CustomAnimationState::color(2, Color::red()),
                     ],
-                    10,
+                    1,
                     3,
                     true,
                 )],

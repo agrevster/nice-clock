@@ -108,7 +108,7 @@ pub fn single_component_test_module_with_images(
 ) -> ClockModule {
     ClockModule {
         name: "single_component_test_module".to_string(),
-        time_limt: Duration::from_secs(3),
+        time_limt: Duration::from_micros(1),
         images_names: images,
         root_compoent: RootComponent::new(vec![component], vec![]),
     }
