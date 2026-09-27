@@ -24,16 +24,13 @@ pub trait ClockConnector {
 //TODO: Add Luau implementation and more static modules
 pub mod module_loader {
 
-    use std::{
-        num::{NonZeroU8, NonZeroU32},
-        time::Duration,
-    };
+    use std::{time::Duration, vec};
 
     use crate::{
         VoidClockResult,
         clock::{
             color::Color,
-            components::{self, Animation, AnimationKeyframe, RootComponent},
+            components::{self, RootComponent},
             connector::ClockConnector,
             module::ClockModule,
         },
@@ -56,23 +53,17 @@ pub mod module_loader {
             time_limt: Duration::from_secs(5),
             images_names: vec![],
             root_compoent: RootComponent::new(
-                vec![Box::new(components::TileComponent {
-                    pos: (9, 5).into(),
-                    color: Color::red(),
-                })],
                 vec![
-                    Animation::new(
-                        vec![0],
-                        vec![
-                            AnimationKeyframe::at(1).color(Color::red()),
-                            AnimationKeyframe::at(2).color(Color::blue()),
-                        ],
-                        NonZeroU8::new(20).unwrap(),
-                        NonZeroU32::new(2).unwrap(),
-                        false,
-                    )
-                    .unwrap(),
+                    Box::new(components::TileComponent {
+                        pos: (9, 5).into(),
+                        color: Color::red(),
+                    }),
+                    Box::new(components::TileComponent {
+                        pos: (9, 6).into(),
+                        color: Color::blue(),
+                    }),
                 ],
+                vec![],
             ),
         }
     }

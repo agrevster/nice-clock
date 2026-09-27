@@ -5,7 +5,7 @@ use common::{
     VoidClockResult,
     clock::{
         color::Color,
-        components::{AnimatableComponent, RootComponent},
+        components::{AnimatableComponent, Animation, RootComponent},
         connector::ClockConnector,
         errors::ClockError,
         images::ImageStore,
@@ -96,6 +96,19 @@ pub fn single_component_test_module(component: Box<dyn AnimatableComponent>) -> 
         time_limt: Duration::from_secs(3),
         images_names: vec![],
         root_compoent: RootComponent::new(vec![component], vec![]),
+    }
+}
+
+pub fn test_module(
+    components: Vec<Box<dyn AnimatableComponent>>,
+    animations: Vec<Animation>,
+    image_names: Vec<String>,
+) -> ClockModule {
+    ClockModule {
+        name: "test_module".to_string(),
+        time_limt: Duration::from_secs(3),
+        images_names: image_names,
+        root_compoent: RootComponent::new(components, animations),
     }
 }
 
