@@ -15,6 +15,7 @@ fn check_basic_text() {
             text: "Hello World".to_string(),
             font: Font::Font5x5,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("str_hello_world.hex")).trim(),
@@ -36,6 +37,7 @@ fn check_text_out_of_bounds() {
             text: "Hello world and Hi Mom".to_string(),
             font: Font::Font5x5,
         })),
+        0,
     );
 }
 
@@ -51,6 +53,7 @@ fn check_basic_text_near_edge() {
             text: "Hi mom".to_string(),
             font: Font::Font5x8_2,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("str_hello_almost_max.hex")).trim(),
@@ -72,6 +75,7 @@ fn check_wrapped_long() {
             font: Font::Font5x8_2,
             line_spacing: 0,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("strwrap_long.hex")).trim(),
@@ -93,6 +97,7 @@ fn check_wrapped_long_new_line() {
             font: Font::Font5x8_2,
             line_spacing: 0,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("strwrap_long_nl.hex")).trim(),
@@ -114,6 +119,7 @@ fn check_wrapped_chain() {
             font: Font::Font5x8_2,
             line_spacing: 0,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("strwrap_chain.hex")).trim(),
@@ -136,6 +142,7 @@ fn check_wrapped_toolong() {
             font: Font::Font5x8_2,
             line_spacing: 0,
         })),
+        0,
     );
 }
 
@@ -152,6 +159,7 @@ fn check_wrapped_spacing() {
             font: Font::Font5x8_2,
             line_spacing: 3,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("strwrap_spacing.hex")).trim(),
@@ -173,6 +181,7 @@ fn check_wrapped_spacing_negative() {
             font: Font::Font5x8_2,
             line_spacing: -5,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("strwrap_spacing_negative.hex")).trim(),

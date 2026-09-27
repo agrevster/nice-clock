@@ -16,6 +16,7 @@ fn check_basic_image() {
             }),
             vec!["test".to_string()],
         ),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("image_basic.hex")).trim(),
@@ -36,6 +37,7 @@ fn check_basic_image2() {
             }),
             vec!["tree".to_string()],
         ),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("image_basic2.hex")).trim(),
@@ -57,6 +59,7 @@ fn check_image_unloaded() {
             }),
             vec!["test".to_string()],
         ),
+        0,
     );
 }
 
@@ -73,5 +76,6 @@ fn check_image_out_of_bounds() {
             }),
             vec!["test".to_string()],
         ),
+        0,
     );
 }

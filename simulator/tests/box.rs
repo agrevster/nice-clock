@@ -15,6 +15,7 @@ fn check_basic_box() {
             width: 5,
             height: 5,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("box1.hex")).trim(),
@@ -35,6 +36,7 @@ fn check_line_box() {
             height: 1,
             fill_inside: false,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("box_line.hex")).trim(),
@@ -55,6 +57,7 @@ fn check_box2() {
             height: 7,
             fill_inside: false,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("box2.hex")).trim(),
@@ -75,6 +78,7 @@ fn check_line_box_vert() {
             height: 9,
             fill_inside: false,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("box_line_vert.hex")).trim(),
@@ -95,6 +99,7 @@ fn check_filled_inside_box() {
             height: 9,
             fill_inside: true,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("box_filled.hex")).trim(),

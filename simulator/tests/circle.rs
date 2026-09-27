@@ -14,6 +14,7 @@ fn check_zero_args_circles() {
             radius: 0,
             outline_thickness: 0,
         })),
+        0,
     );
 
     let empty = hex_from_file(get_dump("empty.hex"));
@@ -32,6 +33,7 @@ fn check_zero_args_circles() {
             radius: 1,
             outline_thickness: 0,
         })),
+        0,
     );
 
     assert_eq!(
@@ -48,6 +50,7 @@ fn check_zero_args_circles() {
             radius: 0,
             outline_thickness: 1,
         })),
+        0,
     );
 
     assert_eq!(
@@ -68,6 +71,7 @@ fn check_basic_circle() {
             radius: 4,
             outline_thickness: 1,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("circle1.hex")).trim(),
@@ -87,6 +91,7 @@ fn check_odd_sized_circle() {
             radius: 5,
             outline_thickness: 1,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("circle4.hex")).trim(),
@@ -106,6 +111,7 @@ fn check_large_circle() {
             radius: 11,
             outline_thickness: 1,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("circle3.hex")).trim(),
@@ -125,6 +131,7 @@ fn check_circle_with_nonzero_thickness() {
             radius: 5,
             outline_thickness: 2,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("circle5.hex")).trim(),
@@ -144,6 +151,7 @@ fn check_circle_filled() {
             radius: 5,
             outline_thickness: 5,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("circle6.hex")).trim(),
@@ -163,6 +171,7 @@ fn check_circle_filled_partial() {
             radius: 7,
             outline_thickness: 3,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("circle7.hex")).trim(),
@@ -183,5 +192,6 @@ fn check_circle_filled_too_big() {
             radius: 7,
             outline_thickness: 8,
         })),
+        0,
     );
 }

@@ -20,6 +20,7 @@ fn check_chars_with_l() {
                 chr: 'L',
                 font: font_enum,
             })),
+            0,
         );
         let filename = font_str.replace("Font", "");
         assert_eq!(
@@ -43,6 +44,7 @@ fn check_char_out_of_bounds() {
             chr: '}',
             font: Font::Font6x12,
         })),
+        0,
     );
 }
 
@@ -58,6 +60,7 @@ fn check_invalid_char_does_default() {
             chr: 'æ',
             font: Font::Font5x5,
         })),
+        0,
     );
     assert_eq!(
         hex_from_file(get_dump("char_default.hex")).trim(),
