@@ -4,7 +4,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use log::warn;
+use log::{info, warn};
 use macros::Animatable;
 
 use crate::{
@@ -94,9 +94,9 @@ impl Animation {
     fn tick_at_frame(&self, frame: u32) -> u32 {
         let tick = frame / u32::from(self.frames_per_tick.get());
         if self.looping {
-            tick % self.duration.get()
+            (tick % self.duration.get()) + 1
         } else {
-            tick.min(self.duration.get() - 1)
+            tick.min(self.duration.get())
         }
     }
 
