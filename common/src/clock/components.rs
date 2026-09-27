@@ -1,10 +1,11 @@
 use std::{
     fmt::Debug,
+    num::{NonZeroU8, NonZeroU32},
     time::{Duration, Instant},
 };
 
 use log::warn;
-use macros::CustomAnimatable;
+use macros::Animatable;
 
 use crate::{
     FPS, HEIGHT, VoidClockResult, WIDTH,
@@ -23,135 +24,154 @@ pub trait Component {
     fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult;
 }
 
-///Applied to all `Components` so they can be updated by a `CustomAnimation`. Not all methods have to
+///Applied to all `Components` so they can be updated by an `Animation`. Not all methods have to
 ///update the struct for example, the `TileComponent` does not have `text` to update so the function
 ///is a no-op.
-pub trait CustomAnimatable {
-    ///Updates the component's `pos` used for `CustomAnimation`.
+pub trait Animatable {
+    ///Updates the component's `pos` used for `Animation`.
     fn set_pos(&mut self, pos: Pos);
-    ///Updates the component's `color` used for `CustomAnimation`.
+    ///Updates the component's `color` used for `Animation`.
     fn set_color(&mut self, color: Color);
-    ///Updates the component's `text` used for `CustomAnimation`.
+    ///Updates the component's `text` used for `Animation`.
     fn set_text(&mut self, text: String);
 }
 
 ///Trait used for all clock components. **Each component must implement this**.
-///Bundles `CustomAnimatable` and `Component` making a given complement able to be drawn as well as
+///Bundles `Animatable` and `Component` making a given complement able to be drawn as well as
 ///animated.
-pub trait AnimatableComponent: CustomAnimatable + Component {}
+pub trait AnimatableComponent: Animatable + Component {}
 
-///Blanket implementation so that anything that implements `CustomAnimatable` and `Component`
+///Blanket implementation so that anything that implements `Animatable` and `Component`
 ///implements `AnimatableComponent`.
-impl<T: Component + CustomAnimatable> AnimatableComponent for T {}
+impl<T: Component + Animatable> AnimatableComponent for T {}
 
-#[derive(Clone)]
-pub struct AnimationConfig {
-    pub should_loop: bool,
-    pub speed: u8,
-    pub duration: u32,
+///Used to represent the current state of the components in an animation.
+#[derive(Debug)]
+struct AnimationResolution<'a> {
+    pub color: Option<Color>,
+    pub pos: Option<Pos>,
+    pub text: Option<&'a str>,
 }
 
-#[derive(Clone)]
-pub struct CustomAnimation {
-    pub component_ids: Vec<usize>,
-    pub states: Vec<CustomAnimationState>,
-    pub animation: AnimationConfig,
-    current_timestamp: u32,
-    current_index: usize,
+#[derive(Debug)]
+pub struct Animation {
+    ///The list of ids affected by the animation
+    component_ids: Vec<usize>,
+    ///All the animation's keyframes
+    keyframes: Vec<AnimationKeyframe>,
+    ///How many animation frames that should run every clock tick (60 FPS)
+    frames_per_tick: NonZeroU8,
+    ///How long the animation lasts in ticks
+    duration: NonZeroU32,
+    ///Whether or not the animation should restart after reaching the duration
+    looping: bool,
 }
 
-impl CustomAnimation {
+impl Animation {
     pub fn new(
         component_ids: Vec<usize>,
-        states: Vec<CustomAnimationState>,
-        speed: u8,
-        duration: u32,
-        should_loop: bool,
-    ) -> CustomAnimation {
-        CustomAnimation {
+        mut keyframes: Vec<AnimationKeyframe>,
+        frames_per_tick: NonZeroU8,
+        duration: NonZeroU32,
+        looping: bool,
+    ) -> Result<Animation, ClockError> {
+        if keyframes.is_empty() {
+            return Err(ClockError::no_keyframes());
+        }
+
+        keyframes.sort_by_key(|k| k.tick);
+
+        Ok(Animation {
             component_ids,
-            states,
-            current_timestamp: 0,
-            current_index: 0,
-            animation: AnimationConfig {
-                should_loop,
-                speed,
-                duration,
-            },
+            keyframes,
+            frames_per_tick,
+            duration,
+            looping,
+        })
+    }
+
+    ///Returns the animation `tick` at the given `frame`.
+    fn tick_at_frame(&self, frame: u32) -> u32 {
+        let tick = frame / u32::from(self.frames_per_tick.get());
+        if self.looping {
+            tick % self.duration.get()
+        } else {
+            tick.min(self.duration.get() - 1)
         }
     }
 
-    ///Updates runs the `set_*` method for all specified component indexes to reflect the current
-    ///`CustomAnimationState`.
-    fn update_all_components(
+    ///Returns the latest version of an animation given the current `frame`.
+    fn resolve(&self, frame: u32) -> AnimationResolution<'_> {
+        let tick = self.tick_at_frame(frame);
+        let upto = self.keyframes.partition_point(|k| k.tick <= tick);
+        let seen = self.keyframes.get(..upto).unwrap_or(&[]);
+        AnimationResolution {
+            color: seen.iter().rev().find_map(|k| k.color),
+            pos: seen.iter().rev().find_map(|k| k.pos),
+            text: seen.iter().rev().find_map(|k| k.text.as_deref()),
+        }
+    }
+
+    ///Applies the current keyframe at `frame` to all `components` listed as part of the animation.
+    pub fn apply_state_to_components(
         &self,
-        components: &mut Vec<Box<dyn AnimatableComponent>>,
+        frame: u32,
+        components: &mut [Box<dyn AnimatableComponent>],
     ) -> VoidClockResult {
-        let state = self
-            .states
-            .get(self.current_index)
-            .unwrap_and_log("Invalid animation state!");
-        for component_id in &self.component_ids {
-            //Make sure we're getting a valid component from index. Can't use an ok_or_else because
-            //of borrowing issues
-            if component_id >= &components.len() {
-                return Err(ClockError::invalid_custom_animation_index(
-                    *component_id,
-                    components.len(),
-                ));
+        let r = self.resolve(frame);
+        let len = components.len(); //Computed here to prevent dropping.
+        for &id in &self.component_ids {
+            let c = components
+                .get_mut(id)
+                .ok_or_else(|| ClockError::invalid_custom_animation_index(id, len))?;
+            if let Some(color) = r.color {
+                c.set_color(color);
             }
-
-            let component = components
-                .get_mut(*component_id)
-                .unwrap_and_log("Tried to get an invalid component by index!");
-
-            if let Some(color) = &state.color {
-                component.set_color(*color);
+            if let Some(pos) = r.pos {
+                c.set_pos(pos);
             }
-            if let Some(pos) = &state.pos {
-                component.set_pos(*pos);
-            }
-            if let Some(text) = &state.text {
-                component.set_text(text.clone());
+            if let Some(text) = r.text {
+                c.set_text(text.to_owned());
             }
         }
         Ok(())
     }
 }
 
-#[derive(Clone)]
-pub struct CustomAnimationState {
-    pub timestamp: u32,
+#[derive(Clone, PartialEq, Debug)]
+///Used to represent the state of all components listed as part of an `Animation` at a given frame.
+pub struct AnimationKeyframe {
+    pub tick: u32,
     pub color: Option<Color>,
     pub pos: Option<Pos>,
     pub text: Option<String>,
 }
 
-impl CustomAnimationState {
-    pub fn color(timestamp: u32, color: Color) -> CustomAnimationState {
-        CustomAnimationState {
-            timestamp,
-            color: Some(color),
+impl AnimationKeyframe {
+    ///Creates a `AnimationKeyframe` at the given `tick`.
+    pub fn at(tick: u32) -> Self {
+        Self {
+            tick,
+            color: None,
             pos: None,
             text: None,
         }
     }
 
-    pub fn pos(timestamp: u32, pos: Pos) -> CustomAnimationState {
-        CustomAnimationState {
-            timestamp,
-            color: None,
-            pos: Some(pos),
-            text: None,
-        }
+    ///Sets the color of the given `AnimationKeyframe` to `color`
+    pub fn color(mut self, color: Color) -> Self {
+        self.color = Some(color);
+        self
     }
-    pub fn text(timestamp: u32, text: String) -> CustomAnimationState {
-        CustomAnimationState {
-            timestamp,
-            color: None,
-            pos: None,
-            text: Some(text),
-        }
+    ///Sets the pos of the given `AnimationKeyframe` to `pos`
+    pub fn pos(mut self, pos: Pos) -> Self {
+        self.pos = Some(pos);
+        self
+    }
+    ///Sets the text of the given `AnimationKeyframe` to `text`
+    pub fn text(mut self, text: impl Into<String>) -> Self {
+        self.text = Some(text.into());
+        self
     }
 }
 
@@ -159,87 +179,59 @@ impl CustomAnimationState {
 ///Run `draw` to draw the module on screen.
 pub struct RootComponent {
     components: Vec<Box<dyn AnimatableComponent>>,
-    custom_animations: Vec<CustomAnimation>,
+    animations: Vec<Animation>,
 }
 
 const SLEEP_PER_FRAME: Duration = Duration::from_micros((1_000_000.0 / FPS as f32) as u64);
 
 impl RootComponent {
-    //TODO: Hardcoded Animations
-    ///Clears the screen, draws a given `RootComponent` onto the `clock`, and blocks the thread until the `time_limit`
-    ///is exceeded.
-    //TODO: Optimize (if there are no animations can just draw once)
-    //TODO:Sort custom animations by speed so we can only need to redraw once
-    pub fn render(
-        &mut self,
-        clock: &mut impl ClockConnector,
-        time_limit: Duration,
-    ) -> VoidClockResult {
-        //How long the module has been active for
-        let module_active_time = Instant::now();
-        let mut frame: u32 = 0;
-
-        while Instant::now() - module_active_time < time_limit {
-            clock.clear_screen()?;
-            //How long the components took to draw
-            let draw_time = Instant::now();
-
-            //Update custom animations
-            self.update_custom_animations(&frame)?;
-
-            //Draw components
-            for component in &self.components {
-                component.draw(clock)?;
-            }
-
-            frame += 1;
-            clock.update_screen()?;
-            let draw_duration = Instant::now() - draw_time;
-            if (draw_duration) < SLEEP_PER_FRAME {
-                std::thread::sleep(SLEEP_PER_FRAME - draw_duration);
-            }
-        }
-
-        Ok(())
-    }
-
     pub fn new(
         components: Vec<Box<dyn AnimatableComponent>>,
-        custom_animations: Vec<CustomAnimation>,
+        animations: Vec<Animation>,
     ) -> RootComponent {
         RootComponent {
             components,
-            custom_animations,
+            animations,
         }
     }
+    ///Renders the given `frame` by applying animation state for the given `frame` and drawing all
+    ///components to the `ClockConnector`.
+    pub fn render_frame(&mut self, clock: &mut dyn ClockConnector, frame: u32) -> VoidClockResult {
+        for animation in &self.animations {
+            animation.apply_state_to_components(frame, &mut self.components)?;
+        }
+        clock.clear_screen()?;
+        for component in &self.components {
+            component.draw(clock)?;
+        }
+        clock.update_screen()
+    }
 
-    pub fn update_custom_animations(&mut self, frame: &u32) -> VoidClockResult {
-        for custom in &mut self.custom_animations {
-            //Is animation done?
-            if custom.current_timestamp > custom.animation.duration {
-                //Skip if the animation is done and it doesn't loop
-                if !custom.animation.should_loop {
-                    continue;
-                }
-                custom.current_timestamp = 0;
-                custom.current_index = 0;
-                custom.update_all_components(&mut self.components)?;
+    pub fn render(
+        &mut self,
+        clock: &mut dyn ClockConnector,
+        time_limit: Duration,
+    ) -> VoidClockResult {
+        let start = Instant::now();
+        let mut frame: u32 = 0;
+
+        loop {
+            let frame_start = Instant::now();
+
+            self.render_frame(clock, frame)?;
+
+            frame = frame.saturating_add(1);
+
+            //If we have been rendering for longer than `time_limit` stop.
+            if start.elapsed() >= time_limit {
+                return Ok(());
             }
 
-            //Update animation if needed
-            if custom.animation.speed > 0 && frame.is_multiple_of(custom.animation.speed as u32) {
-                custom.current_timestamp += 1;
-
-                //Do we need to update?
-                if custom.current_index + 1 < custom.states.len()  && custom.current_timestamp >= custom.states.get(custom.current_index +1).unwrap_and_log("Failed to get next animation state because animations.current_index +1 > animations.states.len()!").timestamp{
-
-                        custom.current_index +=1;
-                    custom.update_all_components(&mut self.components)?;
-
-                    }
+            //If we didn't take longer than the time required to maintain `FPS` frames per second (`SLEEP_PER_FRAME`) sleep to maintain `FPS`.
+            if let Some(sleep_time) = SLEEP_PER_FRAME.checked_sub(frame_start.elapsed()) {
+                std::thread::sleep(sleep_time);
             }
         }
-        Ok(())
     }
 }
 
@@ -254,7 +246,7 @@ impl Debug for RootComponent {
 }
 
 ///Used to draw a single tile on the screen at the given `Pos` and with the given `Color`
-#[derive(CustomAnimatable)]
+#[derive(Animatable)]
 pub struct TileComponent {
     pub color: Color,
     pub pos: Pos,
@@ -271,7 +263,7 @@ impl Component for TileComponent {
 }
 
 ///Used to draw a box on the screen starting at the given `Pos`
-#[derive(CustomAnimatable)]
+#[derive(Animatable)]
 pub struct BoxComponent {
     pub color: Color,
     pub pos: Pos,
@@ -342,7 +334,7 @@ impl Component for BoxComponent {
 }
 
 ///Used to draw a circle on the screen starting at the given `Pos`
-#[derive(CustomAnimatable)]
+#[derive(Animatable)]
 pub struct CircleComponent {
     pub color: Color,
     pub pos: Pos,
@@ -445,7 +437,7 @@ fn draw_char(
 }
 
 ///Used to draw a single `char` on the screen at the given `Pos` and with the given `Color`
-#[derive(CustomAnimatable)]
+#[derive(Animatable)]
 pub struct CharComponent {
     pub color: Color,
     pub chr: char,
@@ -467,7 +459,7 @@ impl Component for CharComponent {
 }
 
 ///Used to draw a `string` on the screen at the given `Pos` and with the given `Color`
-#[derive(CustomAnimatable)]
+#[derive(Animatable)]
 pub struct TextComponent {
     pub color: Color,
     pub text: String,
@@ -496,7 +488,7 @@ impl Component for TextComponent {
 
 ///Used to draw a wrapped `string` on the screen at the given `Pos` and with the given `Color`.
 ///Wrapped strings will go to the next line + `line_spacing` pixels if they encounter `\n` or go over `64`px.
-#[derive(CustomAnimatable)]
+#[derive(Animatable)]
 pub struct WrappedTextComponent {
     pub color: Color,
     pub text: String,
@@ -546,7 +538,7 @@ impl Component for WrappedTextComponent {
 
 ///Used to draw an image the screen at the given `Pos`. The image must be loaded in the Clock's
 ///image store. This can be done by specifying it in the current module's image list.
-#[derive(CustomAnimatable)]
+#[derive(Animatable)]
 pub struct ImageComponent {
     pub pos: Pos,
     pub image_name: String,

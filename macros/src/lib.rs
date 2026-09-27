@@ -24,7 +24,7 @@ fn create_set_fn(
         let struct_name = struct_name.to_string();
         let field_name = attr_name.to_string();
         let warn_message = Literal::string(&format!(
-            "Cannot set field: {} for struct: {} as part of a CustomAnimation, because {} does not have field: {}.",
+            "Cannot set field: {} for struct: {} as part of an Animation, because {} does not have field: {}.",
             field_name, struct_name, struct_name, field_name
         ));
         quote! {
@@ -35,8 +35,8 @@ fn create_set_fn(
     }
 }
 
-#[proc_macro_derive(CustomAnimatable)]
-///This macro implements the `CustomAnimatable` trait on a given component.
+#[proc_macro_derive(Animatable)]
+///This macro implements the `Animatable` trait on a given component.
 ///
 ///It generates set methods for following component fields if prescient: `color`, `pos`, `text`. If
 ///missing, the field will return a function that logs a **no-op warning**.
@@ -79,7 +79,7 @@ pub fn custom_animatable_derive(tokens: proc_macro::TokenStream) -> proc_macro::
             );
 
             quote! {
-                impl CustomAnimatable for #struct_ident {
+                impl Animatable for #struct_ident {
                     #set_color
 
                     #set_pos
@@ -92,17 +92,14 @@ pub fn custom_animatable_derive(tokens: proc_macro::TokenStream) -> proc_macro::
             // Struct discrimination! >:(
             syn::Error::new_spanned(
                 struct_ident,
-                "CustomAnimatable can only be derived by normal structs!",
+                "Animatable can only be derived by normal structs!",
             )
             .into_compile_error()
             .into()
         }
     } else {
-        syn::Error::new_spanned(
-            struct_ident,
-            "CustomAnimatable can only be derived by structs!",
-        )
-        .into_compile_error()
-        .into()
+        syn::Error::new_spanned(struct_ident, "Animatable can only be derived by structs!")
+            .into_compile_error()
+            .into()
     }
 }

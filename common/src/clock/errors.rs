@@ -15,6 +15,8 @@ pub enum ClockError {
     ComponentInvalidArgument(String, String, String),
     ///Returned when an error occurs with a clock asset.
     AssetError(ClockAssetError),
+    ///No keyframes specified
+    NoKeyframesSpecified(),
 }
 
 #[derive(Debug)]
@@ -78,6 +80,11 @@ impl ClockError {
     pub fn invalid_custom_animation_index(index: usize, len: usize) -> ClockError {
         ClockError::InvalidCustomAnimationIndex(index, len)
     }
+
+    ///Returns a `ClockError` for when no key frames are specified in an animation
+    pub fn no_keyframes() -> ClockError {
+        ClockError::NoKeyframesSpecified()
+    }
 }
 
 impl Display for ClockError {
@@ -116,6 +123,9 @@ impl Display for ClockError {
                     write!(f, "Asset not found: {asset_filename}!")
                 }
             },
+            ClockError::NoKeyframesSpecified() => {
+                write!(f, "No keyframes specified for animation!")
+            }
         }
     }
 }
