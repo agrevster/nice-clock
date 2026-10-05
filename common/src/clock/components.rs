@@ -18,7 +18,7 @@ use crate::{
 pub trait Component {
     ///The name of the component.
     ///**It is preferred to inline this!**
-    fn name(&self) -> String;
+    fn name(&self) -> &'static str;
 
     ///The function used to draw the specific component on the `clock`.
     fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult;
@@ -254,8 +254,8 @@ pub struct TileComponent {
 
 impl Component for TileComponent {
     #[inline]
-    fn name(&self) -> String {
-        "tile".to_string()
+    fn name(&self) -> &'static str {
+        "tile"
     }
     fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
         clock.set_tile(&self.pos, &self.color)
@@ -274,8 +274,8 @@ pub struct BoxComponent {
 
 impl Component for BoxComponent {
     #[inline]
-    fn name(&self) -> String {
-        "box".to_string()
+    fn name(&self) -> &'static str {
+        "box"
     }
     fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
         self.pos.validate()?;
@@ -344,8 +344,8 @@ pub struct CircleComponent {
 
 impl Component for CircleComponent {
     #[inline]
-    fn name(&self) -> String {
-        "circle".to_string()
+    fn name(&self) -> &'static str {
+        "circle"
     }
     fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
         self.pos.validate()?;
@@ -447,8 +447,8 @@ pub struct CharComponent {
 
 impl Component for CharComponent {
     #[inline]
-    fn name(&self) -> String {
-        "char".to_string()
+    fn name(&self) -> &'static str {
+        "char"
     }
     fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
         self.pos.validate()?;
@@ -469,8 +469,8 @@ pub struct TextComponent {
 
 impl Component for TextComponent {
     #[inline]
-    fn name(&self) -> String {
-        "text".to_string()
+    fn name(&self) -> &'static str {
+        "text"
     }
     fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
         self.pos.validate()?;
@@ -499,8 +499,8 @@ pub struct WrappedTextComponent {
 
 impl Component for WrappedTextComponent {
     #[inline]
-    fn name(&self) -> String {
-        "wrapped_text".to_string()
+    fn name(&self) -> &'static str {
+        "wrapped_text"
     }
     fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
         self.pos.validate()?;
@@ -546,8 +546,8 @@ pub struct ImageComponent {
 
 impl Component for ImageComponent {
     #[inline]
-    fn name(&self) -> String {
-        "image".to_string()
+    fn name(&self) -> &'static str {
+        "image"
     }
     fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
         self.pos.validate()?;
