@@ -15,9 +15,17 @@ fn create_set_fn(
     let fn_name = format_ident!("set_{attr_name}");
 
     if struct_has_field {
-        quote! {
-            fn #fn_name(&mut self, #attr_name: #attr_type){
-                self.#attr_name = #attr_name;
+        if attr_name == "internal_tick" {
+            quote! {
+                fn #fn_name(&mut self, #attr_name: #attr_type){
+                    self.#attr_name.set(#attr_name);
+                }
+            }
+        } else {
+            quote! {
+                fn #fn_name(&mut self, #attr_name: #attr_type){
+                    self.#attr_name = #attr_name;
+                }
             }
         }
     } else {
@@ -78,6 +86,13 @@ pub fn custom_animatable_derive(tokens: proc_macro::TokenStream) -> proc_macro::
                 field_names.contains("text"),
             );
 
+            let set_internal_tick = create_set_fn(
+                &Ident::new("internal_tick", Span::call_site()),
+                &Ident::new("i32", Span::call_site()),
+                struct_ident,
+                field_names.contains("internal_tick"),
+            );
+
             quote! {
                 impl Animatable for #struct_ident {
                     #set_color
@@ -85,6 +100,8 @@ pub fn custom_animatable_derive(tokens: proc_macro::TokenStream) -> proc_macro::
                     #set_pos
 
                     #set_text
+
+                    #set_internal_tick
                 }
             }
             .into()

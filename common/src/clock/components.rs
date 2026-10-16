@@ -1,4 +1,5 @@
 use std::{
+    cell::Cell,
     fmt::Debug,
     num::{NonZeroU8, NonZeroU32},
     time::{Duration, Instant},
@@ -34,6 +35,9 @@ pub trait Animatable {
     fn set_color(&mut self, color: Color);
     ///Updates the component's `text` used for `Animation`.
     fn set_text(&mut self, text: String);
+    ///Updates the component's `internal_tick` used for `Animation` on
+    ///`HorizontalScrollingTextComponent`.
+    fn set_internal_tick(&mut self, internal_tick: i32);
 }
 
 ///Trait used for all clock components. **Each component must implement this**.
@@ -51,6 +55,7 @@ struct AnimationResolution<'a> {
     pub color: Option<Color>,
     pub pos: Option<Pos>,
     pub text: Option<&'a str>,
+    pub internal_tick: Option<i32>,
 }
 
 #[derive(Debug)]
@@ -109,6 +114,7 @@ impl Animation {
             color: seen.iter().rev().find_map(|k| k.color),
             pos: seen.iter().rev().find_map(|k| k.pos),
             text: seen.iter().rev().find_map(|k| k.text.as_deref()),
+            internal_tick: seen.iter().rev().find_map(|k| k.internal_tick),
         }
     }
 
@@ -133,6 +139,10 @@ impl Animation {
             if let Some(text) = r.text {
                 c.set_text(text.to_owned());
             }
+
+            if let Some(internal_tick) = r.internal_tick {
+                c.set_internal_tick(internal_tick);
+            }
         }
         Ok(())
     }
@@ -145,6 +155,7 @@ pub struct AnimationKeyframe {
     pub color: Option<Color>,
     pub pos: Option<Pos>,
     pub text: Option<String>,
+    pub internal_tick: Option<i32>,
 }
 
 impl AnimationKeyframe {
@@ -155,6 +166,7 @@ impl AnimationKeyframe {
             color: None,
             pos: None,
             text: None,
+            internal_tick: None,
         }
     }
 
@@ -171,6 +183,12 @@ impl AnimationKeyframe {
     ///Sets the text of the given `AnimationKeyframe` to `text`
     pub fn text(mut self, text: impl Into<String>) -> Self {
         self.text = Some(text.into());
+        self
+    }
+
+    ///Sets the internal_tick of the given `AnimationKeyframe` to `internal_tick`
+    pub fn internal_tick(mut self, internal_tick: i32) -> Self {
+        self.internal_tick = Some(internal_tick);
         self
     }
 }
@@ -568,6 +586,145 @@ impl Component for ImageComponent {
                 if pixel != &black {
                     clock.set_tile(&(y + self.pos.y, x + self.pos.x).into(), pixel)?;
                 }
+            }
+        }
+
+        Ok(())
+    }
+}
+
+///Used to draw a `string` that scrolls across on the screen starting at the given `Pos` and with the given `Color` and `Font`.
+///
+#[derive(Animatable)]
+pub struct HorizontalScrollingTextComponent {
+    pub color: Color,
+    pub text: String,
+    pub pos: Pos,
+    pub font: Font,
+    pub cutoff_x: u8,
+    pub internal_tick: Cell<i32>,
+}
+
+impl HorizontalScrollingTextComponent {
+    pub fn animate(
+        id: usize,
+        frames_per_tick: NonZeroU8,
+        start: i32,
+        duration: NonZeroU32,
+        looping: bool,
+    ) -> Animation {
+        Animation {
+            component_ids: vec![id],
+            keyframes: (0..duration.get()).fold(Vec::new(), |mut vec, i| {
+                vec.push(
+                    AnimationKeyframe::at(i).internal_tick(i32::try_from(i).unwrap_or(0) + start),
+                );
+                vec
+            }),
+            frames_per_tick,
+            duration,
+            looping,
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn draw_char_column_if_possible(
+        &self,
+        clock: &mut dyn ClockConnector,
+        y_pos: u8,
+        x_pos: u8,
+        font: Font,
+        char: char,
+        column: u8,
+        color: Color,
+    ) -> VoidClockResult {
+        if y_pos >= HEIGHT || x_pos >= WIDTH {
+            return Ok(());
+        }
+        let bdf = font.get();
+        if column >= bdf.width {
+            return Ok(());
+        }
+
+        let glyph = bdf
+            .glyphs
+            .get(&char)
+            .or_else(|| bdf.glyphs.get(&bdf.default_char))
+            .unwrap_and_log("No default glyph defined for font!");
+
+        let bytes_per_row = (bdf.width as usize).div_ceil(8);
+        let byte_index = (column / 8) as usize;
+        let mask = 0x80u8 >> (column % 8);
+
+        // chunks_exact => every row_bytes.len() == bytes_per_row; no slicing panics
+        for (row, row_bytes) in glyph
+            .chunks_exact(bytes_per_row)
+            .take(bdf.height as usize)
+            .enumerate()
+        {
+            let Some(y) = u8::try_from(row)
+                .ok()
+                .and_then(|r| y_pos.checked_add(r))
+                .filter(|&y| y < HEIGHT)
+            else {
+                break; // ran off the bottom of screen
+            };
+
+            if row_bytes[byte_index] & mask != 0 {
+                clock.set_tile(&Pos::from((y, x_pos)), &color)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Component for HorizontalScrollingTextComponent {
+    #[inline]
+    fn name(&self) -> &'static str {
+        "horizontal_scrolling_text"
+    }
+
+    fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
+        self.pos.validate()?;
+        let font = self.font.get();
+
+        let font_width = font.width as i32;
+        let start_x = self.pos.x as i32;
+        let cutoff_x = self.cutoff_x as i32;
+        let text_pixel_width =
+            font_width.saturating_mul(i32::try_from(self.text.chars().count()).unwrap_or(i32::MAX));
+
+        let pos = self.internal_tick.get();
+
+        //Restart if text has made it all the way to the left
+        if pos > text_pixel_width {
+            return Ok(());
+        }
+
+        for (i, char) in self.text.chars().enumerate() {
+            let char_start = i32::try_from(i)
+                .unwrap_or(i32::MAX)
+                .saturating_mul(font_width);
+            for col in 0..font_width {
+                let screen_x = char_start.saturating_add(col) - pos;
+
+                if screen_x < cutoff_x {
+                    continue;
+                }
+
+                if screen_x > start_x {
+                    //made it to end
+                    return Ok(());
+                }
+                self.draw_char_column_if_possible(
+                    clock,
+                    self.pos.y,
+                    u8::try_from(screen_x).unwrap_or(WIDTH),
+                    self.font,
+                    char,
+                    u8::try_from(col).unwrap_or(u8::MAX),
+                    self.color,
+                )?;
             }
         }
 

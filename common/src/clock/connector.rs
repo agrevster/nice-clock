@@ -24,14 +24,20 @@ pub trait ClockConnector {
 //TODO: Add Luau implementation and more static modules
 pub mod module_loader {
 
-    use std::{time::Duration, vec};
+    use std::{
+        cell::Cell,
+        num::{NonZeroU8, NonZeroU32},
+        time::Duration,
+        vec,
+    };
 
     use crate::{
         VoidClockResult,
         clock::{
             color::Color,
-            components::{self, RootComponent},
+            components::{HorizontalScrollingTextComponent, RootComponent},
             connector::ClockConnector,
+            fonts::Font,
             module::ClockModule,
         },
     };
@@ -50,20 +56,24 @@ pub mod module_loader {
     pub fn test_module() -> ClockModule {
         ClockModule {
             name: "test".to_string(),
-            time_limt: Duration::from_secs(5),
+            time_limt: Duration::from_secs(30),
             images_names: vec![],
             root_compoent: RootComponent::new(
-                vec![
-                    Box::new(components::TileComponent {
-                        pos: (9, 5).into(),
-                        color: Color::red(),
-                    }),
-                    Box::new(components::TileComponent {
-                        pos: (9, 6).into(),
-                        color: Color::blue(),
-                    }),
-                ],
-                vec![],
+                vec![Box::new(HorizontalScrollingTextComponent {
+                    color: Color::red(),
+                    text: "Hello world this is long text".to_string(),
+                    pos: (0, 60).into(),
+                    font: Font::Font5x5,
+                    cutoff_x: 1,
+                    internal_tick: Cell::new(0),
+                })],
+                vec![HorizontalScrollingTextComponent::animate(
+                    0,
+                    NonZeroU8::new(3).unwrap(),
+                    -64,
+                    NonZeroU32::new(251).unwrap(),
+                    true,
+                )],
             ),
         }
     }

@@ -2,3 +2,4 @@
 # Added by cargo
 /target
 dump.hex
+.debug_cmd
