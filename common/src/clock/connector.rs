@@ -1,3 +1,5 @@
+use std::sync::atomic::AtomicBool;
+
 use crate::{
     VoidClockResult,
     clock::{color::Color, errors::ClockError, images::ImageStore, pos::Pos},
@@ -18,6 +20,9 @@ pub trait ClockConnector {
     fn fetch_module_names(&mut self) -> Result<Vec<String>, ClockError>;
     /// Used to get a mutable reference to the clock's image store.
     fn get_image_store(&mut self) -> &mut ImageStore;
+    /// Used to get a reference to the clock's running flag. When this flag is set to `false`, the
+    /// clock stops.
+    fn get_running_flag(&self) -> &AtomicBool;
 }
 
 ///Used to load modules from various sources.
@@ -29,7 +34,12 @@ pub mod module_loader {
 
     use crate::{
         VoidClockResult,
-        clock::{components::RootComponent, connector::ClockConnector, module::ClockModule},
+        clock::{
+            color::Color,
+            components::{BoxComponent, RootComponent},
+            connector::ClockConnector,
+            module::ClockModule,
+        },
     };
 
     pub fn load_module(
@@ -48,7 +58,16 @@ pub mod module_loader {
             name: "test".to_string(),
             time_limt: Duration::from_secs(30),
             images_names: vec![],
-            root_compoent: RootComponent::new(vec![], vec![]),
+            root_compoent: RootComponent::new(
+                vec![Box::new(BoxComponent {
+                    color: Color::blue(),
+                    pos: (0, 0).into(),
+                    fill_inside: true,
+                    width: 10,
+                    height: 5,
+                })],
+                vec![],
+            ),
         }
     }
 }

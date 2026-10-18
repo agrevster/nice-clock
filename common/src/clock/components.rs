@@ -2,6 +2,7 @@ use std::{
     cell::Cell,
     fmt::Debug,
     num::{NonZeroU8, NonZeroU32},
+    sync::atomic::Ordering,
     time::{Duration, Instant},
 };
 
@@ -233,7 +234,7 @@ impl RootComponent {
         let start = Instant::now();
         let mut frame: u32 = 0;
 
-        loop {
+        while clock.get_running_flag().load(Ordering::Relaxed) {
             let frame_start = Instant::now();
 
             self.render_frame(clock, frame)?;
@@ -250,6 +251,7 @@ impl RootComponent {
                 std::thread::sleep(sleep_time);
             }
         }
+        Ok(())
     }
 }
 

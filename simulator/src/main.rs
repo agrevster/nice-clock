@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::{
     fs::File,
     ops::Div,
@@ -34,13 +35,14 @@ static BG_COLOR: SdlColor = SdlColor::RGB(27, 31, 25);
 #[cfg(test)]
 mod test_utils;
 
-struct SimulatorConnector {
+struct SimulatorConnector<'a> {
     pub transmitter: Sender<[[Color; 64]; 32]>,
     scratch: [[Color; 64]; 32],
     image_store: ImageStore,
+    running_flag: &'a AtomicBool,
 }
 
-impl ClockConnector for SimulatorConnector {
+impl<'a> ClockConnector for SimulatorConnector<'a> {
     fn set_tile(&mut self, pos: &Pos, color: &Color) -> common::VoidClockResult {
         let pos = pos.validate()?;
         self.scratch[pos.y as usize][pos.x as usize] = *color;
@@ -72,6 +74,10 @@ impl ClockConnector for SimulatorConnector {
     fn get_image_store(&mut self) -> &mut ImageStore {
         &mut self.image_store
     }
+
+    fn get_running_flag(&self) -> &AtomicBool {
+        self.running_flag
+    }
 }
 
 fn draw_tiles(tiles: &[[Color; 64]; 32], canvas: &mut WindowCanvas) {
@@ -101,7 +107,7 @@ fn tile_pos_for_click_pos(click: (i32, i32)) -> Pos {
     }
 }
 
-fn start_simulator(rx: Receiver<[[Color; 64]; 32]>) {
+fn start_simulator(rx: Receiver<[[Color; 64]; 32]>, running_flag: &AtomicBool) {
     let sleep_time = Duration::from_millis(((1.0).div(FPS as f32) * 1000.0) as u64);
     let sdl = sdl2::init().unwrap_and_log("Failed to create SDL session for simulator!");
     let video = sdl
@@ -128,7 +134,7 @@ fn start_simulator(rx: Receiver<[[Color; 64]; 32]>) {
     let mut event_pump = sdl
         .event_pump()
         .unwrap_and_log("Failed to get SDL event pump!");
-    'run: loop {
+    while running_flag.load(Ordering::Relaxed) {
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
@@ -139,7 +145,9 @@ fn start_simulator(rx: Receiver<[[Color; 64]; 32]>) {
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
-                } => break 'run,
+                } => {
+                    running_flag.store(false, Ordering::Relaxed);
+                }
                 Event::KeyDown {
                     keycode: Some(Keycode::S),
                     ..
@@ -200,8 +208,10 @@ fn main() {
 
     let hexdump_view = args.len() > 1;
     let hexdump_file = args.last();
+    let running_flag = AtomicBool::new(true);
 
     let mut clock = SimulatorConnector {
+        running_flag: &running_flag,
         scratch: [[Color::black(); 64]; 32],
         transmitter: tx,
         image_store: ImageStore::default(),
@@ -210,7 +220,7 @@ fn main() {
     thread::scope(|scope| {
         let sim_window = scope.spawn(|| {
             info!("Starting clock simulator...");
-            start_simulator(rx);
+            start_simulator(rx, &running_flag);
         });
 
         if !hexdump_view {

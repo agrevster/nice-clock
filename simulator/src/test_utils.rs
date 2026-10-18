@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use std::{num::ParseIntError, path::PathBuf, time::Duration};
+use std::{num::ParseIntError, path::PathBuf, sync::atomic::AtomicBool, time::Duration};
 
 use common::{
     VoidClockResult,
@@ -19,6 +19,7 @@ pub struct TestingConnector {
     tiles: [[Color; 64]; 32],
     scratch: [[Color; 64]; 32],
     image_store: ImageStore,
+    running_flag: AtomicBool,
 }
 
 impl Default for TestingConnector {
@@ -27,6 +28,7 @@ impl Default for TestingConnector {
             tiles: [[Color::black(); 64]; 32],
             scratch: [[Color::black(); 64]; 32],
             image_store: ImageStore::default(),
+            running_flag: AtomicBool::new(true),
         }
     }
 }
@@ -61,6 +63,10 @@ impl ClockConnector for TestingConnector {
 
     fn get_image_store(&mut self) -> &mut ImageStore {
         &mut self.image_store
+    }
+
+    fn get_running_flag(&self) -> &AtomicBool {
+        &self.running_flag
     }
 }
 
