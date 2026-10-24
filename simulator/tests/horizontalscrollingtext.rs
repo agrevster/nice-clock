@@ -3,7 +3,11 @@ use std::{
     num::{NonZeroU8, NonZeroU32},
 };
 
-use common::clock::{color::Color, components::HorizontalScrollingTextComponent, fonts::Font};
+use common::clock::{
+    color::Color,
+    components::{HorizontalScrollingTextComponent, animate_internal_tick_component},
+    fonts::Font,
+};
 use simulator::test_utils::{
     TestingConnector, get_dump, hex_from_file, render_to_hex, test_module,
 };
@@ -21,7 +25,7 @@ fn check_short_text() {
             cutoff_x: 0,
             internal_tick: Cell::new(0),
         })],
-        vec![HorizontalScrollingTextComponent::animate(
+        vec![animate_internal_tick_component(
             0,
             NonZeroU8::new(1).unwrap(),
             -64,
@@ -80,7 +84,7 @@ fn check_long_text() {
             cutoff_x: 0,
             internal_tick: Cell::new(0),
         })],
-        vec![HorizontalScrollingTextComponent::animate(
+        vec![animate_internal_tick_component(
             0,
             NonZeroU8::new(1).unwrap(),
             -64,
@@ -159,7 +163,7 @@ fn check_short_text_limited_area() {
             cutoff_x: 10,
             internal_tick: Cell::new(113),
         })],
-        vec![HorizontalScrollingTextComponent::animate(
+        vec![animate_internal_tick_component(
             0,
             NonZeroU8::new(1).unwrap(),
             -64,
@@ -248,7 +252,7 @@ fn check_complex() {
             cutoff_x: 10,
             internal_tick: Cell::new(0),
         })],
-        vec![HorizontalScrollingTextComponent::animate(
+        vec![animate_internal_tick_component(
             0,
             NonZeroU8::new(1).unwrap(),
             -31,

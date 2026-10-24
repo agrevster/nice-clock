@@ -11,7 +11,13 @@ use macros::Animatable;
 
 use crate::{
     FPS, HEIGHT, VoidClockResult, WIDTH,
-    clock::{color::Color, connector::ClockConnector, errors::ClockError, fonts::Font, pos::Pos},
+    clock::{
+        color::Color,
+        connector::ClockConnector,
+        errors::ClockError,
+        fonts::{BDFFont, Font},
+        pos::Pos,
+    },
     utils::LogUnwrap,
 };
 
@@ -595,8 +601,7 @@ impl Component for ImageComponent {
     }
 }
 
-///Used to draw a `string` that scrolls across on the screen starting at the given `Pos` and with the given `Color` and `Font`.
-///
+///Used to draw a `string` that scrolls across on the screen starting at the given `Pos` and with the given `Color` and `Font`. The scrolling cuts off at `cutoff_x`. This uses an `Animation` to increase `internal_tick` resulting in the text scrolling across the screen from right to left.
 #[derive(Animatable)]
 pub struct HorizontalScrollingTextComponent {
     pub color: Color,
@@ -608,27 +613,6 @@ pub struct HorizontalScrollingTextComponent {
 }
 
 impl HorizontalScrollingTextComponent {
-    pub fn animate(
-        id: usize,
-        frames_per_tick: NonZeroU8,
-        start: i32,
-        duration: NonZeroU32,
-        looping: bool,
-    ) -> Animation {
-        Animation {
-            component_ids: vec![id],
-            keyframes: (0..duration.get()).fold(Vec::new(), |mut vec, i| {
-                vec.push(
-                    AnimationKeyframe::at(i).internal_tick(i32::try_from(i).unwrap_or(0) + start),
-                );
-                vec
-            }),
-            frames_per_tick,
-            duration,
-            looping,
-        }
-    }
-
     #[allow(clippy::too_many_arguments)]
     fn draw_char_column_if_possible(
         &self,
@@ -696,10 +680,10 @@ impl Component for HorizontalScrollingTextComponent {
         let text_pixel_width =
             font_width.saturating_mul(i32::try_from(self.text.chars().count()).unwrap_or(i32::MAX));
 
-        let pos = self.internal_tick.get();
+        let tick = self.internal_tick.get();
 
         //Restart if text has made it all the way to the left
-        if pos > text_pixel_width {
+        if tick > text_pixel_width {
             return Ok(());
         }
 
@@ -708,7 +692,7 @@ impl Component for HorizontalScrollingTextComponent {
                 .unwrap_or(i32::MAX)
                 .saturating_mul(font_width);
             for col in 0..font_width {
-                let screen_x = char_start.saturating_add(col) - pos;
+                let screen_x = char_start.saturating_add(col) - tick;
 
                 if screen_x < cutoff_x {
                     continue;
@@ -731,5 +715,158 @@ impl Component for HorizontalScrollingTextComponent {
         }
 
         Ok(())
+    }
+}
+
+#[derive(Animatable)]
+pub struct VerticalScrollingTextComponent {
+    pub color: Color,
+    pub text: String,
+    pub pos: Pos,
+    pub font: Font,
+    pub cutoff_y: u8,
+    pub internal_tick: Cell<i32>,
+    pub line_spacing: i8,
+}
+
+impl VerticalScrollingTextComponent {
+    #[allow(clippy::too_many_arguments)]
+    fn draw_char_row_if_possible(
+        &self,
+        clock: &mut dyn ClockConnector,
+        y_pos: u8,
+        x_pos: u8,
+        font: &BDFFont,
+        char: char,
+        row: u8,
+        color: Color,
+    ) -> VoidClockResult {
+        if y_pos >= HEIGHT || x_pos >= WIDTH {
+            return Ok(());
+        }
+        if row >= font.height {
+            return Ok(());
+        }
+
+        let glyph = font
+            .glyphs
+            .get(&char)
+            .or_else(|| font.glyphs.get(&font.default_char))
+            .unwrap_and_log("No default glyph defined for font!");
+
+        let bytes_per_row = (font.width as usize).div_ceil(8);
+        let row_start = row as usize * bytes_per_row;
+
+        //Skip glyphs that are invalid (smaller than the font's width)
+        let Some(row_bytes) = glyph.get(row_start..row_start + bytes_per_row) else {
+            warn!("Encountered invalid glyph {char}!");
+            return Ok(());
+        };
+        for col in 0..font.width {
+            let Some(x) = x_pos.checked_add(col).filter(|&x| x < WIDTH) else {
+                break; // Glyph 
+            };
+            let Some(byte) = row_bytes.get((col / 8) as usize) else {
+                break;
+            };
+
+            if byte & (0x80u8 >> (col % 8)) != 0 {
+                clock.set_tile(&Pos::from((y_pos, x)), &color)?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl Component for VerticalScrollingTextComponent {
+    #[inline]
+    fn name(&self) -> &'static str {
+        "verticial_scrolling_text"
+    }
+
+    fn draw(&self, clock: &mut dyn ClockConnector) -> VoidClockResult {
+        self.pos.validate()?;
+        let font = self.font.get();
+
+        let window_top = self.cutoff_y as i32;
+        let window_bottom = self.pos.y as i32;
+
+        //Bottom should not be more than top
+        if window_top >= window_bottom {
+            warn!(
+                "VerticalScrollingTextComponent with cutoff_y >= pos.y. This component will not be drawn!"
+            );
+            return Ok(());
+        }
+
+        let font_width = font.width;
+        let font_height = font.height;
+        let line_spacing = 0.max(font_height as i8 + self.line_spacing) as i32;
+        let start_x = self.pos.x;
+
+        let tick = self.internal_tick.get();
+
+        let mut x = start_x;
+        let mut line: i32 = 0;
+
+        for char in self.text.chars() {
+            if char == '\n' {
+                line = line.saturating_add(1);
+                x = start_x;
+                continue;
+            }
+
+            //Wrap text if it does not fit on screen, and ensure we don't have multiple new lines
+            if x > start_x && x.saturating_add(font_width) > WIDTH {
+                line = line.saturating_add(1);
+                x = start_x;
+            }
+
+            let char_x = x;
+            x = x.saturating_add(font_width); //Move over 1 char width
+
+            //At tick 0 line_top should be at pos.y - is below it and + is above
+            let line_top = window_bottom
+                .saturating_add(line.saturating_mul(line_spacing))
+                .saturating_sub(tick);
+
+            //Only rows inside the range are drawn
+            let first_row = window_top.saturating_sub(line_top).max(0);
+            let last_row = window_bottom
+                .saturating_sub(line_top)
+                .min(font_height as i32);
+
+            for row in first_row..=last_row {
+                let Ok(y) = u8::try_from(line_top.saturating_add(row)) else {
+                    continue;
+                };
+                let Ok(row) = u8::try_from(row) else {
+                    continue;
+                };
+                self.draw_char_row_if_possible(clock, y, char_x, font, char, row, self.color)?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+pub fn animate_internal_tick_component(
+    id: usize,
+    frames_per_tick: NonZeroU8,
+    start: i32,
+    duration: NonZeroU32,
+    looping: bool,
+) -> Animation {
+    Animation {
+        component_ids: vec![id],
+        keyframes: (0..duration.get()).fold(Vec::new(), |mut vec, i| {
+            vec.push(AnimationKeyframe::at(i).internal_tick(i32::try_from(i).unwrap_or(0) + start));
+            vec
+        }),
+        frames_per_tick,
+        duration,
+        looping,
     }
 }
