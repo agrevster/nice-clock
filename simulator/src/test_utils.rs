@@ -70,9 +70,26 @@ impl ClockConnector for TestingConnector {
     }
 }
 
+pub fn render_to_tiles(
+    clock: &mut TestingConnector,
+    module: &mut ClockModule,
+    frame: u32,
+) -> [[Color; 64]; 32] {
+    clock.get_image_store().clear();
+    clock
+        .get_image_store()
+        .load_images_for_module(module)
+        .unwrap();
+    module.root_compoent.render_frame(clock, frame).unwrap();
+    clock.tiles
+}
+
 pub fn render_to_hex(clock: &mut TestingConnector, module: &mut ClockModule, frame: u32) -> String {
-    clock.image_store.clear();
-    clock.image_store.load_images_for_module(module).unwrap();
+    clock.get_image_store().clear();
+    clock
+        .get_image_store()
+        .load_images_for_module(module)
+        .unwrap();
     module.root_compoent.render_frame(clock, frame).unwrap();
     tiles_to_hex(clock.tiles)
 }

@@ -1,6 +1,4 @@
-use std::io::Write;
 use std::{
-    fs::File,
     ops::Div,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -20,7 +18,7 @@ use sdl2::{
     render::WindowCanvas,
 };
 
-use crate::test_utils::tiles_to_hex;
+use crate::connector::dump_tiles_to_file;
 
 static BG_COLOR: SdlColor = SdlColor::RGB(27, 31, 25);
 
@@ -96,14 +94,9 @@ pub fn start_simulator(rx: Receiver<[[Color; 64]; 32]>, running_flag: &AtomicBoo
                     keycode: Some(Keycode::S),
                     ..
                 } => {
-                    let tile_dump = tiles_to_hex(tile_cache);
-
-                    let mut dump_file =
-                        File::create("./dump.hex").unwrap_and_log("Failed to create dump file!");
-                    write!(dump_file, "{}", tile_dump)
-                        .unwrap_and_log("Failed to write to dump file!");
-
-                    info!("Tile dump created!");
+                    let mut filepath = std::env::current_dir().expect("Error getting the CWD!");
+                    filepath.push("dump.hex");
+                    dump_tiles_to_file(filepath, tile_cache);
                 }
                 Event::MouseButtonDown {
                     mouse_btn: MouseButton::Left,

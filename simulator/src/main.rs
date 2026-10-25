@@ -1,6 +1,7 @@
 use std::sync::atomic::AtomicBool;
 use std::{sync::mpsc::channel, thread};
 
+use clap::Parser;
 use common::{
     clock::{
         color::Color,
@@ -12,7 +13,9 @@ use common::{
 };
 use log::info;
 use simplelog::{ConfigBuilder, TermLogger, format_description};
-use simulator::test_utils::{hex_from_file, tiles_from_hex};
+use simulator::cli::{Cli, Commands};
+use simulator::connector::dump_tiles_to_file;
+use simulator::test_utils::{TestingConnector, hex_from_file, render_to_tiles, tiles_from_hex};
 use simulator::{connector::SimulatorConnector, window};
 
 fn main() {
@@ -34,13 +37,13 @@ fn main() {
     .expect("Failed to start logger!");
 
     Font::load_fonts().unwrap_and_log("Error loading fonts!");
+
     let (tx, rx) = channel::<[[Color; 64]; 32]>();
-
-    let args = std::env::args().collect::<Vec<String>>();
-
-    let hexdump_view = args.len() > 1;
-    let hexdump_file = args.last();
     let running_flag = AtomicBool::new(true);
+
+    let args = Cli::parse();
+
+    let module = &mut test_module();
 
     let mut clock = SimulatorConnector {
         running_flag: &running_flag,
@@ -55,21 +58,30 @@ fn main() {
             window::start_simulator(rx, &running_flag);
         });
 
-        if !hexdump_view {
-            load_module(&mut clock, &mut test_module()).unwrap_and_log("Error loading module!");
-        } else {
-            let mut filepath = std::env::current_dir().expect("Error getting the CWD!");
-            filepath.push(
-                hexdump_file
-                    .expect("Failed to get hexdump file from args. Might be a parsing issue..."),
-            );
-            clock
-                .transmitter
-                .send(
-                    tiles_from_hex(hex_from_file(filepath)).expect("Error parsing tiles from hex!"),
-                )
-                .expect("Failed to send tiles to simulator window!");
-            info!("Rendering hexdump...");
+        match args.command.unwrap_or_default() {
+            Commands::Render { hexdump } => match hexdump {
+                Some(dump_path) => {
+                    let mut filepath = std::env::current_dir().expect("Error getting the CWD!");
+                    filepath.push(dump_path);
+                    clock
+                        .transmitter
+                        .send(
+                            tiles_from_hex(hex_from_file(filepath))
+                                .expect("Error parsing tiles from hex!"),
+                        )
+                        .expect("Failed to send tiles to simulator window!");
+                    info!("Rendering hexdump...");
+                }
+
+                None => load_module(&mut clock, module).unwrap_and_log("Error loading module!"),
+            },
+            Commands::Dump { out, frame } => {
+                running_flag.store(false, std::sync::atomic::Ordering::Relaxed);
+                dump_tiles_to_file(
+                    out,
+                    render_to_tiles(&mut TestingConnector::default(), module, frame.unwrap_or(0)),
+                );
+            }
         }
 
         sim_window
