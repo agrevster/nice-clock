@@ -3,6 +3,8 @@ pub type VoidClockResult = Result<(), clock::errors::ClockError>;
 
 ///Stores structures defined for use in nice-clock
 pub mod clock;
+///Contains code used to create clock modules from luau code.
+pub mod luau;
 ///Utilities
 pub mod utils;
 

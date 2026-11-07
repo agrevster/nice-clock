@@ -1,5 +1,7 @@
 use std::{error::Error, fmt::Display, path::PathBuf};
 
+use mlua::Error as LuaError;
+
 use crate::clock::pos::Pos;
 
 ///An exhaustive enum of all the errors the clock can return.
@@ -15,8 +17,22 @@ pub enum ClockError {
     ComponentInvalidArgument(String, String, String),
     ///Returned when an error occurs with a clock asset.
     AssetError(ClockAssetError),
-    ///No keyframes specified
+    ///No keyframes specified.
     NoKeyframesSpecified(),
+    ///An error occurs within Luau or relating to Luau.
+    LuauError(ClockLuauError),
+}
+
+#[derive(Debug)]
+///Returned when an error occurs within Luau or relating to Luau.
+pub enum ClockLuauError {
+    ///An error occurs within Luau either run time or compile time.
+    LuauCodeError(LuaError),
+    ///An error occurs building a Luau spec for documentation.
+    ///Takes the missing filed name as an argument.
+    LuauSpecBuilderMissingFieldError(String),
+    ///An error occurs when a Luau spec is not valid.
+    LuauSpecValidationError(String),
 }
 
 #[derive(Debug)]
@@ -81,9 +97,22 @@ impl ClockError {
         ClockError::InvalidCustomAnimationIndex(index, len)
     }
 
-    ///Returns a `ClockError` for when no key frames are specified in an animation
+    ///Returns a `ClockError` for when no keyframes are specified in an animation
     pub fn no_keyframes() -> ClockError {
         ClockError::NoKeyframesSpecified()
+    }
+
+    ///Returns a `ClockError` for when a luau spec builder is missing a required field.
+    pub fn luau_spec_builder_missing_field(field: impl Into<String>) -> ClockError {
+        ClockError::LuauError(ClockLuauError::LuauSpecBuilderMissingFieldError(
+            field.into(),
+        ))
+    }
+
+    ///Returns a `ClockError` for when a Luau spec is not valid.
+    ///For example: when a spec's number of parameters does not match the function's number of parameters.
+    pub fn luau_spec_validation(message: impl Into<String>) -> ClockError {
+        ClockError::LuauError(ClockLuauError::LuauSpecValidationError(message.into()))
     }
 }
 
@@ -126,8 +155,26 @@ impl Display for ClockError {
             ClockError::NoKeyframesSpecified() => {
                 write!(f, "No keyframes specified for animation!")
             }
+
+            ClockError::LuauError(e) => match e {
+                ClockLuauError::LuauCodeError(error) => {
+                    write!(f, "An error has occured within Luau: {error}")
+                }
+                ClockLuauError::LuauSpecBuilderMissingFieldError(fieldname) => {
+                    write!(f, "Builder is missing a required field: {fieldname}")
+                }
+                ClockLuauError::LuauSpecValidationError(message) => {
+                    write!(f, "Invalid Luau spec: {message}")
+                }
+            },
         }
     }
 }
 
 impl Error for ClockError {}
+
+impl From<LuaError> for ClockError {
+    fn from(value: LuaError) -> Self {
+        ClockError::LuauError(ClockLuauError::LuauCodeError(value))
+    }
+}

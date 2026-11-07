@@ -15,7 +15,7 @@ impl<T, E: Display> LogUnwrap<T> for Result<T, E> {
     fn unwrap_and_log(self, msg: &str) -> T {
         self.unwrap_or_else(|e| {
             error!("{}\n{}", msg, e);
-            panic!();
+            panic!("{}\n{}", msg, e);
         })
     }
     fn unwrap_or_log(self, default: T, msg: &str) -> T {
