@@ -14,6 +14,7 @@ pub struct LuauExportBuilder {
     name: String,
     functions: BTreeMap<String, LuauFunctionExport>,
     constants: BTreeMap<String, LuauConstantExport>,
+    classes: BTreeMap<String, LuauClassSpec>,
 }
 impl LuauExportBuilder {
     ///Creates a `LuauExportBuilder` with the given `name`.
@@ -22,6 +23,7 @@ impl LuauExportBuilder {
             name: name.into(),
             functions: BTreeMap::new(),
             constants: BTreeMap::new(),
+            classes: BTreeMap::new(),
         }
     }
 
@@ -33,7 +35,10 @@ impl LuauExportBuilder {
     ) -> Result<LuauExportBuilder, ClockError> {
         let fn_name = function.spec.name.clone();
 
-        if self.functions.contains_key(&fn_name) || self.constants.contains_key(&fn_name) {
+        if self.functions.contains_key(&fn_name)
+            || self.constants.contains_key(&fn_name)
+            || self.classes.contains_key(&fn_name)
+        {
             return Err(ClockError::luau_spec_validation(
                 "An item with this name already exists in the export module.",
             ));
@@ -51,12 +56,33 @@ impl LuauExportBuilder {
     ) -> Result<LuauExportBuilder, ClockError> {
         let const_name = constant.spec.name.clone();
 
-        if self.functions.contains_key(&const_name) || self.constants.contains_key(&const_name) {
+        if self.functions.contains_key(&const_name)
+            || self.constants.contains_key(&const_name)
+            || self.classes.contains_key(&const_name)
+        {
             return Err(ClockError::luau_spec_validation(
                 "An item with this name already exists in the export module.",
             ));
         }
         self.constants.insert(const_name, constant);
+        Ok(self)
+    }
+
+    ///Adds a new `LuauClassSpec` to the `LuauExportBuilder`.
+    ///Returns an error if the name of the class already exists in the export.
+    pub fn class(mut self, class: LuauClassSpec) -> Result<LuauExportBuilder, ClockError> {
+        let class_name = class.name.clone();
+
+        if self.functions.contains_key(&class_name)
+            || self.constants.contains_key(&class_name)
+            || self.classes.contains_key(&class_name)
+        {
+            return Err(ClockError::luau_spec_validation(
+                "An item with this name already exists in the export module.",
+            ));
+        }
+
+        self.classes.insert(class_name, class);
         Ok(self)
     }
 
@@ -69,7 +95,7 @@ impl LuauExportBuilder {
         Ok(())
     }
 
-    ///Attempts to convert the `LuauExportBuilder` into a luau export by pushing all functions and
+    ///Attempts to convert the `LuauExportBuilder` into a luau export by pushing all function and
     ///constants to a luau table with the name of `LuauExportBuilder.name`.
     pub fn build(self, lua: &mut Lua) -> VoidClockResult {
         self.validate_export_name()?;
@@ -90,7 +116,7 @@ impl LuauExportBuilder {
         Ok(())
     }
 
-    ///Attempts to convert the `LuauExportBuilder` into a luau export by pushing all functions and
+    ///Attempts to convert the `LuauExportBuilder` into a luau export by pushing all function and
     ///constants to the luau global table.
     pub fn build_global(self, lua: &mut Lua) -> VoidClockResult {
         self.validate_export_name()?;
@@ -167,6 +193,9 @@ impl_luau_types!(A, B, C, D, E, F, G);
 impl_luau_types!(A, B, C, D, E, F, G, H);
 impl_luau_types!(A, B, C, D, E, F, G, H, I);
 impl_luau_types!(A, B, C, D, E, F, G, H, I, J);
+impl_luau_types!(A, B, C, D, E, F, G, H, I, J, K);
+impl_luau_types!(A, B, C, D, E, F, G, H, I, J, K, L);
+impl_luau_types!(A, B, C, D, E, F, G, H, I, J, K, L, M);
 
 impl LuauType for Value {
     fn luau_type() -> LuauTypeSpec {
@@ -273,7 +302,6 @@ fn is_luau_keyword(str: &str) -> bool {
             | "or"
             | "repeat"
             | "return"
-            | "self"
             | "then"
             | "true"
             | "type"
@@ -388,7 +416,7 @@ impl LuauFunctionSpecBuilder {
 
 impl LuauFunctionSpec {
     ///Validates a given `LuauFunctionSpec` matches the given implementation.
-    ///# This functions asserts the following:
+    ///# This function asserts the following:
     ///
     ///* The number of arguments in the type spec matches the number of arguments in the implementation.
     ///* The return value of the type spec matches the return type of the implementation.
@@ -520,13 +548,13 @@ impl LuauConstantSpecBuilder {
         }
     }
 
-    ///Sets the function's `documentation` to the given string.
+    ///Sets the constant's `documentation` to the given String.
     pub fn documentation(mut self, documentation: impl Into<String>) -> LuauConstantSpecBuilder {
         self.documentation = Some(documentation.into());
         self
     }
 
-    ///Sets the function's `return_type` to the given string.
+    ///Sets the constant's `constant_type` to the given LuauTypeSpec.
     pub fn constant_type(mut self, constant_type: LuauTypeSpec) -> LuauConstantSpecBuilder {
         self.constant_type = Some(constant_type);
         self
@@ -561,7 +589,7 @@ impl LuauConstantSpecBuilder {
 
 impl LuauConstantSpec {
     ///Validates a given `LuauConstantSpec` matches the given implementation.
-    ///# This functions asserts the following:
+    ///# This function asserts the following:
     ///
     ///* Documentation is specified for the constant's spec.
     ///* The spec's name is a valid luau identifier.
@@ -599,6 +627,132 @@ impl LuauConstantSpec {
     }
 }
 
+//
+// User data / Classes
+//
+
+///Contains documentation used for Luau `UserData` types.
+///Created by `LuauExportBuilder`.
+///**This has no implementation as Luau functions will be in charge of pushing their own UserData.
+///This exists purely for documentation.**
+#[derive(Debug, PartialEq, Clone)]
+pub struct LuauClassSpec {
+    ///The class' name.
+    name: String,
+    ///A short description of what the class is for.
+    documentation: String,
+    ///The documentation for all functions used by this class.
+    functions: BTreeMap<String, LuauFunctionSpec>,
+    ///The documentation for all constants used by this class.
+    constants: BTreeMap<String, LuauConstantSpec>,
+}
+
+///Used to create a `LuauClassSpec`.
+struct LuauClassSpecBuilder {
+    ///The class' name.
+    name: String,
+    ///A short description of what the class is for.
+    documentation: Option<String>,
+    ///The documentation for all functions used by this class.
+    functions: BTreeMap<String, LuauFunctionSpec>,
+    ///The documentation for all constants used by this class.
+    constants: BTreeMap<String, LuauConstantSpec>,
+}
+
+impl LuauClassSpecBuilder {
+    ///Creates a new `LuauClassSpecBuilder` used to create a `LuauClassSpec` with the given `name`.
+    pub fn new(name: impl Into<String>) -> Self {
+        LuauClassSpecBuilder {
+            name: name.into(),
+            documentation: None,
+            functions: BTreeMap::new(),
+            constants: BTreeMap::new(),
+        }
+    }
+
+    ///Sets the class' `documentation` to the given string.
+    pub fn documentation(mut self, documentation: impl Into<String>) -> LuauClassSpecBuilder {
+        self.documentation = Some(documentation.into());
+        self
+    }
+
+    ///Adds a function to the `LuauClassSpecBuilder`.
+    pub fn function(
+        mut self,
+        function: LuauFunctionSpec,
+    ) -> Result<LuauClassSpecBuilder, ClockError> {
+        let fn_name = function.name.clone();
+        if self.functions.contains_key(&fn_name) || self.constants.contains_key(&fn_name) {
+            return Err(ClockError::luau_spec_validation(
+                "An item with this name already exists in the class module.",
+            ));
+        }
+
+        //This is gross but I can't be bothered
+        function.validate(
+            function.params.iter().map(|x| x.1.clone()).collect(),
+            function.return_type.clone().unwrap_or(LuauTypeSpec::Nil),
+        )?;
+
+        self.functions.insert(fn_name, function);
+        Ok(self)
+    }
+
+    ///Adds a constant to the `LuauClassSpecBuilder`.
+    pub fn constant(
+        mut self,
+        constant: LuauConstantSpec,
+    ) -> Result<LuauClassSpecBuilder, ClockError> {
+        let const_name = constant.name.clone();
+        if self.functions.contains_key(&const_name) || self.constants.contains_key(&const_name) {
+            return Err(ClockError::luau_spec_validation(
+                "An item with this name already exists in the class module.",
+            ));
+        }
+
+        //This is gross but I can't be bothered
+        constant.validate(constant.constant_type.clone())?;
+
+        self.constants.insert(const_name, constant);
+        Ok(self)
+    }
+
+    ///Converts a `LuauClassSpecBuilder` -> `LuauClassSpec` validating each required item is present.
+    ///Returns a `LuauSpecBuilderError` if a required item is missing.
+    pub fn build(self) -> Result<LuauClassSpec, ClockError> {
+        let name = self.name.clone();
+        let docs = self.documentation.clone();
+
+        let spec = LuauClassSpec {
+            name: self.name,
+            documentation: self
+                .documentation
+                .ok_or_else(|| ClockError::luau_spec_builder_missing_field("documentation"))?,
+            functions: self.functions,
+            constants: self.constants,
+        };
+
+        if name.is_empty() {
+            return Err(ClockError::luau_spec_validation(
+                "Class name cannot be empty!",
+            ));
+        }
+
+        if docs.unwrap().is_empty() {
+            return Err(ClockError::luau_spec_validation(
+                "Class docs cannot be empty!",
+            ));
+        }
+
+        if is_luau_keyword(&name) || !is_valid_identifier(&name) {
+            return Err(ClockError::luau_spec_validation(
+                "Class' name is an invalid Luau identifier or is a reserved Luau keyword.",
+            ));
+        }
+
+        Ok(spec)
+    }
+}
 #[cfg(test)]
 ///*AI was used to help create these tests*
 mod test {
@@ -608,7 +762,8 @@ mod test {
     use mlua::{Lua, Value, ffi::luau_BytecodeType::Number};
 
     use crate::luau::luau_export::{
-        LuauConstantExport, LuauConstantSpecBuilder, LuauExportBuilder, LuauFunctionExport,
+        LuauClassSpec, LuauClassSpecBuilder, LuauConstantExport, LuauConstantSpec,
+        LuauConstantSpecBuilder, LuauExportBuilder, LuauFunctionExport, LuauFunctionSpec,
         LuauFunctionSpecBuilder, LuauType, LuauTypeSpec, LuauTypeTuple, is_luau_keyword,
         is_valid_identifier,
     };
@@ -1205,5 +1360,190 @@ mod test {
                 .build_global(&mut luau);
             assert!(result.is_err());
         }
+    }
+
+    #[test]
+    fn class_must_have_docs() {
+        let result = LuauClassSpecBuilder::new("clazz").build();
+        assert!(result.is_err());
+
+        let result = LuauClassSpecBuilder::new("clazz")
+            .documentation("Does a thing")
+            .build();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn class_must_not_contain_luau_keyword() {
+        let result = LuauClassSpecBuilder::new("class")
+            .documentation("Does a thing")
+            .build();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn class_name_must_be_identifier() {
+        let result = LuauClassSpecBuilder::new("class-")
+            .documentation("Does a thing")
+            .build();
+        assert!(result.is_err());
+    }
+    #[test]
+    fn class_with_functions_and_consts() {
+        let result = LuauClassSpecBuilder::new("clazz")
+            .documentation("Does a thing")
+            .function(
+                LuauFunctionSpecBuilder::new("run")
+                    .documentation("Runs the clazz")
+                    .returns(LuauTypeSpec::Class("clazz"))
+                    .param("self", LuauTypeSpec::Class("clazz"), "The class")
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap()
+            .constant(
+                LuauConstantSpecBuilder::new("result")
+                    .documentation("The result")
+                    .constant_type(LuauTypeSpec::Number)
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap()
+            .build();
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn class_export() {
+        let class = LuauClassSpecBuilder::new("count")
+            .documentation("Counts")
+            .constant(
+                LuauConstantSpecBuilder::new("the_count")
+                    .documentation("the count")
+                    .constant_type(LuauTypeSpec::Number)
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap()
+            .build()
+            .unwrap();
+
+        let builder = LuauExportBuilder::new("mod").class(class.clone()).unwrap();
+
+        let built_class = &builder.classes.get("count").unwrap();
+
+        assert_eq!(&class.name, &built_class.name);
+        assert_eq!(&class.documentation, &built_class.documentation);
+        assert_eq!(&class.functions, &built_class.functions);
+        assert_eq!(&class.constants, &built_class.constants);
+        assert_eq!(builder.classes.len(), 1);
+    }
+
+    #[test]
+    fn class_cannot_have_duplicate_functions() {
+        let result = LuauClassSpecBuilder::new("clazz")
+            .documentation("Does a thing")
+            .function(add_export().spec)
+            .unwrap()
+            .function(add_export().spec);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn class_cannot_have_duplicate_consts() {
+        let result = LuauClassSpecBuilder::new("clazz")
+            .documentation("Does a thing")
+            .constant(pi_export().spec)
+            .unwrap()
+            .constant(pi_export().spec);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn class_cannot_have_duplicate_const_and_func() {
+        let result = LuauClassSpecBuilder::new("clazz")
+            .documentation("Does a thing")
+            .function(
+                LuauFunctionSpecBuilder::new("PI")
+                    .documentation("PI")
+                    .returns(LuauTypeSpec::Number)
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap()
+            .constant(pi_export().spec);
+
+        assert!(result.is_err());
+    }
+
+    fn method(name: &str) -> LuauFunctionSpec {
+        LuauFunctionSpecBuilder::new(name)
+            .documentation("Does a thing.")
+            .param("amount", LuauTypeSpec::Number, "How much.")
+            .returns(LuauTypeSpec::Number)
+            .build()
+            .unwrap()
+    }
+
+    ///A method builder with documentation but no parameters, for building one-off variations.
+    fn bare_method(name: &str) -> LuauFunctionSpecBuilder {
+        LuauFunctionSpecBuilder::new(name).documentation("Does a thing.")
+    }
+
+    ///A valid constant spec.
+    fn constant(name: &str) -> LuauConstantSpec {
+        LuauConstantSpecBuilder::new(name)
+            .documentation("A constant.")
+            .constant_type(LuauTypeSpec::Number)
+            .build()
+            .unwrap()
+    }
+
+    fn counter_class() -> LuauClassSpecBuilder {
+        LuauClassSpecBuilder::new("Counter").documentation("A counter.")
+    }
+
+    #[test]
+    fn class_spec_keeps_name_documentation_and_members() {
+        let spec = counter_class()
+            .function(method("plus"))
+            .unwrap()
+            .constant(constant("MAX"))
+            .unwrap()
+            .build()
+            .unwrap();
+
+        assert_eq!(spec.name, "Counter");
+        assert_eq!(spec.documentation, "A counter.");
+        assert_eq!(spec.functions.len(), 1);
+        assert_eq!(spec.constants.len(), 1);
+        assert_eq!(spec.functions["plus"], method("plus"));
+        assert_eq!(spec.constants["MAX"], constant("MAX"));
+    }
+
+    #[test]
+    fn members_come_out_sorted_regardless_of_insertion_order() {
+        //Sorted output keeps generated definition files stable between runs.
+        let spec = counter_class()
+            .function(method("zeta"))
+            .unwrap()
+            .function(method("alpha"))
+            .unwrap()
+            .function(method("mid"))
+            .unwrap()
+            .constant(constant("Z"))
+            .unwrap()
+            .constant(constant("A"))
+            .unwrap()
+            .build()
+            .unwrap();
+
+        let functions: Vec<&str> = spec.functions.keys().map(String::as_str).collect();
+        let constants: Vec<&str> = spec.constants.keys().map(String::as_str).collect();
+        assert_eq!(functions, ["alpha", "mid", "zeta"]);
+        assert_eq!(constants, ["A", "Z"]);
     }
 }
